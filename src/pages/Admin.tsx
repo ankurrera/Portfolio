@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { LogOut, Loader2 } from 'lucide-react';
-import WYSIWYGEditor from '@/components/admin/WYSIWYGEditor';
 import { toast } from 'sonner';
+
+// Lazy load the WYSIWYGEditor component
+const WYSIWYGEditor = lazy(() => import('@/components/admin/WYSIWYGEditor'));
 
 type PhotoCategory = 'selected' | 'commissioned' | 'editorial' | 'personal';
 const CATEGORIES: PhotoCategory[] = ['selected', 'commissioned', 'editorial', 'personal'];
@@ -78,7 +80,18 @@ export default function Admin() {
         <div className="pt-16">
           {CATEGORIES.map((cat) => (
             <TabsContent key={cat} value={cat} className="mt-0">
-              <WYSIWYGEditor category={cat} />
+              {/* Only render the editor when this tab is active */}
+              {activeTab === cat && (
+                <Suspense 
+                  fallback={
+                    <div className="min-h-screen bg-background flex items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                  }
+                >
+                  <WYSIWYGEditor category={cat} />
+                </Suspense>
+              )}
             </TabsContent>
           ))}
         </div>
