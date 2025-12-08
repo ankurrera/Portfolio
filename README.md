@@ -1,73 +1,149 @@
-# Welcome to your Lovable project
+# Clean Photographer Photography Portfolio Template
 
-## Project info
+A modern, responsive photography portfolio template built with React, TypeScript, and Supabase.
 
-**URL**: https://lovable.dev/projects/135ed883-ca7e-49bf-83a0-6a85cbeade55
+## Features
 
-## How can I edit this code?
+- 📸 Photo gallery with multiple categories (Selected, Commissioned, Editorial, Personal)
+- 🔐 Admin dashboard for photo management
+- 🎨 Clean, minimalist design
+- 📱 Fully responsive
+- 🚀 Fast and optimized with Vite
+- 💾 Supabase backend for data storage and authentication
 
-There are several ways of editing your application.
+## Technologies Used
 
-**Use Lovable**
+- **Frontend**: React 18, TypeScript
+- **Styling**: Tailwind CSS, shadcn-ui components
+- **Backend**: Supabase (PostgreSQL database, Authentication, Storage)
+- **Build Tool**: Vite
+- **State Management**: TanStack React Query
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/135ed883-ca7e-49bf-83a0-6a85cbeade55) and start prompting.
+## Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js (v18 or higher) - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- npm or yarn
+- A Supabase account and project - [create one here](https://supabase.com)
 
-**Use your preferred IDE**
+## Setup Instructions
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### 1. Clone the repository
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 2. Install dependencies
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```sh
+npm install
+```
+
+### 3. Set up Supabase
+
+1. Create a new project at [Supabase](https://app.supabase.com)
+2. Go to Project Settings > API to find your project credentials
+3. Copy `.env.example` to `.env`:
+   ```sh
+   cp .env.example .env
+   ```
+4. Update the `.env` file with your Supabase credentials:
+   ```
+   VITE_SUPABASE_PROJECT_ID="your-project-id"
+   VITE_SUPABASE_URL="https://your-project-id.supabase.co"
+   VITE_SUPABASE_PUBLISHABLE_KEY="your-anon-public-key"
+   ```
+
+### 4. Run database migrations
+
+The SQL migration files are located in `supabase/migrations/`. You can apply them using the Supabase CLI or by running them directly in the SQL Editor in your Supabase dashboard:
+
+**Option A: Using Supabase CLI** (Recommended)
+```sh
+# Install Supabase CLI if you haven't already
+npm install -g supabase
+
+# Link to your project
+supabase link --project-ref your-project-id
+
+# Apply migrations
+supabase db push
+```
+
+**Option B: Manual SQL Execution**
+1. Go to your Supabase project dashboard
+2. Navigate to SQL Editor
+3. Copy and paste the contents of each migration file in order:
+   - `supabase/migrations/20251208080332_remix_migration_from_pg_dump.sql`
+   - `supabase/migrations/20251208081442_25abee87-b56a-40c8-9af4-e7c2d206f677.sql`
+4. Execute each query
+
+### 5. Create an admin user
+
+After setting up the database, you'll need to create an admin user:
+
+1. Sign up through your application's admin login page
+2. Find your user ID in the Supabase dashboard (Authentication > Users)
+3. Run this SQL query in the SQL Editor:
+   ```sql
+   INSERT INTO public.user_roles (user_id, role)
+   VALUES ('your-user-id-here', 'admin');
+   ```
+
+### 6. Start the development server
+
+```sh
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Available Scripts
 
-**Use GitHub Codespaces**
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run build:dev` - Build for development
+- `npm run preview` - Preview production build locally
+- `npm run lint` - Run ESLint
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Project Structure
 
-## What technologies are used for this project?
+```
+├── src/
+│   ├── components/       # Reusable React components
+│   ├── pages/           # Page components
+│   ├── hooks/           # Custom React hooks
+│   ├── integrations/    # Third-party integrations (Supabase)
+│   ├── lib/             # Utility functions
+│   └── services/        # API services
+├── supabase/
+│   ├── config.toml      # Supabase configuration
+│   └── migrations/      # Database migration files
+└── public/              # Static assets
+```
 
-This project is built with:
+## Deployment
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+This project can be deployed to any static hosting service:
 
-## How can I deploy this project?
+- **Vercel**: Connect your GitHub repository for automatic deployments
+- **Netlify**: Drag and drop the `dist` folder after building
+- **GitHub Pages**: Use GitHub Actions for automated deployment
+- **Cloudflare Pages**: Connect your repository for continuous deployment
 
-Simply open [Lovable](https://lovable.dev/projects/135ed883-ca7e-49bf-83a0-6a85cbeade55) and click on Share -> Publish.
+Make sure to set your environment variables in your hosting platform's settings.
 
-## Can I connect a custom domain to my Lovable project?
+## Database Schema
 
-Yes, you can!
+The application uses the following main tables:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- `photos`: Stores photo metadata and URLs
+- `user_roles`: Manages admin access control
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Storage buckets:
+- `photos`: Public bucket for storing photo files
+
+## License
+
+MIT
