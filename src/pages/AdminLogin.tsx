@@ -26,34 +26,36 @@ export default function AdminLogin() {
 
     setIsLoading(true);
     
-    if (isSignUp) {
-      const { error } = await signUp(email, password);
-      setIsLoading(false);
+    try {
+      if (isSignUp) {
+        const { error } = await signUp(email, password);
 
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-
-      toast.success('Account created successfully! Please check your email for verification.');
-      setIsSignUp(false);
-      setEmail('');
-      setPassword('');
-    } else {
-      const { error } = await signIn(email, password);
-      setIsLoading(false);
-
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          toast.error('Invalid email or password');
-        } else {
+        if (error) {
           toast.error(error.message);
+          return;
         }
-        return;
-      }
 
-      toast.success('Signed in successfully');
-      navigate('/admin');
+        toast.success('Account created successfully! Please check your email for verification.');
+        setIsSignUp(false);
+        setEmail('');
+        setPassword('');
+      } else {
+        const { error } = await signIn(email, password);
+
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            toast.error('Invalid email or password');
+          } else {
+            toast.error(error.message);
+          }
+          return;
+        }
+
+        toast.success('Signed in successfully');
+        navigate('/admin');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -97,7 +99,7 @@ export default function AdminLogin() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  autoComplete="current-password"
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
                 />
                 <button
                   type="button"
