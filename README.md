@@ -77,18 +77,22 @@ supabase db push
 3. Copy and paste the contents of each migration file in order:
    - `supabase/migrations/20251208080332_remix_migration_from_pg_dump.sql`
    - `supabase/migrations/20251208081442_25abee87-b56a-40c8-9af4-e7c2d206f677.sql`
+   - `supabase/migrations/20251208093500_add_auto_user_role_trigger.sql`
 4. Execute each query
 
 ### 5. Create an admin user
 
 After setting up the database, you'll need to create an admin user:
 
-1. Sign up through your application's admin login page
-2. Find your user ID in the Supabase dashboard (Authentication > Users)
-3. Run this SQL query in the SQL Editor:
+1. Sign up through your application's admin login page (`/admin/login`)
+2. New users are automatically added to the `user_roles` table with the 'user' role
+3. To promote yourself to admin:
+   - Find your user ID in the Supabase dashboard (Authentication > Users)
+   - Run this SQL query in the SQL Editor:
    ```sql
-   INSERT INTO public.user_roles (user_id, role)
-   VALUES ('your-user-id-here', 'admin');
+   UPDATE public.user_roles
+   SET role = 'admin'
+   WHERE user_id = 'your-user-id-here';
    ```
 
 ### 6. Start the development server
@@ -127,9 +131,19 @@ The application will be available at `http://localhost:8080`
 
 This project can be deployed to any static hosting service:
 
-- **Vercel**: Connect your GitHub repository for automatic deployments
-- **Netlify**: Drag and drop the `dist` folder after building
-- **GitHub Pages**: Use GitHub Actions for automated deployment
+### Vercel (Recommended)
+1. Connect your GitHub repository for automatic deployments
+2. Set your environment variables in the Vercel dashboard:
+   - `VITE_SUPABASE_PROJECT_ID`
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`
+3. The `vercel.json` configuration is already included to handle SPA routing
+
+**Note**: The `vercel.json` file is crucial for proper routing. It ensures that direct navigation to routes like `/admin` works correctly by serving `index.html` for all routes and letting React Router handle client-side routing.
+
+### Other Platforms
+- **Netlify**: Create a `_redirects` file with `/* /index.html 200` or drag and drop the `dist` folder after building
+- **GitHub Pages**: Use GitHub Actions for automated deployment with proper routing configuration
 - **Cloudflare Pages**: Connect your repository for continuous deployment
 
 Make sure to set your environment variables in your hosting platform's settings.

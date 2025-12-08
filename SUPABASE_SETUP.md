@@ -86,6 +86,12 @@ You need to run the SQL migrations to create the necessary tables and functions.
    - Copy and paste the entire contents of this file
    - Click "Run"
 
+   **Third Migration**: `supabase/migrations/20251208093500_add_auto_user_role_trigger.sql`
+   - Click "New query" again
+   - Copy and paste the entire contents of this file
+   - Click "Run"
+   - This migration creates a trigger to automatically add new users to the `user_roles` table
+
 4. Verify the tables were created:
    - Go to **Table Editor** in the sidebar
    - You should see: `photos` and `user_roles` tables
@@ -111,21 +117,20 @@ To access the admin dashboard, you need to create an admin user:
 2. Navigate to the admin login page: `http://localhost:8080/admin/login`
 
 3. Click "Sign Up" and create an account with your email and password
+   - **Note**: New users are automatically added to the `user_roles` table with the 'user' role
 
-4. Find your user ID:
+4. Grant admin access via SQL:
    - Go to your Supabase dashboard
-   - Navigate to **Authentication** > **Users**
-   - Find your newly created user and copy the **User UID**
-
-5. Grant admin access via SQL:
-   - Go to **SQL Editor**
-   - Run this query (replace `your-user-id` with your actual user ID):
+   - Navigate to **SQL Editor**
+   - Find your user ID in **Authentication** > **Users** (copy the **User UID**)
+   - Run this query to upgrade your user to admin (replace `your-user-id` with your actual user ID):
    ```sql
-   INSERT INTO public.user_roles (user_id, role)
-   VALUES ('your-user-id-here', 'admin');
+   UPDATE public.user_roles
+   SET role = 'admin'
+   WHERE user_id = 'your-user-id-here';
    ```
 
-6. Refresh your application and you should now have admin access!
+5. Refresh your application and you should now have admin access!
 
 ### 7. Test Your Setup
 
