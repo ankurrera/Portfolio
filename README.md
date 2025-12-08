@@ -127,9 +127,19 @@ The application will be available at `http://localhost:8080`
 
 This project can be deployed to any static hosting service:
 
-- **Vercel**: Connect your GitHub repository for automatic deployments
-- **Netlify**: Drag and drop the `dist` folder after building
-- **GitHub Pages**: Use GitHub Actions for automated deployment
+### Vercel (Recommended)
+1. Connect your GitHub repository for automatic deployments
+2. Set your environment variables in the Vercel dashboard:
+   - `VITE_SUPABASE_PROJECT_ID`
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`
+3. The `vercel.json` configuration is already included to handle SPA routing
+
+**Note**: The `vercel.json` file is crucial for proper routing. It ensures that direct navigation to routes like `/admin` works correctly by serving `index.html` for all routes and letting React Router handle client-side routing.
+
+### Other Platforms
+- **Netlify**: Create a `_redirects` file with `/* /index.html 200` or drag and drop the `dist` folder after building
+- **GitHub Pages**: Use GitHub Actions for automated deployment with proper routing configuration
 - **Cloudflare Pages**: Connect your repository for continuous deployment
 
 Make sure to set your environment variables in your hosting platform's settings.
