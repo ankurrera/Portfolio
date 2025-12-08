@@ -1,1 +1,4 @@
-project_id = "bqfoqtfyyfpxsxlepyqo"
+# A string used to distinguish different Supabase projects on the same host. Defaults to the
+# working directory name when running `supabase init`.
+# Replace this with your actual Supabase project reference ID (e.g., "abcdefghijklmnop")
+project_id = "your-project-reference-id-here"
