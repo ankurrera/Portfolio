@@ -6,35 +6,73 @@ import PortfolioFooter from "@/components/PortfolioFooter";
 import MasonryGallery from "@/components/MasonryGallery";
 import Lightbox from "@/components/Lightbox";
 import SEO from "@/components/SEO";
-import { fetchMixedMedia } from "@/services/pexels";
+import { supabase } from "@/integrations/supabase/client";
+
+interface GalleryImage {
+  type?: 'image' | 'video';
+  src: string;
+  videoSrc?: string;
+  highResSrc?: string;
+  alt: string;
+  photographer?: string;
+  client?: string;
+  location?: string;
+  details?: string;
+  width?: number;
+  height?: number;
+}
 
 const validCategories = ['selected', 'commissioned', 'editorial', 'personal', 'all'];
 
 const CategoryGallery = () => {
   const { category } = useParams<{ category: string }>();
-  const [images, setImages] = useState<any[]>([]);
+  const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [page, setPage] = useState(1);
 
-  // Validate category
-  if (!category || !validCategories.includes(category.toLowerCase())) {
-    return <Navigate to="/" replace />;
-  }
+  // Validate category first, before hooks
+  const isValidCategory = category && validCategories.includes(category.toLowerCase());
 
-  const categoryUpper = category.toUpperCase();
+  const categoryUpper = category ? category.toUpperCase() : '';
 
   useEffect(() => {
+    if (!isValidCategory) return;
+
     const loadImages = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchMixedMedia(categoryUpper, page, 20);
-        setImages(data.items);
+        
+        // Fetch published photos from Supabase for the selected category
+        const { data, error: fetchError } = await supabase
+          .from('photos')
+          .select('*')
+          .eq('category', category!.toLowerCase())
+          .eq('is_draft', false)
+          .order('display_order', { ascending: true });
+
+        if (fetchError) throw fetchError;
+
+        // Transform Supabase photos to gallery format
+        const transformedImages = (data || []).map((photo) => ({
+          type: 'image' as const,
+          src: photo.image_url,
+          highResSrc: photo.image_url,
+          alt: photo.title || 'Portfolio image',
+          photographer: 'Morgan Blake',
+          client: photo.description || '',
+          location: '',
+          details: photo.description || '',
+          width: photo.width || 800,
+          height: photo.height || 1000,
+        }));
+
+        setImages(transformedImages);
       } catch (err) {
-        console.error('Error fetching Pexels media:', err);
+        console.error('Error fetching photos from Supabase:', err);
         setError('Failed to load images. Please try again later.');
       } finally {
         setLoading(false);
@@ -42,12 +80,17 @@ const CategoryGallery = () => {
     };
 
     loadImages();
-  }, [categoryUpper, page]);
+  }, [category, categoryUpper, page, isValidCategory]);
 
   const handleImageClick = (index: number) => {
     setLightboxIndex(index);
     setLightboxOpen(true);
   };
+
+  // Validate category after all hooks
+  if (!isValidCategory) {
+    return <Navigate to="/" replace />;
+  }
 
   const getCategoryTitle = (cat: string) => {
     const titles: Record<string, string> = {
@@ -114,7 +157,7 @@ const CategoryGallery = () => {
 
         {!loading && !error && images.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-muted-foreground">No images found in this category.</p>
+            <p className="text-muted-foreground">No photos yet.</p>
           </div>
         )}
       </main>
