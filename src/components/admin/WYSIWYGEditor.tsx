@@ -27,11 +27,13 @@ export default function WYSIWYGEditor({ category }: WYSIWYGEditorProps) {
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [loading, setLoading] = useState(true);
   const [showUploader, setShowUploader] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   
   // History management
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [historyInitialized, setHistoryInitialized] = useState(false);
   
   // Autosave
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -50,8 +52,8 @@ export default function WYSIWYGEditor({ category }: WYSIWYGEditorProps) {
       const photosData = (data || []) as PhotoLayoutData[];
       setPhotos(photosData);
       
-      // Initialize history
-      if (photosData.length > 0 && history.length === 0) {
+      // Initialize history only once
+      if (photosData.length > 0 && !historyInitialized) {
         const initialEntry: HistoryEntry = {
           photos: JSON.parse(JSON.stringify(photosData)),
           timestamp: Date.now(),
@@ -59,6 +61,7 @@ export default function WYSIWYGEditor({ category }: WYSIWYGEditorProps) {
         };
         setHistory([initialEntry]);
         setHistoryIndex(0);
+        setHistoryInitialized(true);
       }
     } catch (error) {
       console.error('Error fetching photos:', error);
@@ -80,20 +83,34 @@ export default function WYSIWYGEditor({ category }: WYSIWYGEditorProps) {
       description,
     };
     
-    // Remove any entries after current index
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newEntry);
+    setHistory((prevHistory) => {
+      setHistoryIndex((prevIndex) => {
+        // Remove any entries after current index
+        const newHistory = prevHistory.slice(0, prevIndex + 1);
+        newHistory.push(newEntry);
+        
+        // Keep only last 50 entries
+        if (newHistory.length > 50) {
+          newHistory.shift();
+          return newHistory.length - 1; // Adjust index after shift
+        }
+        
+        return prevIndex + 1;
+      });
+      
+      // Return new history for setState
+      const newHistory = prevHistory.slice(0, historyIndex + 1);
+      newHistory.push(newEntry);
+      
+      if (newHistory.length > 50) {
+        newHistory.shift();
+      }
+      
+      return newHistory;
+    });
     
-    // Keep only last 50 entries
-    if (newHistory.length > 50) {
-      newHistory.shift();
-    } else {
-      setHistoryIndex(historyIndex + 1);
-    }
-    
-    setHistory(newHistory);
     setHasUnsavedChanges(true);
-  }, [history, historyIndex]);
+  }, [historyIndex]);
 
   const handleUndo = useCallback(() => {
     if (historyIndex > 0) {
@@ -292,7 +309,7 @@ export default function WYSIWYGEditor({ category }: WYSIWYGEditorProps) {
         onRedo={handleRedo}
         onSave={handleSave}
         onPublish={handlePublish}
-        onShowHistory={() => {}}
+        onShowHistory={() => setShowHistory(true)}
         onAddPhoto={() => setShowUploader(true)}
       />
 
@@ -372,6 +389,51 @@ export default function WYSIWYGEditor({ category }: WYSIWYGEditorProps) {
             category={category as 'selected' | 'commissioned' | 'editorial' | 'personal'} 
             onUploadComplete={handleUploadComplete} 
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* History Dialog */}
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit History</DialogTitle>
+            <DialogDescription>
+              View and restore previous versions
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {history.map((entry, index) => (
+              <div
+                key={entry.timestamp}
+                className={`p-3 rounded border ${
+                  index === historyIndex
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:bg-secondary/50'
+                } cursor-pointer`}
+                onClick={() => {
+                  setHistoryIndex(index);
+                  setPhotos(JSON.parse(JSON.stringify(entry.photos)));
+                  setHasUnsavedChanges(true);
+                  setShowHistory(false);
+                  toast.success('Restored to previous version');
+                }}
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium">
+                      {entry.description || 'Change'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(entry.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+                  {index === historyIndex && (
+                    <span className="text-xs text-primary">Current</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </DialogContent>
       </Dialog>
     </>

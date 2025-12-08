@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { GripVertical, Maximize2, ZoomIn, ZoomOut, MoveUp, MoveDown, Trash2 } from 'lucide-react';
+import { GripVertical, Maximize2, ZoomIn, MoveUp, MoveDown, Trash2 } from 'lucide-react';
 import { PhotoLayoutData } from '@/types/wysiwyg';
 import { Button } from '@/components/ui/button';
 

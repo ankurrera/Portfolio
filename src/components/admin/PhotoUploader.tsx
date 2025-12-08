@@ -16,7 +16,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string[]>([]);
 
-  const compressImage = async (file: File): Promise<Blob> => {
+  const compressImage = useCallback(async (file: File): Promise<Blob> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d')!;
@@ -46,9 +46,9 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
       
       img.src = URL.createObjectURL(file);
     });
-  };
+  }, []);
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = useCallback(async (file: File) => {
     try {
       // Compress image
       const compressedBlob = await compressImage(file);
@@ -116,9 +116,9 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
       console.error('Upload error:', error);
       throw error;
     }
-  };
+  }, [category, compressImage]);
 
-  const handleFiles = async (files: FileList) => {
+  const handleFiles = useCallback(async (files: FileList) => {
     const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
     
     if (imageFiles.length === 0) {
@@ -147,7 +147,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
     setUploading(false);
     toast.success(`Uploaded ${imageFiles.length} photo(s)`);
     onUploadComplete();
-  };
+  }, [uploadFile, onUploadComplete]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
