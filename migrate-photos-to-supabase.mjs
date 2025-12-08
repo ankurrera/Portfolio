@@ -51,10 +51,9 @@ async function uploadPhoto(filePath, category) {
     const fileName = basename(filePath);
     const fileExt = extname(fileName);
     const timestamp = Date.now();
-    const storagePath = `${category}/${timestamp}-${fileName.replace(fileExt, '')}.webp`;
-
-    // Convert to WebP (simplified - just upload as-is for now)
-    // In production, you'd want to use sharp or canvas to convert to WebP
+    
+    // Note: For WebP conversion, use sharp or canvas in production
+    // For now, uploading original format
     const uploadPath = `${category}/${timestamp}-${fileName}`;
 
     console.log(`Uploading ${fileName} to ${uploadPath}...`);
