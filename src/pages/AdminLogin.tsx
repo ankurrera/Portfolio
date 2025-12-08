@@ -12,7 +12,8 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [isSignUp, setIsSignUp] = useState(false);
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,20 +25,36 @@ export default function AdminLogin() {
     }
 
     setIsLoading(true);
-    const { error } = await signIn(email, password);
-    setIsLoading(false);
+    
+    if (isSignUp) {
+      const { error } = await signUp(email, password);
+      setIsLoading(false);
 
-    if (error) {
-      if (error.message.includes('Invalid login credentials')) {
-        toast.error('Invalid email or password');
-      } else {
+      if (error) {
         toast.error(error.message);
+        return;
       }
-      return;
-    }
 
-    toast.success('Signed in successfully');
-    navigate('/admin');
+      toast.success('Account created successfully! Please check your email for verification.');
+      setIsSignUp(false);
+      setEmail('');
+      setPassword('');
+    } else {
+      const { error } = await signIn(email, password);
+      setIsLoading(false);
+
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('Invalid email or password');
+        } else {
+          toast.error(error.message);
+        }
+        return;
+      }
+
+      toast.success('Signed in successfully');
+      navigate('/admin');
+    }
   };
 
   return (
@@ -45,10 +62,10 @@ export default function AdminLogin() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h1 className="text-2xl font-playfair tracking-tight text-foreground">
-            Admin Login
+            {isSignUp ? 'Admin Sign Up' : 'Admin Login'}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Sign in to manage your portfolio
+            {isSignUp ? 'Create a new admin account' : 'Sign in to manage your portfolio'}
           </p>
         </div>
 
@@ -101,13 +118,26 @@ export default function AdminLogin() {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
+                {isSignUp ? 'Creating account...' : 'Signing in...'}
               </>
             ) : (
-              'Sign in'
+              isSignUp ? 'Create account' : 'Sign in'
             )}
           </Button>
         </form>
+
+        <div className="text-center">
+          <button
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setEmail('');
+              setPassword('');
+            }}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+          </button>
+        </div>
 
         <p className="text-center text-xs text-muted-foreground">
           This is a protected area for administrators only.
