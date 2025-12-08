@@ -69,25 +69,44 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
         .from('photos')
         .getPublicUrl(fileName);
 
-      // Get current max display order
+      // Get current max display order and z_index
       const { data: maxOrderData } = await supabase
         .from('photos')
-        .select('display_order')
+        .select('display_order, z_index')
         .eq('category', category)
         .order('display_order', { ascending: false })
         .limit(1)
         .maybeSingle();
 
       const nextOrder = (maxOrderData?.display_order ?? -1) + 1;
+      const nextZIndex = (maxOrderData?.z_index ?? -1) + 1;
 
-      // Insert into photos table
+      // Calculate initial position for new photo (simple grid layout)
+      const photosPerRow = 3;
+      const photoWidth = 300;
+      const photoHeight = 400;
+      const gap = 20;
+      const row = Math.floor(nextOrder / photosPerRow);
+      const col = nextOrder % photosPerRow;
+      
+      const initialX = col * (photoWidth + gap);
+      const initialY = row * (photoHeight + gap);
+
+      // Insert into photos table with initial layout
       const { error: insertError } = await supabase
         .from('photos')
         .insert({
           category,
           image_url: publicUrl,
           display_order: nextOrder,
-          title: file.name.replace(/\.[^/.]+$/, '')
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          position_x: initialX,
+          position_y: initialY,
+          width: photoWidth,
+          height: photoHeight,
+          scale: 1.0,
+          rotation: 0,
+          z_index: nextZIndex,
         });
 
       if (insertError) throw insertError;

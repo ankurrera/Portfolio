@@ -313,6 +313,20 @@ export default function WYSIWYGEditor({ category }: WYSIWYGEditorProps) {
 
             {/* Photo Canvas */}
             <div className="relative min-h-[600px] max-w-[1600px] mx-auto px-3 md:px-5 pb-16">
+              {/* Grid overlay when snap-to-grid is enabled */}
+              {mode === 'edit' && snapToGrid && (
+                <div 
+                  className="absolute inset-0 pointer-events-none opacity-20"
+                  style={{
+                    backgroundImage: `
+                      repeating-linear-gradient(0deg, transparent, transparent 19px, #888 19px, #888 20px),
+                      repeating-linear-gradient(90deg, transparent, transparent 19px, #888 19px, #888 20px)
+                    `,
+                    backgroundSize: '20px 20px',
+                  }}
+                />
+              )}
+              
               {loading ? (
                 <div className="text-center py-20">
                   <p className="text-muted-foreground">Loading...</p>

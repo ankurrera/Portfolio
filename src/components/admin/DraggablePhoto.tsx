@@ -28,8 +28,12 @@ export default function DraggablePhoto({
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isScaling, setIsScaling] = useState(false);
   const dragStartPos = useRef({ x: 0, y: 0, photoX: 0, photoY: 0 });
   const resizeStartPos = useRef({ x: 0, y: 0, width: 0, height: 0 });
+  const scaleStartPos = useRef({ x: 0, y: 0, scale: 1 });
+  const touchStartDistance = useRef(0);
+  const scaleHoldTimer = useRef<NodeJS.Timeout | null>(null);
 
   const snapValue = (value: number) => {
     if (!snapToGrid) return value;
@@ -64,8 +68,105 @@ export default function DraggablePhoto({
     };
   };
 
+  // Hold-and-pull scaling for mouse
+  const handleScaleStart = (e: React.MouseEvent) => {
+    if (!isEditMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Hold for 500ms to start scaling
+    scaleHoldTimer.current = setTimeout(() => {
+      setIsScaling(true);
+      scaleStartPos.current = {
+        x: e.clientX,
+        y: e.clientY,
+        scale: photo.scale,
+      };
+    }, 500);
+  };
+
+  const handleScaleEnd = () => {
+    if (scaleHoldTimer.current) {
+      clearTimeout(scaleHoldTimer.current);
+      scaleHoldTimer.current = null;
+    }
+    setIsScaling(false);
+  };
+
+  // Touch handlers for pinch-to-zoom
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isEditMode) return;
+    
+    if (e.touches.length === 2) {
+      // Pinch gesture
+      e.preventDefault();
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      touchStartDistance.current = distance;
+      scaleStartPos.current = {
+        x: 0,
+        y: 0,
+        scale: photo.scale,
+      };
+    } else if (e.touches.length === 1) {
+      // Single touch for dragging
+      const touch = e.touches[0];
+      setIsDragging(true);
+      dragStartPos.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        photoX: photo.position_x,
+        photoY: photo.position_y,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isEditMode) return;
+    
+    if (e.touches.length === 2) {
+      // Pinch scaling
+      e.preventDefault();
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      const scaleFactor = distance / touchStartDistance.current;
+      const newScale = Math.max(0.5, Math.min(3, scaleStartPos.current.scale * scaleFactor));
+      
+      onUpdate(photo.id, {
+        scale: newScale,
+      });
+    } else if (e.touches.length === 1 && isDragging) {
+      // Single touch dragging
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - dragStartPos.current.x;
+      const deltaY = touch.clientY - dragStartPos.current.y;
+      
+      const newX = snapValue(dragStartPos.current.photoX + deltaX);
+      const newY = snapValue(dragStartPos.current.photoY + deltaY);
+      
+      onUpdate(photo.id, {
+        position_x: newX,
+        position_y: newY,
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    touchStartDistance.current = 0;
+  };
+
   useEffect(() => {
-    if (!isDragging && !isResizing) return;
+    if (!isDragging && !isResizing && !isScaling) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging) {
@@ -94,11 +195,22 @@ export default function DraggablePhoto({
           height: newHeight,
         });
       }
+
+      if (isScaling) {
+        const deltaX = e.clientX - scaleStartPos.current.x;
+        const scaleFactor = 1 + (deltaX / 200); // 200px movement = 1x scale change
+        const newScale = Math.max(0.5, Math.min(3, scaleStartPos.current.scale * scaleFactor));
+        
+        onUpdate(photo.id, {
+          scale: newScale,
+        });
+      }
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
       setIsResizing(false);
+      handleScaleEnd();
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -108,7 +220,7 @@ export default function DraggablePhoto({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, isResizing, photo.id, snapToGrid, gridSize, onUpdate]);
+  }, [isDragging, isResizing, isScaling, photo.id, snapToGrid, gridSize, onUpdate]);
 
   return (
     <motion.div
@@ -124,8 +236,11 @@ export default function DraggablePhoto({
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       animate={{
-        scale: isDragging || isResizing ? 1.02 : 1,
+        scale: isDragging || isResizing || isScaling ? 1.02 : 1,
       }}
       transition={{ duration: 0.1 }}
     >
@@ -148,7 +263,7 @@ export default function DraggablePhoto({
           
           {/* Size Indicator */}
           <div className="absolute -bottom-8 left-0 bg-primary text-primary-foreground px-2 py-1 text-xs rounded-sm">
-            {Math.round(photo.width)} × {Math.round(photo.height)}
+            {Math.round(photo.width)} × {Math.round(photo.height)} | {photo.scale.toFixed(2)}x
           </div>
         </div>
       )}
@@ -191,9 +306,22 @@ export default function DraggablePhoto({
         <div
           className="absolute -bottom-2 -right-2 w-6 h-6 bg-primary rounded-full cursor-nwse-resize shadow-md flex items-center justify-center pointer-events-auto"
           onMouseDown={handleResizeStart}
-          title="Resize"
+          title="Resize (maintains aspect ratio)"
         >
           <Maximize2 className="h-3 w-3 text-primary-foreground" />
+        </div>
+      )}
+
+      {/* Scale Handle (Hold to scale) */}
+      {isEditMode && isHovered && (
+        <div
+          className="absolute -top-2 -right-2 w-6 h-6 bg-secondary rounded-full cursor-pointer shadow-md flex items-center justify-center pointer-events-auto"
+          onMouseDown={handleScaleStart}
+          onMouseUp={handleScaleEnd}
+          onMouseLeave={handleScaleEnd}
+          title="Hold and drag to scale"
+        >
+          <ZoomIn className="h-3 w-3 text-secondary-foreground" />
         </div>
       )}
 
@@ -205,6 +333,13 @@ export default function DraggablePhoto({
           title="Drag to move"
         >
           <GripVertical className="h-4 w-4 text-primary-foreground" />
+        </div>
+      )}
+
+      {/* Scaling indicator */}
+      {isScaling && (
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 text-xs rounded-sm whitespace-nowrap">
+          Scaling: {photo.scale.toFixed(2)}x
         </div>
       )}
     </motion.div>
