@@ -7,15 +7,16 @@ This script migrates local photos from `src/assets/gallery` to Supabase storage 
 1. Ensure you have a `.env` file with valid Supabase credentials:
    ```
    VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
    ```
    
-   **Note:** If you encounter permission errors during upload, you may need to use a service role key instead:
-   - Add `SUPABASE_SERVICE_ROLE_KEY` to your `.env` file
-   - Update the script to use this key for storage operations
-   - Service role keys bypass Row Level Security policies
+   **Important:** This script requires a **service role key** (not the publishable key) to bypass Row Level Security policies and upload files to storage.
+   
+   - The service role key can be found in your Supabase project settings under "API"
+   - Never commit this key to version control
+   - The script will fall back to `VITE_SUPABASE_PUBLISHABLE_KEY` but uploads may fail due to RLS policies
 
-2. Ensure the `photos` storage bucket exists in your Supabase project
+2. Ensure the `photos` storage bucket exists in your Supabase project with proper policies
 
 3. Install dependencies if not already done:
    ```bash

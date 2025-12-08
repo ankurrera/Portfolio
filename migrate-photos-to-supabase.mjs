@@ -14,17 +14,32 @@ const __dirname = dirname(__filename);
 dotenv.config();
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+// Use service role key if available, otherwise fall back to publishable key
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-// Note: For production use, you may need a service role key for storage uploads
-// If uploads fail with permission errors, use SUPABASE_SERVICE_ROLE_KEY instead
+// Note: Storage uploads typically require service role key to bypass RLS
 if (!supabaseUrl || !supabaseKey) {
   console.error('Missing Supabase credentials in .env file');
-  console.error('Required: VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY');
+  console.error('Required: VITE_SUPABASE_URL and either:');
+  console.error('  - SUPABASE_SERVICE_ROLE_KEY (recommended for uploads), or');
+  console.error('  - VITE_SUPABASE_PUBLISHABLE_KEY');
   process.exit(1);
 }
 
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.warn('⚠️  Warning: Using publishable key. If uploads fail, add SUPABASE_SERVICE_ROLE_KEY to .env\n');
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// MIME type mapping for common image formats
+const MIME_TYPES = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+};
 
 // Category mapping based on filenames
 const categoryMapping = {
@@ -58,10 +73,12 @@ async function uploadPhoto(filePath, category) {
 
     console.log(`Uploading ${fileName} to ${uploadPath}...`);
 
+    const mimeType = MIME_TYPES[fileExt.toLowerCase()] || `image/${fileExt.replace('.', '')}`;
+
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('photos')
       .upload(uploadPath, fileBuffer, {
-        contentType: `image/${fileExt.replace('.', '')}`,
+        contentType: mimeType,
         cacheControl: '31536000',
         upsert: false
       });
