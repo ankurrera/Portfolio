@@ -35,35 +35,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return !!data;
   };
 
+  const updateAuthState = async (session: Session | null) => {
+    setSession(session);
+    setUser(session?.user ?? null);
+    
+    // Wait for admin check to complete before setting isLoading to false
+    if (session?.user) {
+      try {
+        const isAdminUser = await checkAdminRole(session.user.id);
+        setIsAdmin(isAdminUser);
+      } catch (error) {
+        console.error('Error checking admin role:', error);
+        setIsAdmin(false);
+      }
+    } else {
+      setIsAdmin(false);
+    }
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Defer admin check with setTimeout
-        if (session?.user) {
-          setTimeout(() => {
-            checkAdminRole(session.user.id).then(setIsAdmin);
-          }, 0);
-        } else {
-          setIsAdmin(false);
-        }
-        setIsLoading(false);
+      async (event, session) => {
+        await updateAuthState(session);
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        checkAdminRole(session.user.id).then(setIsAdmin);
-      }
-      setIsLoading(false);
-    });
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      await updateAuthState(session);
+    };
+    
+    initializeAuth();
 
     return () => subscription.unsubscribe();
   }, []);

@@ -92,6 +92,12 @@ You need to run the SQL migrations to create the necessary tables and functions.
    - Click "Run"
    - This migration creates a trigger to automatically add new users to the `user_roles` table
 
+   **Fourth Migration**: `supabase/migrations/20251208095404_fix_user_roles_rls_policy.sql`
+   - Click "New query" again
+   - Copy and paste the entire contents of this file
+   - Click "Run"
+   - This migration fixes the RLS policy to allow users to view their own role
+
 4. Verify the tables were created:
    - Go to **Table Editor** in the sidebar
    - You should see: `photos` and `user_roles` tables
@@ -165,9 +171,23 @@ To access the admin dashboard, you need to create an admin user:
 All tables have RLS enabled:
 - Public users can view all photos
 - Only authenticated admin users can create/update/delete photos
-- Only admin users can view the `user_roles` table
+- Users can view their own role in the `user_roles` table
+- Admins can view all roles in the `user_roles` table
 
 ## Troubleshooting
+
+### Issue: "You do not have admin access" even though role is set to admin
+**Solution**: This is caused by a missing RLS policy. Make sure you've run all migrations, especially `20251208095404_fix_user_roles_rls_policy.sql`. If you've already set up your database before this migration existed:
+1. Go to Supabase SQL Editor
+2. Run this query:
+   ```sql
+   CREATE POLICY "Users can view their own role"
+   ON public.user_roles
+   FOR SELECT
+   TO authenticated
+   USING (user_id = auth.uid());
+   ```
+3. Sign out and sign back in
 
 ### Issue: "Failed to fetch" errors
 **Solution**: Check that your environment variables are correct in `.env` and restart your dev server.

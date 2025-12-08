@@ -16,7 +16,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string[]>([]);
 
-  const compressImage = async (file: File): Promise<Blob> => {
+  const compressImage = useCallback(async (file: File): Promise<Blob> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d')!;
@@ -46,9 +46,9 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
       
       img.src = URL.createObjectURL(file);
     });
-  };
+  }, []);
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = useCallback(async (file: File) => {
     try {
       // Compress image
       const compressedBlob = await compressImage(file);
@@ -69,25 +69,44 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
         .from('photos')
         .getPublicUrl(fileName);
 
-      // Get current max display order
+      // Get current max display order and z_index
       const { data: maxOrderData } = await supabase
         .from('photos')
-        .select('display_order')
+        .select('display_order, z_index')
         .eq('category', category)
         .order('display_order', { ascending: false })
         .limit(1)
         .maybeSingle();
 
       const nextOrder = (maxOrderData?.display_order ?? -1) + 1;
+      const nextZIndex = (maxOrderData?.z_index ?? -1) + 1;
 
-      // Insert into photos table
+      // Calculate initial position for new photo (simple grid layout)
+      const photosPerRow = 3;
+      const photoWidth = 300;
+      const photoHeight = 400;
+      const gap = 20;
+      const row = Math.floor(nextOrder / photosPerRow);
+      const col = nextOrder % photosPerRow;
+      
+      const initialX = col * (photoWidth + gap);
+      const initialY = row * (photoHeight + gap);
+
+      // Insert into photos table with initial layout
       const { error: insertError } = await supabase
         .from('photos')
         .insert({
           category,
           image_url: publicUrl,
           display_order: nextOrder,
-          title: file.name.replace(/\.[^/.]+$/, '')
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          position_x: initialX,
+          position_y: initialY,
+          width: photoWidth,
+          height: photoHeight,
+          scale: 1.0,
+          rotation: 0,
+          z_index: nextZIndex,
         });
 
       if (insertError) throw insertError;
@@ -97,9 +116,9 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
       console.error('Upload error:', error);
       throw error;
     }
-  };
+  }, [category, compressImage]);
 
-  const handleFiles = async (files: FileList) => {
+  const handleFiles = useCallback(async (files: FileList) => {
     const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
     
     if (imageFiles.length === 0) {
@@ -128,7 +147,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
     setUploading(false);
     toast.success(`Uploaded ${imageFiles.length} photo(s)`);
     onUploadComplete();
-  };
+  }, [uploadFile, onUploadComplete]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -136,7 +155,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
     if (e.dataTransfer.files.length > 0) {
       handleFiles(e.dataTransfer.files);
     }
-  }, [category]);
+  }, [handleFiles]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
