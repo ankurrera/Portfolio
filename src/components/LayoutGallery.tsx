@@ -109,8 +109,9 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
       maxExtent = Math.max(maxExtent, bottomExtent);
     });
 
-    // Add padding to ensure content isn't cut off
-    const baseHeight = Math.max(600, maxExtent + 100);
+    // Add generous padding to ensure content isn't cut off and footer has space
+    // 200px ensures adequate spacing for footer (typical footer height + margin)
+    const baseHeight = Math.max(600, maxExtent + 200);
     
     // Apply responsive scaling to the height
     // Guard against division by zero during initial render
@@ -122,12 +123,12 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
   const layoutScale = getLayoutScale();
 
   return (
-    <div ref={containerRef} className={`max-w-[${LAYOUT_MAX_WIDTH}px] mx-auto px-3 md:px-5 pb-16`}>
+    <div ref={containerRef} className={`max-w-[${LAYOUT_MAX_WIDTH}px] mx-auto px-3 md:px-5 pb-32`}>{/* Increased bottom padding for footer clearance */}
       {hasLayoutData ? (
         // WYSIWYG Layout Mode - respects admin positioning
         // Uses CSS transforms to scale entire layout on smaller screens
         <div 
-          className="relative" 
+          className="relative overflow-visible" 
           style={{ 
             minHeight: `${containerHeight}px`,
           }}

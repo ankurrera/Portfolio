@@ -13,6 +13,7 @@ import {
   History,
   Settings,
   LogOut,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -40,6 +41,7 @@ interface EditorToolbarProps {
   canRedo: boolean;
   hasChanges: boolean;
   category: PhotoCategory;
+  isRefreshing?: boolean;
   onModeChange: (mode: EditorMode) => void;
   onDevicePreviewChange: (device: DevicePreview) => void;
   onSnapToGridChange: (enabled: boolean) => void;
@@ -49,6 +51,7 @@ interface EditorToolbarProps {
   onPublish: () => void;
   onShowHistory: () => void;
   onAddPhoto: () => void;
+  onRefresh: () => void;
   onCategoryChange: (category: PhotoCategory) => void;
   onSignOut: () => void;
 }
@@ -61,6 +64,7 @@ export default function EditorToolbar({
   canRedo,
   hasChanges,
   category,
+  isRefreshing = false,
   onModeChange,
   onDevicePreviewChange,
   onSnapToGridChange,
@@ -70,6 +74,7 @@ export default function EditorToolbar({
   onPublish,
   onShowHistory,
   onAddPhoto,
+  onRefresh,
   onCategoryChange,
   onSignOut,
 }: EditorToolbarProps) {
@@ -204,6 +209,21 @@ export default function EditorToolbar({
           </Tooltip>
 
           <Separator orientation="vertical" className="h-6" />
+
+          {/* Refresh */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Refresh Photos</TooltipContent>
+          </Tooltip>
 
           {/* History */}
           <Tooltip>
