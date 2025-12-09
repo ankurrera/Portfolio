@@ -323,7 +323,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
         onSignOut={onSignOut}
       />
 
-      <div className="pt-16 min-h-screen bg-background">
+      <div className="pt-24 min-h-screen bg-background">
         {/* Preview Container */}
         <div 
           className="mx-auto transition-all duration-300"
@@ -333,7 +333,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
           }}
         >
           {/* Exact replica of public view */}
-          <PortfolioHeader activeCategory={categoryUpper} />
+          <PortfolioHeader activeCategory={categoryUpper} isAdminContext={true} topOffset="56px" />
           
           <main className="relative">
             <PhotographerBio />
