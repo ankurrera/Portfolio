@@ -391,10 +391,10 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
         onSignOut={onSignOut}
       />
 
-      <div className="pt-24 min-h-screen bg-background">
+      <div className="flex flex-col min-h-screen pt-24 bg-background">{/* Changed to flex layout */}
         {/* Preview Container */}
         <div 
-          className="mx-auto transition-all duration-300"
+          className="flex-1 mx-auto transition-all duration-300"
           style={{ 
             width: getDeviceWidth(),
             maxWidth: '1600px',
@@ -403,7 +403,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
           {/* Exact replica of public view */}
           <PortfolioHeader activeCategory={categoryUpper} isAdminContext={true} topOffset="56px" />
           
-          <main className="relative">
+          <main className="flex-1">
             <PhotographerBio />
 
             {/* Photo Canvas */}

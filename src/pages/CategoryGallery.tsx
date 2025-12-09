@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import PortfolioHeader from "@/components/PortfolioHeader";
 import PhotographerBio from "@/components/PhotographerBio";
 import PortfolioFooter from "@/components/PortfolioFooter";
+import PageLayout from "@/components/PageLayout";
+import DevErrorBanner from "@/components/DevErrorBanner";
 import LayoutGallery from "@/components/LayoutGallery";
 import Lightbox from "@/components/Lightbox";
 import SEO from "@/components/SEO";
@@ -16,9 +18,11 @@ const CategoryGallery = () => {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<string | undefined>(undefined);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [page, setPage] = useState(1);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Validate category first, before hooks
   const isValidCategory = category && validCategories.includes(category.toLowerCase());
@@ -29,18 +33,33 @@ const CategoryGallery = () => {
     if (!isValidCategory) return;
 
     const loadImages = async () => {
+      // Cancel any in-flight requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Create new abort controller with timeout
+      abortControllerRef.current = new AbortController();
+      const timeoutId = setTimeout(() => {
+        abortControllerRef.current?.abort();
+      }, 15000); // 15 second timeout
+
       try {
         setLoading(true);
         setError(null);
+        setErrorDetails(undefined);
         
         const validatedCategory = category!.toLowerCase();
+        
+        console.info(`[CategoryGallery] Fetching photos for category: ${validatedCategory}`);
         
         // Build query based on category - 'all' fetches from all categories
         let query = supabase
           .from('photos')
           .select('*')
           .eq('is_draft', false)
-          .order('z_index', { ascending: true });
+          .order('z_index', { ascending: true })
+          .abortSignal(abortControllerRef.current.signal);
 
         // Only filter by category if not 'all'
         if (validatedCategory !== 'all') {
@@ -49,7 +68,11 @@ const CategoryGallery = () => {
 
         const { data, error: fetchError } = await query;
 
+        clearTimeout(timeoutId);
+
         if (fetchError) throw fetchError;
+
+        console.info(`[CategoryGallery] Successfully fetched ${data?.length || 0} photos for ${validatedCategory}`);
 
         // Transform Supabase photos to gallery format
         const transformedImages = (data || []).map((photo) => ({
@@ -72,15 +95,34 @@ const CategoryGallery = () => {
         }));
 
         setImages(transformedImages);
-      } catch (err) {
-        console.error('Error fetching photos from Supabase:', err);
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+
+        // Don't show error if request was aborted intentionally
+        if (err.name === 'AbortError' || abortControllerRef.current?.signal.aborted) {
+          console.warn('[CategoryGallery] Request aborted (timeout or navigation)');
+          setError('Request timed out. Please check your network connection.');
+          setErrorDetails('The request took longer than 15 seconds to complete.');
+          return;
+        }
+        
+        console.error('[CategoryGallery] Error fetching photos from Supabase:', err);
+        const errorMessage = err?.message || 'Unknown error occurred';
         setError('Failed to load images. Please try again later.');
+        setErrorDetails(`Error: ${errorMessage}\n\nCheck browser console and network tab for more details.`);
       } finally {
         setLoading(false);
       }
     };
 
     loadImages();
+
+    // Cleanup function to abort in-flight requests when component unmounts or dependencies change
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [category, page, isValidCategory]);
 
   const handleImageClick = (index: number) => {
@@ -128,7 +170,7 @@ const CategoryGallery = () => {
   };
 
   return (
-    <>
+    <PageLayout>
       <SEO
         title={`${getCategoryTitle(category)} - Morgan Blake`}
         description={getCategoryDescription(category)}
@@ -136,16 +178,23 @@ const CategoryGallery = () => {
         jsonLd={jsonLd}
       />
 
+      <DevErrorBanner error={error} details={errorDetails} />
+
       <PortfolioHeader
         activeCategory={categoryUpper}
       />
 
-      <main>
+      <main className="flex-1">
         <PhotographerBio />
 
         {error && (
           <div className="text-center py-20">
             <p className="text-destructive">{error}</p>
+            {import.meta.env.DEV && (
+              <p className="text-xs text-muted-foreground mt-2">
+                See console/network tab for error details
+              </p>
+            )}
           </div>
         )}
 
@@ -159,6 +208,11 @@ const CategoryGallery = () => {
         {!loading && !error && images.length === 0 && (
           <div className="text-center py-20">
             <p className="text-muted-foreground">No photos yet.</p>
+            {import.meta.env.DEV && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Check console for errors or upload photos via /admin
+              </p>
+            )}
           </div>
         )}
       </main>
@@ -172,7 +226,7 @@ const CategoryGallery = () => {
       )}
 
       <PortfolioFooter />
-    </>
+    </PageLayout>
   );
 };
 
