@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "motion/react";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 import { GalleryImage } from "@/types/gallery";
@@ -81,8 +81,13 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
     ? [...images].sort((a, b) => (a.z_index || 0) - (b.z_index || 0))
     : images;
 
+  // Calculate layout scale for responsive scaling
+  const getLayoutScale = useCallback(() => {
+    return Math.min(1, containerWidth / LAYOUT_MAX_WIDTH);
+  }, [containerWidth]);
+
   // Calculate container height based on positioned content
-  const calculateContainerHeight = () => {
+  const calculateContainerHeight = useCallback(() => {
     if (!hasLayoutData || sortedImages.length === 0) {
       return 600; // Fallback minimum height
     }
@@ -108,11 +113,13 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
     const baseHeight = Math.max(600, maxExtent + 100);
     
     // Apply responsive scaling to the height
-    const layoutScale = Math.min(1, containerWidth / LAYOUT_MAX_WIDTH);
+    // Guard against division by zero during initial render
+    const layoutScale = getLayoutScale();
     return baseHeight * layoutScale;
-  };
+  }, [hasLayoutData, sortedImages, getLayoutScale]);
 
   const containerHeight = calculateContainerHeight();
+  const layoutScale = getLayoutScale();
 
   return (
     <div ref={containerRef} className={`max-w-[${LAYOUT_MAX_WIDTH}px] mx-auto px-3 md:px-5 pb-16`}>
@@ -126,10 +133,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
           }}
         >
           <div className="relative origin-top-left" style={{
-            transform: 'scale(var(--layout-scale, 1))',
-            // On mobile, scale down to fit screen
-            '--layout-scale': `min(1, calc(100vw / ${LAYOUT_MAX_WIDTH}))`,
-            minHeight: `${containerHeight}px`,
+            transform: `scale(${layoutScale})`,
           } as React.CSSProperties}>
             {sortedImages.map((image, index) => {
               const {
