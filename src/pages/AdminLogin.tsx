@@ -31,11 +31,18 @@ export default function AdminLogin() {
         const { error } = await signUp(email, password);
 
         if (error) {
-          toast.error(error.message);
+          // Check if error is related to email confirmation
+          if (error.message.includes('email') && error.message.includes('confirm')) {
+            toast.error('Email confirmation is required. Please check your email or contact an administrator.');
+          } else if (error.message.includes('already registered')) {
+            toast.error('This email is already registered. Please sign in instead.');
+          } else {
+            toast.error(error.message);
+          }
           return;
         }
 
-        toast.success('Account created successfully! Please check your email for verification.');
+        toast.success('Account created successfully! You can now sign in.');
         setIsSignUp(false);
         setEmail('');
         setPassword('');

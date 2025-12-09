@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { formatSupabaseError } from '@/lib/utils';
 
 interface AuthContextType {
   user: User | null;
@@ -29,7 +30,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
     
     if (error) {
-      console.error('Error checking admin role:', error);
+      const errorMessage = formatSupabaseError(error);
+      console.error('Error checking admin role:', errorMessage);
       return false;
     }
     return !!data;
@@ -45,7 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const isAdminUser = await checkAdminRole(session.user.id);
         setIsAdmin(isAdminUser);
       } catch (error) {
-        console.error('Error checking admin role:', error);
+        const errorMessage = formatSupabaseError(error);
+        console.error('Error checking admin role:', errorMessage);
         setIsAdmin(false);
       }
     } else {
@@ -79,13 +82,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signUp({
+    // Sign up with Supabase Authentication
+    // Note: For immediate access, email confirmation must be disabled in Supabase dashboard
+    // Go to: Authentication > Providers > Email > Disable "Confirm email"
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: redirectUrl }
+      options: {
+        emailRedirectTo: `${window.location.origin}/admin/login`,
+      }
     });
-    return { error };
+    
+    if (error) {
+      // Only log errors in development to avoid exposing sensitive information
+      if (import.meta.env.DEV) {
+        console.error('SignUp error:', error);
+      }
+      return { error };
+    }
+    
+    // Log successful signup for debugging (only in development, no PII)
+    if (import.meta.env.DEV) {
+      console.log('SignUp successful:', {
+        hasUser: !!data.user,
+        emailConfirmed: !!data.user?.confirmed_at,
+        hasSession: !!data.session
+      });
+      
+      // If user was created but no session (email confirmation required)
+      if (data.user && !data.session) {
+        console.warn('User created but email confirmation is required. Please check email or disable confirmation in Supabase settings.');
+      }
+    }
+    
+    return { error: null };
   };
 
   const signOut = async () => {

@@ -80,13 +80,25 @@ supabase db push
    - `supabase/migrations/20251208093500_add_auto_user_role_trigger.sql`
 4. Execute each query
 
-### 5. Create an admin user
+### 5. Configure Authentication (Important!)
+
+By default, Supabase requires email confirmation for new signups. To allow users to sign up and login immediately:
+
+1. Go to your Supabase project dashboard
+2. Navigate to **Authentication** > **Providers** > **Email**
+3. Disable the **"Confirm email"** toggle
+4. Click **Save**
+
+**Note**: This allows immediate access without email verification. If you want to enable email confirmation, see [EMAIL_SETUP_GUIDE.md](./EMAIL_SETUP_GUIDE.md) for instructions on configuring SMTP.
+
+### 6. Create an admin user
 
 After setting up the database, you'll need to create an admin user:
 
 1. Sign up through your application's admin login page (`/admin/login`)
-2. New users are automatically added to the `user_roles` table with the 'user' role
-3. To promote yourself to admin:
+2. You can login immediately (no email verification required)
+3. New users are automatically added to the `user_roles` table with the 'user' role
+4. To promote yourself to admin:
    - Find your user ID in the Supabase dashboard (Authentication > Users)
    - Run this SQL query in the SQL Editor:
    ```sql
@@ -95,7 +107,7 @@ After setting up the database, you'll need to create an admin user:
    WHERE user_id = 'your-user-id-here';
    ```
 
-### 6. Start the development server
+### 7. Start the development server
 
 ```sh
 npm run dev
