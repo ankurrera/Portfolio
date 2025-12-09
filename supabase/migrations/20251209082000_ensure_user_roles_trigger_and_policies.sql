@@ -8,6 +8,7 @@ BEGIN
   -- Insert new user into user_roles with 'user' role by default
   -- This happens automatically when a user signs up via Supabase Auth
   -- ON CONFLICT DO NOTHING prevents errors if the user already exists
+  -- Note: The table has UNIQUE (user_id, role) constraint, allowing multiple roles per user
   INSERT INTO public.user_roles (user_id, role)
   VALUES (NEW.id, 'user')
   ON CONFLICT (user_id, role) DO NOTHING;

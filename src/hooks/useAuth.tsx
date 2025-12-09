@@ -95,17 +95,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     }
     
-    // Log successful signup for debugging
-    console.log('SignUp successful:', {
-      userId: data.user?.id,
-      email: data.user?.email,
-      emailConfirmed: !!data.user?.confirmed_at,
-      session: !!data.session
-    });
-    
-    // If user was created but no session (email confirmation required)
-    if (data.user && !data.session) {
-      console.warn('User created but email confirmation is required. Please check email or disable confirmation in Supabase settings.');
+    // Log successful signup for debugging (only in development)
+    if (import.meta.env.DEV) {
+      console.log('SignUp successful:', {
+        userId: data.user?.id,
+        email: data.user?.email,
+        emailConfirmed: !!data.user?.confirmed_at,
+        session: !!data.session
+      });
+      
+      // If user was created but no session (email confirmation required)
+      if (data.user && !data.session) {
+        console.warn('User created but email confirmation is required. Please check email or disable confirmation in Supabase settings.');
+      }
     }
     
     return { error: null };
