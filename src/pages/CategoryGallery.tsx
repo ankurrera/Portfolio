@@ -40,7 +40,7 @@ const CategoryGallery = () => {
           .from('photos')
           .select('*')
           .eq('is_draft', false)
-          .order('display_order', { ascending: true });
+          .order('z_index', { ascending: true });
 
         // Only filter by category if not 'all'
         if (validatedCategory !== 'all') {

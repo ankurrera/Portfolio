@@ -30,7 +30,7 @@ const Index = () => {
           .select('*')
           .eq('category', 'selected' as const)
           .eq('is_draft', false)
-          .order('display_order', { ascending: true });
+          .order('z_index', { ascending: true });
 
         if (fetchError) throw fetchError;
 

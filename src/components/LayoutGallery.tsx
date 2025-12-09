@@ -83,36 +83,41 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
     <div className="max-w-[1600px] mx-auto px-3 md:px-5 pb-16">
       {hasLayoutData ? (
         // WYSIWYG Layout Mode - respects admin positioning
-        <div className="relative min-h-[600px]">
-          {sortedImages.map((image, index) => {
-            const {
-              position_x = 0,
-              position_y = 0,
-              width = 300,
-              height = 400,
-              scale = 1,
-              rotation = 0,
-              z_index = 0,
-            } = image;
+        // Uses CSS transforms to scale entire layout on smaller screens
+        <div className="relative min-h-[600px] overflow-hidden">
+          <div className="relative origin-top-left" style={{
+            transform: 'scale(var(--layout-scale, 1))',
+            // On mobile, scale down to fit screen
+            '--layout-scale': 'min(1, calc(100vw / 1600))',
+          } as React.CSSProperties}>
+            {sortedImages.map((image, index) => {
+              const {
+                position_x = 0,
+                position_y = 0,
+                width = 300,
+                height = 400,
+                scale = 1,
+                rotation = 0,
+                z_index = 0,
+              } = image;
 
-            return (
-              <button
-                key={index}
-                onClick={() => onImageClick(index)}
-                onMouseEnter={() => handleImageHover(index)}
-                onMouseLeave={handleImageLeave}
-                className="absolute cursor-zoom-in select-none"
-                style={{
-                  left: position_x,
-                  top: position_y,
-                  width: width,
-                  height: height,
-                  maxWidth: '100%', // Responsive: prevent overflow
-                  transform: `scale(${scale}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center',
-                  zIndex: z_index,
-                }}
-              >
+              return (
+                <button
+                  key={index}
+                  onClick={() => onImageClick(index)}
+                  onMouseEnter={() => handleImageHover(index)}
+                  onMouseLeave={handleImageLeave}
+                  className="absolute cursor-zoom-in select-none"
+                  style={{
+                    left: position_x,
+                    top: position_y,
+                    width: width,
+                    height: height,
+                    transform: `scale(${scale}) rotate(${rotation}deg)`,
+                    transformOrigin: 'center',
+                    zIndex: z_index,
+                  }}
+                >
                 <div className="relative h-full w-full overflow-hidden rounded-sm shadow-lg">
                   {image.type === "video" ? (
                     <video
@@ -185,6 +190,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
               </button>
             );
           })}
+          </div>
         </div>
       ) : (
         // Fallback: Natural image size layout (not masonry)
