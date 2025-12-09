@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import PortfolioHeader from "@/components/PortfolioHeader";
 import PortfolioFooter from "@/components/PortfolioFooter";
+import PageLayout from "@/components/PageLayout";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { Portrait, DEFAULT_PHOTO_WIDTH, DEFAULT_PHOTO_HEIGHT } from "@/types/gallery";
@@ -91,7 +92,7 @@ const About = () => {
   }, []);
 
   return (
-    <>
+    <PageLayout>
       <SEO
         title="About - Morgan Blake"
         description="Learn about Morgan Blake, a production photographer specializing in fashion, editorial, and commercial photography."
@@ -102,7 +103,7 @@ const About = () => {
         activeCategory=""
       />
       
-      <main className="min-h-screen">
+      <main className="flex-1">
         <section className="max-w-[1600px] mx-auto pt-20 pb-12 md:pt-24 md:pb-16">
           <div className="text-center space-y-8 mb-16 px-3 md:px-5 max-w-2xl mx-auto">
             <div className="space-y-4">
@@ -269,7 +270,7 @@ const About = () => {
       </main>
 
       <PortfolioFooter />
-    </>
+    </PageLayout>
   );
 };
 

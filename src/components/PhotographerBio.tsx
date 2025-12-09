@@ -1,6 +1,15 @@
+import { useIsAdminRoute } from '@/hooks/useIsAdminRoute';
+
 const PhotographerBio = () => {
+  const isAdminRoute = useIsAdminRoute();
+  
+  // Hide on admin routes
+  if (isAdminRoute) {
+    return null;
+  }
+  
   return (
-    <section className="max-w-[1600px] mx-auto px-3 md:px-5 pt-20 pb-12 md:pt-24 md:pb-16">
+    <section className="photographer-bio max-w-[1600px] mx-auto px-3 md:px-5 pt-20 pb-12 md:pt-24 md:pb-16">
       <div className="space-y-4 text-center">
         <h2 className="font-playfair text-4xl md:text-5xl text-foreground">
           Morgan Blake

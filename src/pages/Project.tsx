@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import PageLayout from "@/components/PageLayout";
 import SEO from "@/components/SEO";
 
 import alpine1 from "@/assets/projects/alpine-1.jpg";
@@ -55,7 +56,7 @@ const Project = () => {
   };
 
   return (
-    <>
+    <PageLayout>
       <SEO
         title="Alpine Light - Morgan Blake"
         description="A collection of images capturing the ethereal quality of early morning light in mountain landscapes. These photographs explore the delicate balance between shadow and illumination in high-altitude environments."
@@ -66,7 +67,7 @@ const Project = () => {
 
       <Header />
 
-      <main>
+      <main className="flex-1">
         <header className="px-8 py-20 max-w-2xl">
           <h1 className="text-4xl md:text-5xl font-light tracking-tight mb-6">
             Alpine Light
@@ -110,7 +111,7 @@ const Project = () => {
       </main>
 
       <Footer />
-    </>
+    </PageLayout>
   );
 };
 
