@@ -5,12 +5,13 @@ import PortfolioFooter from "@/components/PortfolioFooter";
 import MasonryGallery from "@/components/MasonryGallery";
 import Lightbox from "@/components/Lightbox";
 import SEO from "@/components/SEO";
-import { fetchMixedMedia } from "@/services/pexels";
+import { supabase } from "@/integrations/supabase/client";
+import { GalleryImage, DEFAULT_PHOTO_WIDTH, DEFAULT_PHOTO_HEIGHT } from "@/types/gallery";
 
 const Index = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [displayImages, setDisplayImages] = useState<any[]>([]);
+  const [displayImages, setDisplayImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,10 +23,34 @@ const Index = () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchMixedMedia(activeCategory, 1, 20);
-        setDisplayImages(data.items);
+        
+        // Fetch published photos from Supabase for SELECTED category
+        const { data, error: fetchError } = await supabase
+          .from('photos')
+          .select('*')
+          .eq('category', 'selected' as const)
+          .eq('is_draft', false)
+          .order('display_order', { ascending: true });
+
+        if (fetchError) throw fetchError;
+
+        // Transform Supabase photos to gallery format
+        const transformedImages = (data || []).map((photo) => ({
+          type: 'image' as const,
+          src: photo.image_url,
+          highResSrc: photo.image_url,
+          alt: photo.title || 'Portfolio image',
+          photographer: 'Morgan Blake',
+          client: photo.description || '',
+          location: '',
+          details: photo.description || '',
+          width: photo.width || DEFAULT_PHOTO_WIDTH,
+          height: photo.height || DEFAULT_PHOTO_HEIGHT,
+        }));
+
+        setDisplayImages(transformedImages);
       } catch (err) {
-        console.error('Error fetching Pexels media:', err);
+        console.error('Error fetching photos from Supabase:', err);
         setError('Failed to load images. Please try again later.');
       } finally {
         setLoading(false);
@@ -97,7 +122,7 @@ const Index = () => {
 
         {!loading && !error && displayImages.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-muted-foreground">No images found in this category.</p>
+            <p className="text-muted-foreground">No photos yet.</p>
           </div>
         )}
       </main>

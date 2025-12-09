@@ -20,30 +20,57 @@ export type Database = {
           created_at: string
           description: string | null
           display_order: number
+          height: number
           id: string
           image_url: string
+          is_draft: boolean
+          layout_config: Json
+          position_x: number
+          position_y: number
+          rotation: number
+          scale: number
           title: string | null
           updated_at: string
+          width: number
+          z_index: number
         }
         Insert: {
           category: Database["public"]["Enums"]["photo_category"]
           created_at?: string
           description?: string | null
           display_order?: number
+          height?: number
           id?: string
           image_url: string
+          is_draft?: boolean
+          layout_config?: Json
+          position_x?: number
+          position_y?: number
+          rotation?: number
+          scale?: number
           title?: string | null
           updated_at?: string
+          width?: number
+          z_index?: number
         }
         Update: {
           category?: Database["public"]["Enums"]["photo_category"]
           created_at?: string
           description?: string | null
           display_order?: number
+          height?: number
           id?: string
           image_url?: string
+          is_draft?: boolean
+          layout_config?: Json
+          position_x?: number
+          position_y?: number
+          rotation?: number
+          scale?: number
           title?: string | null
           updated_at?: string
+          width?: number
+          z_index?: number
         }
         Relationships: []
       }

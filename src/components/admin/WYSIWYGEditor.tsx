@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { PhotoLayoutData, EditorMode, DevicePreview, HistoryEntry } from '@/types/wysiwyg';
+import { PhotoLayoutData, EditorMode, DevicePreview, HistoryEntry, PhotoCategory } from '@/types/wysiwyg';
 import PortfolioHeader from '@/components/PortfolioHeader';
 import PhotographerBio from '@/components/PhotographerBio';
 import PortfolioFooter from '@/components/PortfolioFooter';
@@ -17,10 +17,12 @@ import {
 } from '@/components/ui/dialog';
 
 interface WYSIWYGEditorProps {
-  category: string;
+  category: PhotoCategory;
+  onCategoryChange: (category: PhotoCategory) => void;
+  onSignOut: () => void;
 }
 
-export default function WYSIWYGEditor({ category }: WYSIWYGEditorProps) {
+export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }: WYSIWYGEditorProps) {
   const [photos, setPhotos] = useState<PhotoLayoutData[]>([]);
   const [mode, setMode] = useState<EditorMode>('edit');
   const [devicePreview, setDevicePreview] = useState<DevicePreview>('desktop');
@@ -44,7 +46,7 @@ export default function WYSIWYGEditor({ category }: WYSIWYGEditorProps) {
       const { data, error } = await supabase
         .from('photos')
         .select('*')
-        .eq('category', category)
+        .eq('category', category as 'selected' | 'commissioned' | 'editorial' | 'personal')
         .order('z_index', { ascending: true });
 
       if (error) throw error;
@@ -302,6 +304,7 @@ export default function WYSIWYGEditor({ category }: WYSIWYGEditorProps) {
         canUndo={historyIndex > 0}
         canRedo={historyIndex < history.length - 1}
         hasChanges={hasUnsavedChanges}
+        category={category}
         onModeChange={setMode}
         onDevicePreviewChange={setDevicePreview}
         onSnapToGridChange={setSnapToGrid}
@@ -311,9 +314,11 @@ export default function WYSIWYGEditor({ category }: WYSIWYGEditorProps) {
         onPublish={handlePublish}
         onShowHistory={() => setShowHistory(true)}
         onAddPhoto={() => setShowUploader(true)}
+        onCategoryChange={onCategoryChange}
+        onSignOut={onSignOut}
       />
 
-      <div className="pt-16 min-h-screen bg-background">
+      <div className="pt-0 min-h-screen bg-background">
         {/* Preview Container */}
         <div 
           className="mx-auto transition-all duration-300"

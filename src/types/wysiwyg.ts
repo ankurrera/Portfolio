@@ -1,3 +1,5 @@
+export type PhotoCategory = 'selected' | 'commissioned' | 'editorial' | 'personal';
+
 export interface PhotoPosition {
   id: string;
   x: number;
@@ -15,7 +17,7 @@ export interface PhotoLayoutData {
   description: string | null;
   image_url: string;
   display_order: number;
-  category: string;
+  category: PhotoCategory;
   position_x: number;
   position_y: number;
   width: number;
@@ -25,11 +27,13 @@ export interface PhotoLayoutData {
   z_index: number;
   is_draft: boolean;
   layout_config: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface LayoutRevision {
   id: string;
-  category: string;
+  category: PhotoCategory;
   revision_name: string;
   layout_data: PhotoLayoutData[];
   created_by: string | null;

@@ -5,7 +5,8 @@ import * as z from "zod";
 import PortfolioHeader from "@/components/PortfolioHeader";
 import PortfolioFooter from "@/components/PortfolioFooter";
 import SEO from "@/components/SEO";
-import { fetchPexelsPhotos } from "@/services/pexels";
+import { supabase } from "@/integrations/supabase/client";
+import { Portrait, DEFAULT_PHOTO_WIDTH, DEFAULT_PHOTO_HEIGHT } from "@/types/gallery";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +29,7 @@ const contactSchema = z.object({
 type ContactFormValues = z.infer<typeof contactSchema>;
 
 const About = () => {
-  const [portrait, setPortrait] = useState<any>(null);
+  const [portrait, setPortrait] = useState<Portrait | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -59,15 +60,24 @@ const About = () => {
   useEffect(() => {
     const loadPortrait = async () => {
       try {
-        // Fetch a professional photographer portrait from Pexels
-        const data = await fetchPexelsPhotos('PERSONAL', 1, 1); // Personal category has artistic portraits
-        if (data.photos.length > 0) {
-          const photo = data.photos[0];
+        // Fetch a portrait from Supabase uploads - try 'personal' category first
+        const { data, error: fetchError } = await supabase
+          .from('photos')
+          .select('*')
+          .eq('category', 'personal')
+          .eq('is_draft', false)
+          .order('display_order', { ascending: true })
+          .limit(1);
+
+        if (fetchError) throw fetchError;
+
+        if (data && data.length > 0) {
+          const photo = data[0];
           setPortrait({
-            src: photo.src.large2x,
-            alt: photo.alt || 'Portrait',
-            width: photo.width,
-            height: photo.height,
+            src: photo.image_url,
+            alt: photo.title || 'Portrait',
+            width: photo.width || DEFAULT_PHOTO_WIDTH,
+            height: photo.height || DEFAULT_PHOTO_HEIGHT,
           });
         }
       } catch (err) {
