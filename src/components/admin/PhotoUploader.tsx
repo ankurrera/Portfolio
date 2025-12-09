@@ -100,6 +100,8 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
       const initialY = row * (photoHeight + gap);
 
       // Insert into photos table with initial layout
+      // Note: is_draft defaults to false (published) so photos appear immediately
+      // They become drafts when layout is modified and saved, then published again
       const { error: insertError } = await supabase
         .from('photos')
         .insert({
@@ -114,6 +116,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
           scale: 1.0,
           rotation: 0,
           z_index: nextZIndex,
+          is_draft: false, // Explicitly set to published (matches DB default)
         });
 
       if (insertError) throw insertError;

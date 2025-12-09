@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import PortfolioHeader from "@/components/PortfolioHeader";
 import PhotographerBio from "@/components/PhotographerBio";
 import PortfolioFooter from "@/components/PortfolioFooter";
-import MasonryGallery from "@/components/MasonryGallery";
+import LayoutGallery from "@/components/LayoutGallery";
 import Lightbox from "@/components/Lightbox";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,7 +30,7 @@ const Index = () => {
           .select('*')
           .eq('category', 'selected' as const)
           .eq('is_draft', false)
-          .order('display_order', { ascending: true });
+          .order('z_index', { ascending: true });
 
         if (fetchError) throw fetchError;
 
@@ -46,6 +46,12 @@ const Index = () => {
           details: photo.description || '',
           width: photo.width || DEFAULT_PHOTO_WIDTH,
           height: photo.height || DEFAULT_PHOTO_HEIGHT,
+          // Include WYSIWYG layout fields
+          position_x: photo.position_x,
+          position_y: photo.position_y,
+          scale: photo.scale,
+          rotation: photo.rotation,
+          z_index: photo.z_index,
         }));
 
         setDisplayImages(transformedImages);
@@ -114,7 +120,7 @@ const Index = () => {
         )}
 
         {!error && displayImages.length > 0 && (
-          <MasonryGallery
+          <LayoutGallery
             images={displayImages}
             onImageClick={handleImageClick}
           />

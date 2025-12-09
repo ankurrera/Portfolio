@@ -76,7 +76,7 @@ export default function EditorToolbar({
   const [showSettings, setShowSettings] = useState(false);
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-border shadow-sm">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border shadow-sm">
       <div className="container mx-auto px-4 py-2 flex items-center justify-between gap-4">
         {/* Left Section: Category Selector & Mode Toggle */}
         <div className="flex items-center gap-2">

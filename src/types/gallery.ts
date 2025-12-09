@@ -14,6 +14,12 @@ export interface GalleryImage {
   details?: string;
   width?: number;
   height?: number;
+  // WYSIWYG layout fields
+  position_x?: number;
+  position_y?: number;
+  scale?: number;
+  rotation?: number;
+  z_index?: number;
 }
 
 export interface Portrait {
