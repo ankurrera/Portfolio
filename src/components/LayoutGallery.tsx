@@ -19,7 +19,9 @@ interface LayoutGalleryProps {
 const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+  const [containerWidth, setContainerWidth] = useState(LAYOUT_MAX_WIDTH);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const handleImageLoad = (index: number) => {
     setLoadedImages((prev) => new Set(prev).add(index));
@@ -49,6 +51,23 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
+    };
+  }, []);
+
+  // Track container width for responsive scaling
+  useEffect(() => {
+    const updateContainerWidth = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.offsetWidth;
+        setContainerWidth(width);
+      }
+    };
+
+    updateContainerWidth();
+    window.addEventListener('resize', updateContainerWidth);
+    
+    return () => {
+      window.removeEventListener('resize', updateContainerWidth);
     };
   }, []);
 
@@ -86,13 +105,17 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
     });
 
     // Add padding to ensure content isn't cut off
-    return Math.max(600, maxExtent + 100);
+    const baseHeight = Math.max(600, maxExtent + 100);
+    
+    // Apply responsive scaling to the height
+    const layoutScale = Math.min(1, containerWidth / LAYOUT_MAX_WIDTH);
+    return baseHeight * layoutScale;
   };
 
   const containerHeight = calculateContainerHeight();
 
   return (
-    <div className={`max-w-[${LAYOUT_MAX_WIDTH}px] mx-auto px-3 md:px-5 pb-16`}>
+    <div ref={containerRef} className={`max-w-[${LAYOUT_MAX_WIDTH}px] mx-auto px-3 md:px-5 pb-16`}>
       {hasLayoutData ? (
         // WYSIWYG Layout Mode - respects admin positioning
         // Uses CSS transforms to scale entire layout on smaller screens
