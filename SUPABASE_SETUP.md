@@ -110,7 +110,23 @@ The storage bucket for photos should be created automatically by the second migr
 2. You should see a bucket named `photos`
 3. This bucket is configured as public, allowing anyone to view photos
 
-### 6. Create Your First Admin User
+### 6. Configure Email Authentication (Important!)
+
+By default, Supabase requires email confirmation for new signups. To allow users to sign in immediately after signup:
+
+1. Go to your Supabase project dashboard
+2. Navigate to **Authentication** > **Providers** > **Email**
+3. Under "Email Settings", find **"Confirm email"**
+4. **Disable** the "Confirm email" toggle
+5. Click "Save"
+
+This allows users to sign up and log in immediately without needing to verify their email address.
+
+**Note**: If you want to keep email confirmation enabled, you'll need to configure an email provider:
+- Go to **Authentication** > **Email Templates** to customize confirmation emails
+- Set up an SMTP provider in **Project Settings** > **Auth** > **SMTP Settings**
+
+### 7. Create Your First Admin User
 
 To access the admin dashboard, you need to create an admin user:
 
@@ -122,8 +138,9 @@ To access the admin dashboard, you need to create an admin user:
 
 2. Navigate to the admin login page: `http://localhost:8080/admin/login`
 
-3. Click "Sign Up" and create an account with your email and password
-   - **Note**: New users are automatically added to the `user_roles` table with the 'user' role
+3. Click "Don't have an account? Sign up" and create an account with your email and password
+   - **Note**: You can now log in immediately after signup (no email verification required)
+   - New users are automatically added to the `user_roles` table with the 'user' role
 
 4. Grant admin access via SQL:
    - Go to your Supabase dashboard
@@ -138,7 +155,7 @@ To access the admin dashboard, you need to create an admin user:
 
 5. Refresh your application and you should now have admin access!
 
-### 7. Test Your Setup
+### 8. Test Your Setup
 
 1. Log in to the admin dashboard at `/admin/login`
 2. Try uploading a photo to test the storage integration
@@ -201,11 +218,21 @@ All tables have RLS enabled:
 2. Verify the storage policies are correctly set
 3. Check browser console for CORS errors
 
-### Issue: Can't sign in
+### Issue: Can't sign in after signup
 **Solution**: 
-1. Verify Supabase Auth is enabled in your project settings
-2. Check email confirmation settings (Authentication > Settings > Email Auth)
-3. For local development, you may want to disable email confirmation
+1. Make sure email confirmation is disabled in Supabase (see Step 6 above)
+2. Go to **Authentication** > **Providers** > **Email**
+3. Disable the "Confirm email" toggle
+4. If you want to use email confirmation, configure an SMTP provider first
+5. Verify Supabase Auth is enabled in your project settings
+
+### Issue: Not receiving confirmation emails
+**Solution**: 
+1. For immediate access without email verification, disable "Confirm email" in Supabase settings
+2. If you need email confirmation:
+   - Set up an SMTP provider in **Project Settings** > **Auth** > **SMTP Settings**
+   - Configure custom email templates in **Authentication** > **Email Templates**
+   - Or use a third-party email service like SendGrid or AWS SES
 
 ## Production Deployment
 

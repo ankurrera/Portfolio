@@ -35,7 +35,7 @@ export default function AdminLogin() {
           return;
         }
 
-        toast.success('Account created successfully! Please check your email for verification.');
+        toast.success('Account created successfully! You can now sign in.');
         setIsSignUp(false);
         setEmail('');
         setPassword('');

@@ -79,11 +79,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    // Sign up with email confirmation disabled for immediate access
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: redirectUrl }
+      options: {
+        // Disable email confirmation - users can login immediately
+        emailRedirectTo: undefined,
+        data: {
+          // Store any additional user metadata here if needed
+        }
+      }
     });
     return { error };
   };
