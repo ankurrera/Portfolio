@@ -6,6 +6,8 @@ import { TextRoll } from "@/components/ui/text-roll";
 
 interface PortfolioHeaderProps {
   activeCategory: string;
+  isAdminContext?: boolean;
+  topOffset?: string;
 }
 
 const categories = [
@@ -15,7 +17,7 @@ const categories = [
   "PERSONAL",
 ];
 
-const PortfolioHeader = ({ activeCategory }: PortfolioHeaderProps) => {
+const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '0' }: PortfolioHeaderProps) => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -43,7 +45,10 @@ const PortfolioHeader = ({ activeCategory }: PortfolioHeaderProps) => {
   }, [mobileMenuOpen]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background">
+    <header 
+      className={`fixed left-0 right-0 ${isAdminContext ? 'z-40' : 'z-50'} bg-background`}
+      style={{ top: topOffset }}
+    >
       <div className="max-w-[1600px] mx-auto flex items-center justify-between md:justify-center px-3 md:px-5 py-3 gap-3">
         <Link
           to="/"
