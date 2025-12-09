@@ -29,6 +29,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
   const [devicePreview, setDevicePreview] = useState<DevicePreview>('desktop');
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   
@@ -40,9 +41,37 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
   
   // Autosave
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const fetchPhotos = async () => {
-    setLoading(true);
+  const fetchPhotos = async (isRefresh = false) => {
+    // Cancel any in-flight requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Clear any pending refresh timeout
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+    
+    // Create new abort controller for this request
+    abortControllerRef.current = new AbortController();
+    
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+    
+    // Set timeout fallback - if fetch doesn't complete in 10 seconds, show error
+    refreshTimeoutRef.current = setTimeout(() => {
+      if (isRefresh && isRefreshing) {
+        setIsRefreshing(false);
+        toast.error('Request timed out. Please check your connection and try again.');
+      }
+    }, 10000);
+    
     try {
       const { data, error } = await supabase
         .from('photos')
@@ -66,17 +95,43 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
         setHistoryIndex(0);
         setHistoryInitialized(true);
       }
-    } catch (error) {
+      
+      if (isRefresh) {
+        toast.success('Photos refreshed successfully');
+      }
+    } catch (error: any) {
+      // Don't show error if request was aborted (user triggered another action)
+      if (error.name === 'AbortError') {
+        return;
+      }
+      
       const errorMessage = formatSupabaseError(error);
       console.error('Error fetching photos:', errorMessage);
       toast.error(`Failed to load photos: ${errorMessage}`);
     } finally {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
+      
       setLoading(false);
+      setIsRefreshing(false);
+      abortControllerRef.current = null;
     }
   };
 
   useEffect(() => {
     fetchPhotos();
+    
+    // Cleanup function to abort in-flight requests when component unmounts or category changes
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
   }, [category]);
 
   // Add to history
@@ -280,6 +335,13 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
     }
   };
 
+  const handleRefresh = useCallback(() => {
+    // Don't allow refresh if already refreshing
+    if (isRefreshing) return;
+    
+    fetchPhotos(true);
+  }, [isRefreshing, category]);
+
   const handleUploadComplete = () => {
     setShowUploader(false);
     fetchPhotos();
@@ -310,6 +372,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
         canRedo={historyIndex < history.length - 1}
         hasChanges={hasUnsavedChanges}
         category={category}
+        isRefreshing={isRefreshing}
         onModeChange={setMode}
         onDevicePreviewChange={setDevicePreview}
         onSnapToGridChange={setSnapToGrid}
@@ -319,6 +382,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
         onPublish={handlePublish}
         onShowHistory={() => setShowHistory(true)}
         onAddPhoto={() => setShowUploader(true)}
+        onRefresh={handleRefresh}
         onCategoryChange={onCategoryChange}
         onSignOut={onSignOut}
       />
@@ -339,7 +403,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
             <PhotographerBio />
 
             {/* Photo Canvas */}
-            <div className="relative min-h-[600px] max-w-[1600px] mx-auto px-3 md:px-5 pb-16">
+            <div className="relative min-h-[600px] max-w-[1600px] mx-auto px-3 md:px-5 pb-32">{/* Increased padding for footer clearance */}
               {/* Grid overlay when snap-to-grid is enabled */}
               {mode === 'edit' && snapToGrid && (
                 <div 
