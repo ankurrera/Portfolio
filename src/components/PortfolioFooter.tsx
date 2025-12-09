@@ -1,6 +1,15 @@
+import { useIsAdminRoute } from '@/hooks/useIsAdminRoute';
+
 const PortfolioFooter = () => {
+  const isAdminRoute = useIsAdminRoute();
+  
+  // Hide on admin routes
+  if (isAdminRoute) {
+    return null;
+  }
+  
   return (
-    <footer className="relative z-10 max-w-[1600px] mx-auto px-3 md:px-5 pb-16 mt-20">
+    <footer className="portfolio-footer relative z-10 max-w-[1600px] mx-auto px-3 md:px-5 pb-16 mt-20">
       <div className="text-center text-[10px] uppercase tracking-widest font-inter text-muted-foreground">
         <a
           href="mailto:hello@morganblake.com"

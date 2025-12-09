@@ -111,6 +111,13 @@ All colors MUST be HSL.
   [data-rmiz-modal-img] {
     border-radius: 0.5rem;
   }
+
+  /* Hide hero/intro and footer on admin routes as a CSS fallback */
+  /* Using !important as this is a safety mechanism that should not be overridden */
+  body.admin-dashboard .photographer-bio,
+  body.admin-dashboard .portfolio-footer {
+    display: none !important;
+  }
 }
 
 @keyframes marquee-rtl {
