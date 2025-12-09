@@ -58,7 +58,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
         .replace(/[^a-zA-Z0-9]/g, '-') // Replace non-alphanumeric with hyphens
         .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
         .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
-      const fileName = `${category}/${Date.now()}-${sanitizedName}.webp`;
+      const fileName = `${category}/${Date.now()}-${sanitizedName || 'photo'}.webp`;
       
       // Upload to storage
       const { error: uploadError } = await supabase.storage
