@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { formatSupabaseError } from '@/lib/utils';
 import { toast } from 'sonner';
 
 type PhotoCategory = 'selected' | 'commissioned' | 'editorial' | 'personal';
@@ -119,8 +120,9 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
 
       return file.name;
     } catch (error) {
-      console.error('Upload error:', error instanceof Error ? error.message : error);
-      throw error;
+      const errorMessage = formatSupabaseError(error);
+      console.error('Upload error:', errorMessage);
+      throw new Error(errorMessage);
     }
   }, [category, compressImage]);
 
@@ -143,10 +145,11 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
           prev.map(p => p === `Uploading ${file.name}...` ? `✓ ${file.name}` : p)
         );
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : formatSupabaseError(error);
         setUploadProgress(prev => 
-          prev.map(p => p === `Uploading ${file.name}...` ? `✗ ${file.name} failed` : p)
+          prev.map(p => p === `Uploading ${file.name}...` ? `✗ ${file.name}: ${errorMessage}` : p)
         );
-        toast.error(`Failed to upload ${file.name}`);
+        toast.error(`Failed to upload ${file.name}: ${errorMessage}`);
       }
     }
 

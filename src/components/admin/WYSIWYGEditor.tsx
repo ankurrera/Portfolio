@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { PhotoLayoutData, EditorMode, DevicePreview, HistoryEntry, PhotoCategory } from '@/types/wysiwyg';
+import { formatSupabaseError } from '@/lib/utils';
 import PortfolioHeader from '@/components/PortfolioHeader';
 import PhotographerBio from '@/components/PhotographerBio';
 import PortfolioFooter from '@/components/PortfolioFooter';
@@ -66,8 +67,9 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
         setHistoryInitialized(true);
       }
     } catch (error) {
-      console.error('Error fetching photos:', error instanceof Error ? error.message : error);
-      toast.error('Failed to load photos');
+      const errorMessage = formatSupabaseError(error);
+      console.error('Error fetching photos:', errorMessage);
+      toast.error(`Failed to load photos: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -176,8 +178,9 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       addToHistory(newPhotos, 'Deleted photo');
       toast.success('Photo deleted');
     } catch (error) {
-      console.error('Delete error:', error);
-      toast.error('Failed to delete photo');
+      const errorMessage = formatSupabaseError(error);
+      console.error('Delete error:', errorMessage);
+      toast.error(`Failed to delete photo: ${errorMessage}`);
     }
   }, [photos, addToHistory]);
 
@@ -238,8 +241,9 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       setHasUnsavedChanges(false);
       toast.success('Draft saved successfully');
     } catch (error) {
-      console.error('Save error:', error);
-      toast.error('Failed to save draft');
+      const errorMessage = formatSupabaseError(error);
+      console.error('Save error:', errorMessage);
+      toast.error(`Failed to save draft: ${errorMessage}`);
     }
   };
 
@@ -270,8 +274,9 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       setHasUnsavedChanges(false);
       toast.success('Layout published successfully!');
     } catch (error) {
-      console.error('Publish error:', error);
-      toast.error('Failed to publish layout');
+      const errorMessage = formatSupabaseError(error);
+      console.error('Publish error:', errorMessage);
+      toast.error(`Failed to publish layout: ${errorMessage}`);
     }
   };
 

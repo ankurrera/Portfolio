@@ -3,6 +3,7 @@ import { Trash2, GripVertical, Pencil, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
+import { formatSupabaseError } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -57,8 +58,9 @@ export default function PhotoGrid({ photos, onUpdate }: PhotoGridProps) {
       toast.success('Photo deleted');
       onUpdate();
     } catch (error) {
-      console.error('Delete error:', error);
-      toast.error('Failed to delete photo');
+      const errorMessage = formatSupabaseError(error);
+      console.error('Delete error:', errorMessage);
+      toast.error(`Failed to delete photo: ${errorMessage}`);
     } finally {
       setDeleting(null);
     }
@@ -82,8 +84,9 @@ export default function PhotoGrid({ photos, onUpdate }: PhotoGridProps) {
       setEditingId(null);
       onUpdate();
     } catch (error) {
-      console.error('Update error:', error);
-      toast.error('Failed to update title');
+      const errorMessage = formatSupabaseError(error);
+      console.error('Update error:', errorMessage);
+      toast.error(`Failed to update title: ${errorMessage}`);
     }
   };
 

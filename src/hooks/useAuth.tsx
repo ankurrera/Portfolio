@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { formatSupabaseError } from '@/lib/utils';
 
 interface AuthContextType {
   user: User | null;
@@ -29,7 +30,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
     
     if (error) {
-      console.error('Error checking admin role:', error);
+      const errorMessage = formatSupabaseError(error);
+      console.error('Error checking admin role:', errorMessage);
       return false;
     }
     return !!data;
@@ -45,7 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const isAdminUser = await checkAdminRole(session.user.id);
         setIsAdmin(isAdminUser);
       } catch (error) {
-        console.error('Error checking admin role:', error);
+        const errorMessage = formatSupabaseError(error);
+        console.error('Error checking admin role:', errorMessage);
         setIsAdmin(false);
       }
     } else {
