@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { Instagram, Mail } from "lucide-react";
 
 const Footer = () => {
@@ -10,18 +9,18 @@ const Footer = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 max-w-7xl mx-auto">
         <nav className="flex flex-col gap-y-3">
-          <Link 
-            to="/" 
+          <a 
+            href="/" 
             className="text-sm uppercase tracking-widest underline hover:no-underline transition-all duration-300"
           >
             Home
-          </Link>
-          <Link 
-            to="/about" 
+          </a>
+          <a 
+            href="/about" 
             className="text-sm uppercase tracking-widest underline hover:no-underline transition-all duration-300"
           >
             About
-          </Link>
+          </a>
         </nav>
         
         <div className="flex flex-col gap-y-3 md:items-end">
