@@ -1,30 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
+import { GalleryImage } from "@/types/gallery";
 
-interface GalleryItem {
-  type?: "image" | "video";
-  src: string;
-  videoSrc?: string;
-  highResSrc?: string;
-  alt: string;
-  photographer?: string;
-  client?: string;
-  location?: string;
-  details?: string;
-  span?: number;
-  width?: number;
-  height?: number;
-  // WYSIWYG layout fields
-  position_x?: number;
-  position_y?: number;
-  scale?: number;
-  rotation?: number;
-  z_index?: number;
-}
+// Maximum layout width for scaling calculations
+const LAYOUT_MAX_WIDTH = 1600;
 
 interface LayoutGalleryProps {
-  images: GalleryItem[];
+  images: GalleryImage[];
   onImageClick: (index: number) => void;
 }
 
@@ -80,7 +63,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
     : images;
 
   return (
-    <div className="max-w-[1600px] mx-auto px-3 md:px-5 pb-16">
+    <div className={`max-w-[${LAYOUT_MAX_WIDTH}px] mx-auto px-3 md:px-5 pb-16`}>
       {hasLayoutData ? (
         // WYSIWYG Layout Mode - respects admin positioning
         // Uses CSS transforms to scale entire layout on smaller screens
@@ -88,7 +71,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
           <div className="relative origin-top-left" style={{
             transform: 'scale(var(--layout-scale, 1))',
             // On mobile, scale down to fit screen
-            '--layout-scale': 'min(1, calc(100vw / 1600))',
+            '--layout-scale': `min(1, calc(100vw / ${LAYOUT_MAX_WIDTH}))`,
           } as React.CSSProperties}>
             {sortedImages.map((image, index) => {
               const {
