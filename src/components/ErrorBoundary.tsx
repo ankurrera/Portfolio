@@ -1,5 +1,4 @@
 import { Component, ReactNode } from "react";
-import { Link } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 
@@ -50,12 +49,12 @@ class ErrorBoundary extends Component<Props, State> {
                 >
                   Refresh Page
                 </button>
-                <Link
-                  to="/"
+                <a
+                  href="/"
                   className="inline-block px-8 py-3 border-2 border-foreground text-sm uppercase tracking-widest hover:bg-foreground hover:text-background transition-all duration-300"
                 >
                   Return Home
-                </Link>
+                </a>
               </div>
             </div>
           </main>
