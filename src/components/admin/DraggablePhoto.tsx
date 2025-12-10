@@ -231,6 +231,7 @@ export default function DraggablePhoto({
         width: photo.width,
         height: photo.height,
         transform: `scale(${photo.scale}) rotate(${photo.rotation}deg)`,
+        transformOrigin: 'center center',
         zIndex: photo.z_index,
         cursor: isEditMode ? (isDragging ? 'grabbing' : 'grab') : 'default',
       }}

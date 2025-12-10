@@ -160,7 +160,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                     width: width,
                     height: height,
                     transform: `scale(${scale}) rotate(${rotation}deg)`,
-                    transformOrigin: 'center',
+                    transformOrigin: 'center center',
                     zIndex: z_index,
                   }}
                 >
