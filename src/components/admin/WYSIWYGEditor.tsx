@@ -415,8 +415,27 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
     return Math.max(600, maxExtent + 300);
   }, [photos]);
 
+  // Calculate scale factor for device preview
+  // Desktop baseline is 1600px (max-width), we scale down for smaller devices
+  const getDeviceScaleFactor = useCallback(() => {
+    const desktopBaseWidth = 1600; // Reference width for desktop layout
+    
+    switch (devicePreview) {
+      case 'mobile':
+        // 420px / 1600px = 0.2625
+        return 420 / desktopBaseWidth;
+      case 'tablet':
+        // 900px / 1600px = 0.5625
+        return 900 / desktopBaseWidth;
+      case 'desktop':
+      default:
+        return 1; // No scaling
+    }
+  }, [devicePreview]);
+
   const categoryUpper = category.toUpperCase();
   const canvasHeight = calculateCanvasHeight();
+  const scaleFactor = getDeviceScaleFactor();
 
   return (
     <>
@@ -478,30 +497,39 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
 
                 {/* Photo Canvas - Dynamic height based on content */}
                 <div 
-                  className="gallery-wrapper relative w-full mx-auto px-3 md:px-5"
+                  className="gallery-wrapper-outer relative mx-auto"
                   style={{
-                    minHeight: `${canvasHeight}px`,
-                    height: `${canvasHeight}px`,
+                    width: devicePreview === 'desktop' ? '100%' : getDeviceWidth(),
+                    maxWidth: devicePreview === 'desktop' ? '1600px' : 'none',
                   }}
                 >
-                  {/* Grid overlay when snap-to-grid is enabled */}
-                  {mode === 'edit' && snapToGrid && (
-                    <div 
-                      className="absolute inset-0 pointer-events-none opacity-20"
-                      style={{
-                        backgroundImage: `
-                          repeating-linear-gradient(0deg, transparent, transparent 19px, #888 19px, #888 20px),
-                          repeating-linear-gradient(90deg, transparent, transparent 19px, #888 19px, #888 20px)
-                        `,
-                        backgroundSize: '20px 20px',
-                        width: '100%',
-                        height: '100%',
-                      }}
-                    />
-                  )}
-                  
-                  {/* Gallery container for photos */}
-                  <div className="gallery relative w-full h-full">
+                  <div 
+                    className="gallery-wrapper relative px-3 md:px-5"
+                    style={{
+                      minHeight: `${canvasHeight}px`,
+                      height: `${canvasHeight}px`,
+                      width: '1600px',
+                      zoom: scaleFactor,
+                    }}
+                  >
+                    {/* Grid overlay when snap-to-grid is enabled */}
+                    {mode === 'edit' && snapToGrid && (
+                      <div 
+                        className="absolute inset-0 pointer-events-none opacity-20"
+                        style={{
+                          backgroundImage: `
+                            repeating-linear-gradient(0deg, transparent, transparent 19px, #888 19px, #888 20px),
+                            repeating-linear-gradient(90deg, transparent, transparent 19px, #888 19px, #888 20px)
+                          `,
+                          backgroundSize: '20px 20px',
+                          width: '100%',
+                          height: '100%',
+                        }}
+                      />
+                    )}
+                    
+                    {/* Gallery container for photos */}
+                    <div className="gallery relative w-full h-full">
                     {loading ? (
                       <div className="text-center py-20">
                         <p className="text-muted-foreground">Loading...</p>
@@ -527,6 +555,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
                         />
                       ))
                     )}
+                    </div>
                   </div>
                 </div>
               </main>
