@@ -17,12 +17,21 @@ interface LayoutGalleryProps {
  * No auto-resizing, no forced aspect ratios, no equalization of card dimensions.
  * Layout respects admin's original positioning, spacing, and card sizes.
  */
+
+// Layout configuration constants
+const DESKTOP_BREAKPOINT = 1200;
+const TABLET_BREAKPOINT = 600;
+const CONTAINER_MIN_HEIGHT = 600;
+const CONTAINER_BOTTOM_PADDING = 100;
+const DEBOUNCE_DELAY_MS = 150;
+
 const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleImageLoad = (index: number) => {
     setLoadedImages((prev) => new Set(prev).add(index));
@@ -46,21 +55,34 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
     // Don't reset hoveredIndex on mouse leave, let the timer handle it
   };
 
-  // Detect viewport size for layout mode
+  // Detect viewport size for layout mode with debouncing
   useEffect(() => {
     const checkViewport = () => {
       const width = window.innerWidth;
-      setIsDesktop(width >= 1200);
-      setIsTablet(width >= 600 && width < 1200);
+      setIsDesktop(width >= DESKTOP_BREAKPOINT);
+      setIsTablet(width >= TABLET_BREAKPOINT && width < DESKTOP_BREAKPOINT);
     };
     
+    const debouncedCheckViewport = () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      debounceTimerRef.current = setTimeout(checkViewport, DEBOUNCE_DELAY_MS);
+    };
+    
+    // Initial check without debounce
     checkViewport();
-    window.addEventListener('resize', checkViewport);
+    
+    // Debounced resize listener
+    window.addEventListener('resize', debouncedCheckViewport);
     
     return () => {
-      window.removeEventListener('resize', checkViewport);
+      window.removeEventListener('resize', debouncedCheckViewport);
       if (timerRef.current) {
         clearTimeout(timerRef.current);
+      }
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
     };
   }, []);
@@ -82,7 +104,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
     });
     
     // Add padding for comfortable viewing
-    return Math.max(600, maxExtent + 100);
+    return Math.max(CONTAINER_MIN_HEIGHT, maxExtent + CONTAINER_BOTTOM_PADDING);
   };
 
   return (
@@ -211,7 +233,8 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
           {sortedImages.map((image, index) => {
             const width = image.width || 300;
             const height = image.height || 400;
-            const aspectRatio = height / width;
+            // Guard against division by zero
+            const aspectRatio = width > 0 ? height / width : 400 / 300;
 
             return (
               <button
@@ -317,6 +340,8 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
           {sortedImages.map((image, index) => {
             const width = image.width || 300;
             const height = image.height || 400;
+            // Guard against division by zero
+            const aspectRatioPercent = width > 0 ? (height / width) * 100 : (400 / 300) * 100;
 
             return (
               <button
@@ -332,7 +357,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                 <div 
                   className="relative w-full overflow-hidden rounded-sm shadow-lg"
                   style={{
-                    paddingBottom: `${(height / width) * 100}%`,
+                    paddingBottom: `${aspectRatioPercent}%`,
                   }}
                 >
                   <div className="absolute inset-0">
