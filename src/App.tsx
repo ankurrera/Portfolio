@@ -12,6 +12,8 @@ import CategoryGallery from "./pages/CategoryGallery";
 import CategoryRedirect from "./pages/CategoryRedirect";
 import Photoshoots from "./pages/Photoshoots";
 import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminPhotoshootsEdit from "./pages/AdminPhotoshootsEdit";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -36,6 +38,8 @@ const App = () => (
                 <Route path="/category/:category" element={<CategoryRedirect />} />
                 <Route path="/project/:slug" element={<Project />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/photoshoots/:category/edit" element={<AdminPhotoshootsEdit />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
