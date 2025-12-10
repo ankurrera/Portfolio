@@ -26,7 +26,7 @@ const Footer = () => {
         
         <div className="flex flex-col gap-y-3 md:items-end">
           <a
-            href="https://instagram.com/raya.photo"
+            href="https://www.instagram.com/ankurr.tf/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm uppercase tracking-widest hover:opacity-60 transition-opacity duration-300 flex items-center gap-x-2 py-2"
@@ -36,7 +36,7 @@ const Footer = () => {
             Instagram
           </a>
           <a
-            href="mailto:hello@raya.photo"
+            href="mailto:ankurr.era@gmail.com"
             className="text-sm uppercase tracking-widest hover:opacity-60 transition-opacity duration-300 flex items-center gap-x-2 py-2"
             aria-label="Send us an email"
           >
