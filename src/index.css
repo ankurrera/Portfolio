@@ -153,6 +153,12 @@ All colors MUST be HSL.
     min-width: 0; /* Essential: prevents child images from forcing parent growth */
   }
 
+  /* Ensure images within admin gallery don't cause overflow */
+  .gallery img {
+    max-width: 100%;
+    height: auto;
+  }
+
   /* Tablet: 4-column grid maintaining original card sizes */
   .gallery-tablet-grid {
     display: grid;
