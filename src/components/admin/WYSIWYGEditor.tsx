@@ -465,10 +465,10 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
 
       <div className="flex flex-col min-h-screen pt-24 bg-background overflow-y-auto overflow-x-hidden">
         {/* Outer container for centering */}
-        <div className="flex-1 w-full flex justify-center px-4">
+        <div className="flex-1 w-full flex justify-center px-2 sm:px-4 min-w-0">
           {/* Device Frame - with visible dashed border for tablet/mobile */}
           <div 
-            className="flex-1 transition-all duration-300 flex flex-col relative"
+            className="transition-all duration-300 flex flex-col relative min-w-0"
             style={{ 
               width: getDeviceWidth(),
               maxWidth: devicePreview === 'desktop' ? `${DESKTOP_CANVAS_WIDTH}px` : getDeviceWidth(),
@@ -489,7 +489,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
             )}
 
             {/* Device Inner - constrained content area */}
-            <div className="device-inner flex-1 flex flex-col relative">
+            <div className="device-inner flex-1 flex flex-col relative min-w-0">
               {/* Exact replica of public view */}
               <PortfolioHeader activeCategory={categoryUpper} isAdminContext={true} topOffset="56px" />
               

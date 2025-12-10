@@ -117,6 +117,7 @@ All colors MUST be HSL.
     position: relative;
     width: 100%;
     overflow-x: hidden;
+    min-width: 0; /* Essential: allows flex child to shrink below content size */
   }
 
   /* 
@@ -124,6 +125,7 @@ All colors MUST be HSL.
    */
   .gallery-wrapper-outer {
     overflow: hidden;
+    min-width: 0; /* Essential: prevents overflow from wide content */
   }
 
   /* 
@@ -135,6 +137,7 @@ All colors MUST be HSL.
     position: relative;
     margin-left: 0 !important;
     margin-right: 0 !important;
+    min-width: 0; /* Essential: allows shrinking in flex/grid */
   }
 
   /* 
@@ -147,6 +150,7 @@ All colors MUST be HSL.
     margin-right: 0 !important;
     left: 0 !important;
     right: 0 !important;
+    min-width: 0; /* Essential: prevents child images from forcing parent growth */
   }
 
   /* Tablet: 4-column grid maintaining original card sizes */
@@ -210,6 +214,11 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground font-inter;
+    overflow-x: hidden; /* Defensive: prevent horizontal scroll globally */
+  }
+
+  html {
+    overflow-x: hidden; /* Defensive: prevent horizontal scroll at root */
   }
 
   /* Global focus styles for keyboard navigation */

@@ -81,10 +81,10 @@ export default function EditorToolbar({
   const [showSettings, setShowSettings] = useState(false);
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border shadow-sm">
-      <div className="container mx-auto px-4 py-2 flex items-center justify-between gap-4">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border shadow-sm overflow-x-auto">
+      <div className="px-2 sm:px-4 py-2 flex items-center justify-between gap-2 sm:gap-4 min-w-max">
         {/* Left Section: Category Selector & Mode Toggle */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-shrink-0">
           <Select value={category} onValueChange={(value) => onCategoryChange(value as PhotoCategory)}>
             <SelectTrigger className="w-[140px]">
               <SelectValue />
@@ -118,7 +118,7 @@ export default function EditorToolbar({
         </div>
 
         {/* Center Section: Device Preview & Tools */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-shrink-0">
           <Separator orientation="vertical" className="h-6" />
           
           {/* Device Preview */}
@@ -241,7 +241,7 @@ export default function EditorToolbar({
         </div>
 
         {/* Right Section: Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-shrink-0">
           <Button
             variant="outline"
             size="sm"
