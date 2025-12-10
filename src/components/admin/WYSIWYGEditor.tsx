@@ -276,6 +276,9 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
   const handleSave = async () => {
     try {
       // Update all photos in database
+      // NOTE: We no longer set is_draft to true here
+      // Photos remain in their current published/draft state
+      // Save only updates layout positions
       const updates = photos.map((photo) => ({
         id: photo.id,
         position_x: photo.position_x,
@@ -285,7 +288,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
         scale: photo.scale,
         rotation: photo.rotation,
         z_index: photo.z_index,
-        is_draft: true,
+        // Don't change is_draft status on save
       }));
 
       for (const update of updates) {
@@ -298,17 +301,17 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       }
 
       setHasUnsavedChanges(false);
-      toast.success('Draft saved successfully');
+      toast.success('Layout saved successfully');
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
       console.error('Save error:', errorMessage);
-      toast.error(`Failed to save draft: ${errorMessage}`);
+      toast.error(`Failed to save layout: ${errorMessage}`);
     }
   };
 
   const handlePublish = async () => {
     try {
-      // Update all photos and mark as published
+      // Update all photos and ensure they are published
       const updates = photos.map((photo) => ({
         id: photo.id,
         position_x: photo.position_x,
@@ -318,7 +321,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
         scale: photo.scale,
         rotation: photo.rotation,
         z_index: photo.z_index,
-        is_draft: false,
+        is_draft: false, // Ensure photos are published
       }));
 
       for (const update of updates) {
@@ -331,7 +334,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       }
 
       setHasUnsavedChanges(false);
-      toast.success('Layout published successfully!');
+      toast.success('Layout published successfully! All photos are now visible to the public.');
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
       console.error('Publish error:', errorMessage);
