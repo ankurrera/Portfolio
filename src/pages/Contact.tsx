@@ -56,8 +56,8 @@ const Contact = () => {
   return (
     <>
       <SEO
-        title="Contact - Morgan Blake"
-        description="Get in touch with Morgan Blake for photography inquiries, production services, and collaboration opportunities."
+        title="Contact - Ankur Bag"
+        description="Get in touch with Ankur Bag for photography inquiries, production services, and collaboration opportunities."
         canonicalUrl="/contact"
       />
 

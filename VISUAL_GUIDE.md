@@ -105,7 +105,7 @@ This document provides a visual overview of the implemented UX enhancements.
 │              [Large Photo]                   │
 │                                              │
 │                                              │
-│ Morgan Blake                                 │
+│ Ankur Bag                                    │
 │ For Client Name                              │
 └──────────────────────────────────────────────┘
 ```

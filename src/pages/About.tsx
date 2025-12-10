@@ -94,8 +94,8 @@ const About = () => {
   return (
     <PageLayout>
       <SEO
-        title="About - Morgan Blake"
-        description="Learn about Morgan Blake, a production photographer specializing in fashion, editorial, and commercial photography."
+        title="About - Ankur Bag"
+        description="Learn about Ankur Bag, a production photographer specializing in fashion, editorial, and commercial photography."
         canonicalUrl="/about"
       />
 
@@ -108,7 +108,7 @@ const About = () => {
           <div className="text-center space-y-8 mb-16 px-3 md:px-5 max-w-2xl mx-auto">
             <div className="space-y-4">
               <h1 className="font-playfair text-4xl md:text-5xl text-foreground">
-                Morgan Blake
+                Ankur Bag
               </h1>
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-inter">
                 PRODUCTION & PHOTOGRAPHY

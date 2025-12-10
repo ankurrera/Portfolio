@@ -111,6 +111,50 @@ All colors MUST be HSL.
   [data-rmiz-modal-img] {
     border-radius: 0.5rem;
   }
+
+  /* Tablet: 4-column grid maintaining original card sizes */
+  .gallery-tablet-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: auto;
+    gap: 24px;
+    place-items: start;
+    max-width: 100%;
+  }
+
+  /* Mobile: Single column maintaining original card sizes */
+  .gallery-mobile-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: 100%;
+  }
+
+  /* Legacy responsive gallery grid - kept for backwards compatibility */
+  .gallery-responsive-grid {
+    display: grid;
+    justify-content: center;
+    gap: 1rem;
+    /* Mobile: single column, max 360px centered */
+    grid-template-columns: minmax(0, 360px);
+  }
+
+  /* Tablet: 2-3 columns with 220px cards */
+  @media (min-width: 600px) and (max-width: 1199px) {
+    .gallery-responsive-grid {
+      gap: 1.25rem;
+      grid-template-columns: repeat(auto-fill, 220px);
+    }
+  }
+
+  /* Desktop: 4-5 columns with 260px cards */
+  @media (min-width: 1200px) {
+    .gallery-responsive-grid {
+      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fill, 260px);
+    }
+  }
 }
 
 @keyframes marquee-rtl {
