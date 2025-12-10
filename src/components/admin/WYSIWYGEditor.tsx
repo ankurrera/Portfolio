@@ -364,6 +364,20 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
     }
   };
 
+  // Calculate canvas height dynamically based on photo positions
+  const calculateCanvasHeight = useCallback(() => {
+    if (photos.length === 0) return 600;
+    
+    let maxExtent = 0;
+    photos.forEach((photo) => {
+      const bottomExtent = photo.position_y + (photo.height * photo.scale);
+      maxExtent = Math.max(maxExtent, bottomExtent);
+    });
+    
+    // Add padding for comfortable editing and footer clearance
+    return Math.max(600, maxExtent + 300);
+  }, [photos]);
+
   const categoryUpper = category.toUpperCase();
 
   return (
@@ -391,10 +405,10 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
         onSignOut={onSignOut}
       />
 
-      <div className="flex flex-col min-h-screen pt-24 bg-background">
+      <div className="flex flex-col min-h-screen pt-24 bg-background overflow-y-auto">
         {/* Preview Container */}
         <div 
-          className="flex-1 mx-auto transition-all duration-300"
+          className="flex-1 mx-auto transition-all duration-300 flex flex-col"
           style={{ 
             width: getDeviceWidth(),
             maxWidth: '1600px',
@@ -403,11 +417,16 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
           {/* Exact replica of public view */}
           <PortfolioHeader activeCategory={categoryUpper} isAdminContext={true} topOffset="56px" />
           
-          <main className="flex-1">
+          <main className="flex-1 flex flex-col">
             <PhotographerBio />
 
-            {/* Photo Canvas */}
-            <div className="relative min-h-[600px] max-w-[1600px] mx-auto px-3 md:px-5 pb-32">{/* Increased padding for footer clearance */}
+            {/* Photo Canvas - Dynamic height based on content */}
+            <div 
+              className="relative max-w-[1600px] mx-auto px-3 md:px-5 flex-1"
+              style={{
+                minHeight: `${calculateCanvasHeight()}px`,
+              }}
+            >
               {/* Grid overlay when snap-to-grid is enabled */}
               {mode === 'edit' && snapToGrid && (
                 <div 
@@ -450,7 +469,10 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
             </div>
           </main>
 
-          <PortfolioFooter />
+          {/* Footer outside main content flow */}
+          <div className="mt-auto">
+            <PortfolioFooter />
+          </div>
         </div>
       </div>
 

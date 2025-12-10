@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
-export default function AdminLogin() {
+const AdminLogin = forwardRef<HTMLDivElement>(function AdminLogin(_, ref) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -67,7 +67,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div ref={ref} className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h1 className="text-2xl font-playfair tracking-tight text-foreground">
@@ -154,4 +154,6 @@ export default function AdminLogin() {
       </div>
     </div>
   );
-}
+});
+
+export default AdminLogin;
