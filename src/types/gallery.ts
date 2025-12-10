@@ -20,6 +20,12 @@ export interface GalleryImage {
   scale?: number;
   rotation?: number;
   z_index?: number;
+  // Metadata fields
+  caption?: string;
+  photographer_name?: string;
+  date_taken?: string;
+  device_used?: string;
+  video_thumbnail_url?: string;
 }
 
 export interface Portrait {

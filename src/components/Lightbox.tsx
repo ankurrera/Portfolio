@@ -8,6 +8,11 @@ interface LightboxProps {
     client?: string;
     location?: string;
     details?: string;
+    // New metadata fields
+    caption?: string;
+    photographer_name?: string;
+    date_taken?: string;
+    device_used?: string;
   }[];
   initialIndex: number;
   onClose: () => void;
@@ -131,13 +136,34 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
 
       {/* Museum-style Project Details - Bottom Left */}
       <div className="fixed bottom-8 left-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed max-w-xs pointer-events-none">
-        {currentImage.photographer && (
+        {/* New metadata fields take precedence */}
+        {currentImage.photographer_name && (
+          <div className="mb-1 text-sm">Shot by {currentImage.photographer_name}</div>
+        )}
+        {currentImage.caption && (
+          <div className="mb-2 text-foreground/70">{currentImage.caption}</div>
+        )}
+        {currentImage.date_taken && (
+          <div className="mb-1">
+            {new Date(currentImage.date_taken).toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </div>
+        )}
+        {currentImage.device_used && (
+          <div className="text-foreground/40">Shot with {currentImage.device_used}</div>
+        )}
+        
+        {/* Legacy fields for backwards compatibility */}
+        {!currentImage.photographer_name && currentImage.photographer && (
           <div className="mb-1">{currentImage.photographer}</div>
         )}
-        {currentImage.client && (
+        {!currentImage.caption && currentImage.client && (
           <div className="mb-1">For {currentImage.client}</div>
         )}
-        {currentImage.location && currentImage.details && (
+        {!currentImage.date_taken && !currentImage.device_used && currentImage.location && currentImage.details && (
           <div className="text-foreground/40">
             Shot in {currentImage.location}. {currentImage.details}.
           </div>
