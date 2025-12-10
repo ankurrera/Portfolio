@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const checkAdminRole = async (userId: string) => {
+    console.log('[useAuth] Checking admin role for user:', userId);
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
@@ -31,47 +32,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     if (error) {
       const errorMessage = formatSupabaseError(error);
-      console.error('Error checking admin role:', errorMessage);
+      console.error('[useAuth] Error checking admin role:', errorMessage);
       return false;
     }
-    return !!data;
-  };
-
-  const updateAuthState = async (session: Session | null) => {
-    setSession(session);
-    setUser(session?.user ?? null);
-    
-    // Wait for admin check to complete before setting isLoading to false
-    if (session?.user) {
-      try {
-        const isAdminUser = await checkAdminRole(session.user.id);
-        setIsAdmin(isAdminUser);
-      } catch (error) {
-        const errorMessage = formatSupabaseError(error);
-        console.error('Error checking admin role:', errorMessage);
-        setIsAdmin(false);
-      }
-    } else {
-      setIsAdmin(false);
-    }
-    setIsLoading(false);
+    const isAdmin = !!data;
+    console.log('[useAuth] Admin role check result:', { hasData: !!data, isAdmin });
+    return isAdmin;
   };
 
   useEffect(() => {
     // Set up auth state listener FIRST
+    // IMPORTANT: Use synchronous state updates only, defer async work with setTimeout
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        await updateAuthState(session);
+      (event, session) => {
+        // Set loading state immediately when auth state changes
+        setIsLoading(true);
+        
+        // Synchronous state update
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Defer async admin check to avoid deadlocks
+        if (session?.user) {
+          setTimeout(() => {
+            checkAdminRole(session.user.id).then((isAdminUser) => {
+              setIsAdmin(isAdminUser);
+              setIsLoading(false);
+            }).catch(() => {
+              setIsAdmin(false);
+              setIsLoading(false);
+            });
+          }, 0);
+        } else {
+          setIsAdmin(false);
+          setIsLoading(false);
+        }
       }
     );
 
     // THEN check for existing session
-    const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      await updateAuthState(session);
-    };
-    
-    initializeAuth();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        checkAdminRole(session.user.id).then((isAdminUser) => {
+          setIsAdmin(isAdminUser);
+          setIsLoading(false);
+        }).catch(() => {
+          setIsAdmin(false);
+          setIsLoading(false);
+        });
+      } else {
+        setIsAdmin(false);
+        setIsLoading(false);
+      }
+    });
 
     return () => subscription.unsubscribe();
   }, []);

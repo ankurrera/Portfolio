@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
@@ -8,31 +8,29 @@ import { PhotoCategory } from '@/types/wysiwyg';
 // Lazy load the WYSIWYGEditor component
 const WYSIWYGEditor = lazy(() => import('@/components/admin/WYSIWYGEditor'));
 
-export default function Admin() {
+const Admin = forwardRef<HTMLDivElement>(function Admin(_, ref) {
   const { user, isAdmin, isLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<PhotoCategory>('selected');
-  const [authChecked, setAuthChecked] = useState(false);
 
-  // Single effect for auth redirect - only runs once auth is loaded
+  // Single effect for auth redirect - runs when auth state changes
   useEffect(() => {
+    // Wait for loading to complete before making auth decisions
     if (isLoading) return;
     
-    // Mark auth as checked to prevent re-running
-    if (authChecked) return;
-    setAuthChecked(true);
-    
+    // Redirect to login if not authenticated
     if (!user) {
       navigate('/admin/login', { replace: true });
       return;
     }
     
+    // Kick out non-admin users
     if (!isAdmin) {
       toast.error('You do not have admin access');
       signOut();
       navigate('/admin/login', { replace: true });
     }
-  }, [user, isAdmin, isLoading, navigate, signOut, authChecked]);
+  }, [user, isAdmin, isLoading, navigate, signOut]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -52,7 +50,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div ref={ref} className="flex flex-col min-h-screen bg-background">
       <Suspense 
         fallback={
           <div className="flex-1 bg-background flex items-center justify-center">
@@ -68,4 +66,6 @@ export default function Admin() {
       </Suspense>
     </div>
   );
-}
+});
+
+export default Admin;
