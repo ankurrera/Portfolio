@@ -112,23 +112,29 @@ All colors MUST be HSL.
     border-radius: 0.5rem;
   }
 
-  /* Tablet: 4-column grid maintaining original card sizes */
+  /* Tablet: 2-3 column grid with 220px card width and 4:5 aspect ratio */
   .gallery-tablet-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, 220px);
     grid-auto-rows: auto;
     gap: 24px;
-    place-items: start;
+    justify-content: center;
     max-width: 100%;
   }
 
-  /* Mobile: Single column maintaining original card sizes */
+  /* Mobile: Single column with max 360px width and side padding */
   .gallery-mobile-column {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1.5rem;
     max-width: 100%;
+    padding: 0 20px;
+  }
+  
+  .gallery-mobile-column > * {
+    width: 100%;
+    max-width: min(360px, calc(100vw - 40px));
   }
 
   /* Legacy responsive gallery grid - kept for backwards compatibility */

@@ -227,15 +227,10 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
         </div>
       )}
 
-      {/* Tablet: 4-column grid maintaining original card sizes */}
+      {/* Tablet: 2-3 column grid with 220px cards and 4:5 aspect ratio */}
       {isTablet && (
         <div className="gallery-tablet-grid">
           {sortedImages.map((image, index) => {
-            const width = image.width || 300;
-            const height = image.height || 400;
-            // Guard against division by zero
-            const aspectRatio = width > 0 ? height / width : 400 / 300;
-
             return (
               <button
                 key={index}
@@ -243,11 +238,14 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                 onMouseEnter={() => handleImageHover(index)}
                 onMouseLeave={handleImageLeave}
                 className="w-full cursor-zoom-in select-none group"
+                style={{
+                  width: '220px',
+                }}
               >
                 <div 
                   className="relative w-full overflow-hidden rounded-sm shadow-lg"
                   style={{
-                    paddingBottom: `${aspectRatio * 100}%`,
+                    aspectRatio: '4 / 5',
                   }}
                 >
                   <div className="absolute inset-0">
@@ -334,15 +332,10 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
         </div>
       )}
 
-      {/* Mobile: Single column maintaining original card sizes */}
+      {/* Mobile: Single column with max 360px width and 4:5 aspect ratio */}
       {!isDesktop && !isTablet && (
         <div className="gallery-mobile-column">
           {sortedImages.map((image, index) => {
-            const width = image.width || 300;
-            const height = image.height || 400;
-            // Guard against division by zero
-            const aspectRatioPercent = width > 0 ? (height / width) * 100 : (400 / 300) * 100;
-
             return (
               <button
                 key={index}
@@ -350,14 +343,11 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                 onMouseEnter={() => handleImageHover(index)}
                 onMouseLeave={handleImageLeave}
                 className="w-full cursor-zoom-in select-none group"
-                style={{
-                  maxWidth: `${width}px`,
-                }}
               >
                 <div 
                   className="relative w-full overflow-hidden rounded-sm shadow-lg"
                   style={{
-                    paddingBottom: `${aspectRatioPercent}%`,
+                    aspectRatio: '4 / 5',
                   }}
                 >
                   <div className="absolute inset-0">
