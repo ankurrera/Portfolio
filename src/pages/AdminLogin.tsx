@@ -1,4 +1,4 @@
-import { useState, forwardRef } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,28 @@ const AdminLogin = forwardRef<HTMLDivElement>(function AdminLogin(_, ref) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const [attemptingLogin, setAttemptingLogin] = useState(false);
+  const { signIn, signUp, user, isAdmin, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // Handle navigation after successful login and admin verification
+  useEffect(() => {
+    // Only navigate if we're attempting login, auth is done loading, and user is authenticated
+    if (attemptingLogin && !authLoading && user) {
+      if (isAdmin) {
+        // User is verified as admin, navigate to admin panel
+        toast.success('Signed in successfully');
+        navigate('/admin');
+        setAttemptingLogin(false);
+        setIsLoading(false);
+      } else {
+        // User is authenticated but not an admin
+        toast.error('You do not have admin access');
+        setAttemptingLogin(false);
+        setIsLoading(false);
+      }
+    }
+  }, [attemptingLogin, authLoading, user, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +59,7 @@ const AdminLogin = forwardRef<HTMLDivElement>(function AdminLogin(_, ref) {
           } else {
             toast.error(error.message);
           }
+          setIsLoading(false);
           return;
         }
 
@@ -46,6 +67,7 @@ const AdminLogin = forwardRef<HTMLDivElement>(function AdminLogin(_, ref) {
         setIsSignUp(false);
         setEmail('');
         setPassword('');
+        setIsLoading(false);
       } else {
         const { error } = await signIn(email, password);
 
@@ -55,14 +77,18 @@ const AdminLogin = forwardRef<HTMLDivElement>(function AdminLogin(_, ref) {
           } else {
             toast.error(error.message);
           }
+          setIsLoading(false);
           return;
         }
 
-        toast.success('Signed in successfully');
-        navigate('/admin');
+        // Set flag to trigger navigation after admin verification completes
+        setAttemptingLogin(true);
+        // Note: Don't set isLoading to false here - keep it true until navigation happens
       }
-    } finally {
+    } catch (error) {
+      console.error('Login error:', error);
       setIsLoading(false);
+      setAttemptingLogin(false);
     }
   };
 
