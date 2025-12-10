@@ -21,7 +21,7 @@ const AdminPhotoshootsEdit = () => {
   useEffect(() => {
     const validCategories: PhotoCategory[] = ['selected', 'commissioned', 'editorial', 'personal'];
     if (category && !validCategories.includes(category as PhotoCategory)) {
-      navigate('/admin', { replace: true });
+      navigate('/admin/dashboard', { replace: true });
       return;
     }
     if (category) {
@@ -83,7 +83,7 @@ const AdminPhotoshootsEdit = () => {
       <div className="border-b border-border bg-background z-40">
         <div className="container mx-auto px-4 py-3">
           <Link 
-            to="/admin"
+            to="/admin/dashboard"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
