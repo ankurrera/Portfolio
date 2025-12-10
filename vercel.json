@@ -22,7 +22,7 @@
     },
     {
       "source": "/category/all",
-      "destination": "/photoshoots/selected",
+      "destination": "/photoshoots",
       "permanent": true
     }
   ],
