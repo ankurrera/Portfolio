@@ -231,7 +231,8 @@ export default function DraggablePhoto({
         width: photo.width,
         height: photo.height,
         transform: `scale(${photo.scale}) rotate(${photo.rotation}deg)`,
-        zIndex: photo.z_index,
+        transformOrigin: 'center center',
+        zIndex: isDragging || isResizing || isScaling ? 9999 : photo.z_index,
         cursor: isEditMode ? (isDragging ? 'grabbing' : 'grab') : 'default',
       }}
       onMouseEnter={() => setIsHovered(true)}

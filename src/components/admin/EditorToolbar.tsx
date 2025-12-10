@@ -258,16 +258,21 @@ export default function EditorToolbar({
             disabled={!hasChanges}
           >
             <Save className="h-4 w-4 mr-2" />
-            Save Draft
+            Save Layout
           </Button>
 
-          <Button
-            size="sm"
-            onClick={onPublish}
-            disabled={!hasChanges}
-          >
-            Publish
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="sm"
+                onClick={onPublish}
+                disabled={!hasChanges}
+              >
+                Publish
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Save layout and make all photos visible to public</TooltipContent>
+          </Tooltip>
 
           <Separator orientation="vertical" className="h-6" />
 

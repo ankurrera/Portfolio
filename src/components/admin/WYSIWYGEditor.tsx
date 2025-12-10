@@ -276,6 +276,9 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
   const handleSave = async () => {
     try {
       // Update all photos in database
+      // CRITICAL: We do NOT set is_draft here to prevent photos from disappearing from public view.
+      // Public pages filter for is_draft=false, so changing this flag would hide all photos.
+      // Save only updates layout positions while preserving publish status.
       const updates = photos.map((photo) => ({
         id: photo.id,
         position_x: photo.position_x,
@@ -285,7 +288,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
         scale: photo.scale,
         rotation: photo.rotation,
         z_index: photo.z_index,
-        is_draft: true,
+        // Don't change is_draft status on save
       }));
 
       for (const update of updates) {
@@ -298,17 +301,17 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       }
 
       setHasUnsavedChanges(false);
-      toast.success('Draft saved successfully');
+      toast.success('Layout saved successfully');
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
       console.error('Save error:', errorMessage);
-      toast.error(`Failed to save draft: ${errorMessage}`);
+      toast.error(`Failed to save layout: ${errorMessage}`);
     }
   };
 
   const handlePublish = async () => {
     try {
-      // Update all photos and mark as published
+      // Update all photos and ensure they are published
       const updates = photos.map((photo) => ({
         id: photo.id,
         position_x: photo.position_x,
@@ -318,7 +321,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
         scale: photo.scale,
         rotation: photo.rotation,
         z_index: photo.z_index,
-        is_draft: false,
+        is_draft: false, // Ensure photos are published
       }));
 
       for (const update of updates) {
@@ -331,7 +334,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       }
 
       setHasUnsavedChanges(false);
-      toast.success('Layout published successfully!');
+      toast.success('Layout published successfully! All photos are now visible to the public.');
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
       console.error('Publish error:', errorMessage);
@@ -379,6 +382,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
   }, [photos]);
 
   const categoryUpper = category.toUpperCase();
+  const canvasHeight = calculateCanvasHeight();
 
   return (
     <>
@@ -405,7 +409,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
         onSignOut={onSignOut}
       />
 
-      <div className="flex flex-col min-h-screen pt-24 bg-background overflow-y-auto">
+      <div className="flex flex-col min-h-screen pt-24 bg-background overflow-y-auto overflow-x-hidden">
         {/* Preview Container */}
         <div 
           className="flex-1 mx-auto transition-all duration-300 flex flex-col"
@@ -422,9 +426,10 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
 
             {/* Photo Canvas - Dynamic height based on content */}
             <div 
-              className="relative max-w-[1600px] mx-auto px-3 md:px-5 flex-1"
+              className="relative w-full mx-auto px-3 md:px-5"
               style={{
-                minHeight: `${calculateCanvasHeight()}px`,
+                minHeight: `${canvasHeight}px`,
+                height: `${canvasHeight}px`,
               }}
             >
               {/* Grid overlay when snap-to-grid is enabled */}
@@ -437,6 +442,8 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
                       repeating-linear-gradient(90deg, transparent, transparent 19px, #888 19px, #888 20px)
                     `,
                     backgroundSize: '20px 20px',
+                    width: '100%',
+                    height: '100%',
                   }}
                 />
               )}

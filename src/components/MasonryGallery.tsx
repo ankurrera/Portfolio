@@ -156,7 +156,7 @@ const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
                 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
               />
-              {image.photographer && image.client && (
+              {(image.photographer || image.client || image.photographer_name || image.date_taken) && (
                 <motion.div
                   className="absolute bottom-0 left-0 w-full pointer-events-none"
                   animate={hoveredIndex === index ? "visible" : "hidden"}
@@ -166,13 +166,31 @@ const MasonryGallery = ({ images, onImageClick }: MasonryGalleryProps) => {
                   }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
                 >
-                  <div className="flex flex-col items-center gap-0 px-4 py-3 text-center">
-                    <p className="text-base font-medium text-white">
-                      For {image.client}
-                    </p>
-                    <span className="text-xs text-white/90">
-                      Shot in {image.location}. {image.details}.
-                    </span>
+                  <div className="flex flex-col items-center gap-0.5 px-4 py-3 text-center">
+                    {/* New metadata fields take precedence */}
+                    {image.photographer_name ? (
+                      <p className="text-sm font-medium text-white">
+                        Shot by {image.photographer_name}
+                      </p>
+                    ) : image.photographer && image.client ? (
+                      <p className="text-base font-medium text-white">
+                        For {image.client}
+                      </p>
+                    ) : null}
+                    
+                    {image.date_taken ? (
+                      <span className="text-xs text-white/90">
+                        {new Date(image.date_taken).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </span>
+                    ) : image.location && image.details ? (
+                      <span className="text-xs text-white/90">
+                        Shot in {image.location}. {image.details}.
+                      </span>
+                    ) : null}
                   </div>
                 </motion.div>
               )}
