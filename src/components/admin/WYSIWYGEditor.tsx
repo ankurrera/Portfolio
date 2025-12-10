@@ -450,13 +450,20 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
           >
             {/* Dashed device outline for tablet/mobile previews */}
             {devicePreview !== 'desktop' && (
-              <div 
-                className="absolute inset-0 pointer-events-none z-10"
-                style={{
-                  border: '2px dashed rgba(0, 0, 0, 0.3)',
-                  borderRadius: '4px',
-                }}
-              />
+              <>
+                <div 
+                  className="absolute inset-0 pointer-events-none z-10 border-2 border-dashed opacity-50"
+                  style={{
+                    borderColor: 'hsl(var(--muted-foreground))',
+                    borderRadius: '4px',
+                  }}
+                  aria-label={`${devicePreview} preview frame`}
+                />
+                {/* Device preview label */}
+                <div className="absolute top-2 right-2 z-20 px-3 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-sm pointer-events-none">
+                  {devicePreview === 'tablet' ? 'Tablet Preview (900px)' : 'Mobile Preview (420px)'}
+                </div>
+              </>
             )}
 
             {/* Device Inner - constrained content area */}
