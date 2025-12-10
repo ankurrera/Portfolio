@@ -120,7 +120,14 @@ All colors MUST be HSL.
   }
 
   /* 
-   * Gallery wrapper and container - prevents unwanted shifts during device preview.
+   * Gallery wrapper outer - constrains the zoomed content for device previews
+   */
+  .gallery-wrapper-outer {
+    overflow: hidden;
+  }
+
+  /* 
+   * Gallery wrapper - prevents unwanted margin shifts during device preview.
    * Using !important is intentional here to override any dynamic styles that might 
    * be applied by drag libraries or other scripts during preview mode transitions.
    */
@@ -128,16 +135,18 @@ All colors MUST be HSL.
     position: relative;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    transform: none !important;
   }
 
+  /* 
+   * Gallery container - allows transform for device preview scaling.
+   * Margin and position overrides prevent unwanted shifts.
+   */
   .gallery {
     position: relative;
     margin-left: 0 !important;
     margin-right: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    transform: none !important;
   }
 
   /* Tablet: 4-column grid maintaining original card sizes */
