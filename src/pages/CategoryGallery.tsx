@@ -92,6 +92,12 @@ const CategoryGallery = () => {
           scale: photo.scale,
           rotation: photo.rotation,
           z_index: photo.z_index,
+          // Include new metadata fields
+          caption: photo.caption || undefined,
+          photographer_name: photo.photographer_name || undefined,
+          date_taken: photo.date_taken || undefined,
+          device_used: photo.device_used || undefined,
+          video_thumbnail_url: photo.video_thumbnail_url || undefined,
         }));
 
         setImages(transformedImages);
