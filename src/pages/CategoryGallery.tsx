@@ -80,7 +80,7 @@ const CategoryGallery = () => {
           src: photo.image_url,
           highResSrc: photo.image_url,
           alt: photo.title || 'Portfolio image',
-          photographer: 'Morgan Blake',
+          photographer: 'Ankur Bag',
           client: photo.description || '',
           location: '',
           details: photo.description || '',
@@ -166,19 +166,19 @@ const CategoryGallery = () => {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    "name": `${getCategoryTitle(category)} - Morgan Blake`,
+    "name": `${getCategoryTitle(category)} - Ankur Bag`,
     "description": getCategoryDescription(category),
     "url": `https://morganblake.com/category/${category}`,
     "creator": {
       "@type": "Person",
-      "name": "Morgan Blake"
+      "name": "Ankur Bag"
     }
   };
 
   return (
     <PageLayout>
       <SEO
-        title={`${getCategoryTitle(category)} - Morgan Blake`}
+        title={`${getCategoryTitle(category)} - Ankur Bag`}
         description={getCategoryDescription(category)}
         canonicalUrl={`/category/${category}`}
         jsonLd={jsonLd}

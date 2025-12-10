@@ -63,7 +63,7 @@ const Index = () => {
           src: photo.image_url,
           highResSrc: photo.image_url,
           alt: photo.title || 'Portfolio image',
-          photographer: 'Morgan Blake',
+          photographer: 'Ankur Bag',
           client: photo.description || '',
           location: '',
           details: photo.description || '',
@@ -122,7 +122,7 @@ const Index = () => {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",
-    "name": "Morgan Blake",
+    "name": "Ankur Bag",
     "jobTitle": "Production Photographer",
     "description": "Production photographer specializing in fashion, editorial, and commercial photography. Creating compelling imagery for global brands and publications.",
     "url": "https://morganblake.com",
@@ -147,7 +147,7 @@ const Index = () => {
   return (
     <PageLayout>
       <SEO
-        title="Morgan Blake - Fashion Production & Photography"
+        title="Ankur Bag - Fashion Production & Photography"
         description="Production photographer specializing in fashion, editorial, and commercial photography. Creating compelling imagery for global brands and publications."
         canonicalUrl="/"
         ogType="profile"

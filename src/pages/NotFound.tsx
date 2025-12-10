@@ -7,7 +7,7 @@ const NotFound = () => {
   return (
     <>
       <SEO
-        title="404 - Page Not Found | Morgan Blake"
+        title="404 - Page Not Found | Ankur Bag"
         description="The page you're looking for doesn't exist or has been moved. Return to our homepage to explore fashion photography."
         canonicalUrl="/404"
         ogType="website"

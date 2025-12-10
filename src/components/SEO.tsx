@@ -37,7 +37,7 @@ const SEO = ({
       <meta property="og:url" content={fullUrl} />
       <meta property="og:image" content={fullImageUrl} />
       <meta property="og:image:alt" content={title} />
-      <meta property="og:site_name" content="Morgan Blake Photography" />
+      <meta property="og:site_name" content="Ankur Bag Photography" />
       <meta property="og:locale" content="en_US" />
 
       {/* Twitter Card Meta Tags */}
@@ -50,7 +50,7 @@ const SEO = ({
       <meta name="twitter:creator" content="@morganblake.photo" />
 
       {/* Additional Meta Tags */}
-      <meta name="author" content="Morgan Blake" />
+      <meta name="author" content="Ankur Bag" />
       <meta name="robots" content="index, follow" />
       <meta name="googlebot" content="index, follow" />
       
