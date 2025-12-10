@@ -46,8 +46,8 @@ const SEO = ({
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={fullImageUrl} />
       <meta name="twitter:image:alt" content={title} />
-      <meta name="twitter:site" content="@morganblake.photo" />
-      <meta name="twitter:creator" content="@morganblake.photo" />
+      <meta name="twitter:site" content="@ankurr.tf" />
+      <meta name="twitter:creator" content="@ankurr.tf" />
 
       {/* Additional Meta Tags */}
       <meta name="author" content="Ankur Bag" />
