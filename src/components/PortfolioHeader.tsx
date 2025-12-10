@@ -20,6 +20,7 @@ const categories = [
 const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '0' }: PortfolioHeaderProps) => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [photoshootsOpen, setPhotoshootsOpen] = useState(false);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -77,27 +78,60 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-3">
-        {categories.map((category) => (
-          <Link
-            key={category}
-            to={`/category/${category.toLowerCase()}`}
-            onMouseEnter={() => setHoveredItem(category)}
-            onMouseLeave={() => setHoveredItem(null)}
-            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
-              activeCategory === category
-                ? "text-foreground font-medium"
-                : "text-muted-foreground hover:text-foreground/80"
-            }`}
+          {/* Photoshoots dropdown */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setPhotoshootsOpen(true)}
+            onMouseLeave={() => setPhotoshootsOpen(false)}
           >
-            {hoveredItem === category ? (
-              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
-                {category}
-              </TextRoll>
-            ) : (
-              category
+            <Link
+              to="/photoshoots"
+              onMouseEnter={() => setHoveredItem('photoshoots')}
+              onMouseLeave={() => setHoveredItem(null)}
+              className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+                categories.includes(activeCategory)
+                  ? "text-foreground font-medium"
+                  : "text-muted-foreground hover:text-foreground/80"
+              }`}
+            >
+              {hoveredItem === 'photoshoots' ? (
+                <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                  PHOTOSHOOTS
+                </TextRoll>
+              ) : (
+                "PHOTOSHOOTS"
+              )}
+            </Link>
+            
+            {/* Dropdown menu */}
+            {photoshootsOpen && (
+              <div className="absolute left-0 top-full pt-2 z-50">
+                <div className="bg-background border border-border shadow-lg min-w-[180px] py-2">
+                  {categories.map((category) => (
+                    <Link
+                      key={category}
+                      to={`/photoshoots/${category.toLowerCase()}`}
+                      onMouseEnter={() => setHoveredItem(category)}
+                      onMouseLeave={() => setHoveredItem(null)}
+                      className={`block px-4 py-2 text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors ${
+                        activeCategory === category
+                          ? "text-foreground font-medium bg-accent/5"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent/5"
+                      }`}
+                    >
+                      {hoveredItem === category ? (
+                        <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                          {category}
+                        </TextRoll>
+                      ) : (
+                        category
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             )}
-          </Link>
-        ))}
+          </div>
         
         <Link
           to="/about"
@@ -137,21 +171,32 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
 
               {/* Mobile Navigation Links */}
               <nav className="flex flex-col items-center justify-center gap-8 px-8 pt-12">
-                {/* Categories */}
-                {categories.map((category) => (
-                  <Link
-                    key={category}
-                    to={`/category/${category.toLowerCase()}`}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`text-lg uppercase tracking-widest font-inter transition-colors ${
-                      activeCategory === category
-                        ? "text-foreground font-medium"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {category}
-                  </Link>
-                ))}
+                {/* Photoshoots parent link */}
+                <Link
+                  to="/photoshoots"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-lg uppercase tracking-widest font-inter text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  PHOTOSHOOTS
+                </Link>
+
+                {/* Categories as sub-items */}
+                <div className="flex flex-col items-center gap-4 pl-4">
+                  {categories.map((category) => (
+                    <Link
+                      key={category}
+                      to={`/photoshoots/${category.toLowerCase()}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`text-base uppercase tracking-widest font-inter transition-colors ${
+                        activeCategory === category
+                          ? "text-foreground font-medium"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {category}
+                    </Link>
+                  ))}
+                </div>
 
                 {/* Separator */}
                 <div className="w-16 h-px bg-border"></div>

@@ -8,6 +8,7 @@ import DevErrorBanner from "@/components/DevErrorBanner";
 import LayoutGallery from "@/components/LayoutGallery";
 import Lightbox from "@/components/Lightbox";
 import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
 import { GalleryImage, DEFAULT_PHOTO_WIDTH, DEFAULT_PHOTO_HEIGHT } from "@/types/gallery";
 
@@ -168,7 +169,7 @@ const CategoryGallery = () => {
     "@type": "CollectionPage",
     "name": `${getCategoryTitle(category)} - Ankur Bag`,
     "description": getCategoryDescription(category),
-    "url": `https://morganblake.com/category/${category}`,
+    "url": `https://morganblake.com/photoshoots/${category}`,
     "creator": {
       "@type": "Person",
       "name": "Ankur Bag"
@@ -180,7 +181,7 @@ const CategoryGallery = () => {
       <SEO
         title={`${getCategoryTitle(category)} - Ankur Bag`}
         description={getCategoryDescription(category)}
-        canonicalUrl={`/category/${category}`}
+        canonicalUrl={`/photoshoots/${category}`}
         jsonLd={jsonLd}
       />
 
@@ -192,6 +193,15 @@ const CategoryGallery = () => {
 
       <main className="flex-1">
         <PhotographerBio />
+        
+        {/* Breadcrumbs */}
+        <Breadcrumbs
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Photoshoots', href: '/photoshoots' },
+            { label: getCategoryTitle(category).toUpperCase() }
+          ]}
+        />
 
         {error && (
           <div className="text-center py-20">

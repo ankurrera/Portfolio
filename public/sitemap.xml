@@ -18,6 +18,46 @@
     <priority>0.8</priority>
   </url>
   
+  <!-- Photoshoots Parent Page -->
+  <url>
+    <loc>https://raya.photo/photoshoots</loc>
+    <lastmod>2024-01-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Photoshoots: Selected -->
+  <url>
+    <loc>https://raya.photo/photoshoots/selected</loc>
+    <lastmod>2024-01-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Photoshoots: Commissioned -->
+  <url>
+    <loc>https://raya.photo/photoshoots/commissioned</loc>
+    <lastmod>2024-01-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Photoshoots: Editorial -->
+  <url>
+    <loc>https://raya.photo/photoshoots/editorial</loc>
+    <lastmod>2024-01-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Photoshoots: Personal -->
+  <url>
+    <loc>https://raya.photo/photoshoots/personal</loc>
+    <lastmod>2024-01-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
   <!-- Project: Alpine Light -->
   <url>
     <loc>https://raya.photo/project/alpine-light</loc>

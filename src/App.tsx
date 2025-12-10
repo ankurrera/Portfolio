@@ -9,6 +9,8 @@ import Index from "./pages/Index";
 import About from "./pages/About";
 import Project from "./pages/Project";
 import CategoryGallery from "./pages/CategoryGallery";
+import CategoryRedirect from "./pages/CategoryRedirect";
+import Photoshoots from "./pages/Photoshoots";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
@@ -28,7 +30,10 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/about" element={<About />} />
-                <Route path="/category/:category" element={<CategoryGallery />} />
+                <Route path="/photoshoots" element={<Photoshoots />} />
+                <Route path="/photoshoots/:category" element={<CategoryGallery />} />
+                {/* Redirect old category routes to new photoshoots routes */}
+                <Route path="/category/:category" element={<CategoryRedirect />} />
                 <Route path="/project/:slug" element={<Project />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/login" element={<AdminLogin />} />

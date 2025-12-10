@@ -1,4 +1,31 @@
 {
+  "redirects": [
+    {
+      "source": "/category/selected",
+      "destination": "/photoshoots/selected",
+      "permanent": true
+    },
+    {
+      "source": "/category/commissioned",
+      "destination": "/photoshoots/commissioned",
+      "permanent": true
+    },
+    {
+      "source": "/category/editorial",
+      "destination": "/photoshoots/editorial",
+      "permanent": true
+    },
+    {
+      "source": "/category/personal",
+      "destination": "/photoshoots/personal",
+      "permanent": true
+    },
+    {
+      "source": "/category/all",
+      "destination": "/photoshoots",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",

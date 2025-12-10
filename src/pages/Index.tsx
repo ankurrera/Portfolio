@@ -128,7 +128,7 @@ const Index = () => {
     "url": "https://morganblake.com",
     "image": "https://morganblake.com/og-image.jpg",
     "sameAs": [
-      "https://instagram.com/morganblake.photo"
+      "https://www.instagram.com/ankurr.tf/"
     ],
     "knowsAbout": [
       "Fashion Photography",
