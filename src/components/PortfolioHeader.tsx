@@ -53,10 +53,12 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
   // Close secondary header when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (photoshootsOpen && subHeaderRef.current && !subHeaderRef.current.contains(event.target as Node)) {
+      if (!event.target || !photoshootsOpen || !subHeaderRef.current) return;
+      
+      if (!subHeaderRef.current.contains(event.target as Node)) {
         // Check if click is not on the Photoshoots button itself
         const target = event.target as HTMLElement;
-        if (!target.closest('[data-photoshoots-trigger]')) {
+        if (target && !target.closest('[data-photoshoots-trigger]')) {
           setPhotoshootsOpen(false);
         }
       }
