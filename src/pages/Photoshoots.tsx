@@ -4,6 +4,7 @@ import PhotographerBio from "@/components/PhotographerBio";
 import PortfolioFooter from "@/components/PortfolioFooter";
 import PageLayout from "@/components/PageLayout";
 import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 const Photoshoots = () => {
   const categories = [
@@ -54,6 +55,14 @@ const Photoshoots = () => {
 
       <main className="flex-1">
         <PhotographerBio />
+        
+        {/* Breadcrumbs */}
+        <Breadcrumbs
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Photoshoots' }
+          ]}
+        />
 
         <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-16">
           <h1 className="text-2xl md:text-3xl font-light uppercase tracking-widest mb-12 text-center">

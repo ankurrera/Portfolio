@@ -8,16 +8,13 @@ import DevErrorBanner from "@/components/DevErrorBanner";
 import LayoutGallery from "@/components/LayoutGallery";
 import Lightbox from "@/components/Lightbox";
 import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
 import { GalleryImage, DEFAULT_PHOTO_WIDTH, DEFAULT_PHOTO_HEIGHT } from "@/types/gallery";
 
 const validCategories = ['selected', 'commissioned', 'editorial', 'personal', 'all'];
 
-interface CategoryGalleryProps {
-  redirectToPhotoshoots?: boolean;
-}
-
-const CategoryGallery = ({ redirectToPhotoshoots = false }: CategoryGalleryProps) => {
+const CategoryGallery = () => {
   const { category } = useParams<{ category: string }>();
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,11 +27,6 @@ const CategoryGallery = ({ redirectToPhotoshoots = false }: CategoryGalleryProps
 
   // Validate category first, before hooks
   const isValidCategory = category && validCategories.includes(category.toLowerCase());
-
-  // Redirect old /category/:category routes to new /photoshoots/:category routes
-  if (redirectToPhotoshoots && isValidCategory) {
-    return <Navigate to={`/photoshoots/${category}`} replace />;
-  }
 
   const categoryUpper = category ? category.toUpperCase() : '';
 
@@ -201,6 +193,15 @@ const CategoryGallery = ({ redirectToPhotoshoots = false }: CategoryGalleryProps
 
       <main className="flex-1">
         <PhotographerBio />
+        
+        {/* Breadcrumbs */}
+        <Breadcrumbs
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Photoshoots', href: '/photoshoots' },
+            { label: getCategoryTitle(category).toUpperCase() }
+          ]}
+        />
 
         {error && (
           <div className="text-center py-20">
