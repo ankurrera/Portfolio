@@ -111,6 +111,31 @@ All colors MUST be HSL.
   [data-rmiz-modal-img] {
     border-radius: 0.5rem;
   }
+
+  /* Responsive gallery grid with fixed card sizes */
+  .gallery-responsive-grid {
+    display: grid;
+    justify-content: center;
+    gap: 1rem;
+    /* Mobile: single column, max 360px */
+    grid-template-columns: minmax(0, min(360px, 100%));
+  }
+
+  /* Tablet: 2-3 columns with 220px cards */
+  @media (min-width: 600px) and (max-width: 1199px) {
+    .gallery-responsive-grid {
+      gap: 1.25rem;
+      grid-template-columns: repeat(auto-fill, 220px);
+    }
+  }
+
+  /* Desktop: 4-5 columns with 260px cards */
+  @media (min-width: 1200px) {
+    .gallery-responsive-grid {
+      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fill, 260px);
+    }
+  }
 }
 
 @keyframes marquee-rtl {
