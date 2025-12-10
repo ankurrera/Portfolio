@@ -138,6 +138,27 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
     };
   }, [category]);
 
+  // Handle device preview changes to ensure layout recalculation
+  useEffect(() => {
+    // Force a re-render of draggable components when device preview changes
+    // This ensures motion library recalculates positions and placeholders
+    let frame: number | null = null;
+    
+    if (devicePreview !== 'desktop') {
+      // Use requestAnimationFrame for better performance
+      frame = requestAnimationFrame(() => {
+        // Trigger layout recalculation by dispatching resize event
+        window.dispatchEvent(new Event('resize'));
+      });
+    }
+    
+    return () => {
+      if (frame !== null) {
+        cancelAnimationFrame(frame);
+      }
+    };
+  }, [devicePreview]);
+
   // Add to history
   const addToHistory = useCallback((newPhotos: PhotoLayoutData[], description?: string) => {
     const newEntry: HistoryEntry = {
@@ -358,12 +379,25 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
   const getDeviceWidth = () => {
     switch (devicePreview) {
       case 'mobile':
-        return '375px';
+        return '420px';
       case 'tablet':
-        return '768px';
+        return '900px';
       case 'desktop':
       default:
         return '100%';
+    }
+  };
+
+  // Get device max-width for the frame
+  const getDeviceMaxWidth = () => {
+    switch (devicePreview) {
+      case 'mobile':
+        return 420;
+      case 'tablet':
+        return 900;
+      case 'desktop':
+      default:
+        return null;
     }
   };
 
@@ -410,75 +444,98 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       />
 
       <div className="flex flex-col min-h-screen pt-24 bg-background overflow-y-auto overflow-x-hidden">
-        {/* Preview Container */}
-        <div 
-          className="flex-1 mx-auto transition-all duration-300 flex flex-col"
-          style={{ 
-            width: getDeviceWidth(),
-            maxWidth: '1600px',
-          }}
-        >
-          {/* Exact replica of public view */}
-          <PortfolioHeader activeCategory={categoryUpper} isAdminContext={true} topOffset="56px" />
-          
-          <main className="flex-1 flex flex-col">
-            <PhotographerBio />
-
-            {/* Photo Canvas - Dynamic height based on content */}
-            <div 
-              className="relative w-full mx-auto px-3 md:px-5"
-              style={{
-                minHeight: `${canvasHeight}px`,
-                height: `${canvasHeight}px`,
-              }}
-            >
-              {/* Grid overlay when snap-to-grid is enabled */}
-              {mode === 'edit' && snapToGrid && (
+        {/* Outer container for centering */}
+        <div className="flex-1 w-full flex justify-center px-4">
+          {/* Device Frame - with visible dashed border for tablet/mobile */}
+          <div 
+            className="flex-1 transition-all duration-300 flex flex-col relative"
+            style={{ 
+              width: getDeviceWidth(),
+              maxWidth: devicePreview === 'desktop' ? '1600px' : getDeviceWidth(),
+            }}
+          >
+            {/* Dashed device outline for tablet/mobile previews */}
+            {devicePreview !== 'desktop' && (
+              <>
                 <div 
-                  className="absolute inset-0 pointer-events-none opacity-20"
-                  style={{
-                    backgroundImage: `
-                      repeating-linear-gradient(0deg, transparent, transparent 19px, #888 19px, #888 20px),
-                      repeating-linear-gradient(90deg, transparent, transparent 19px, #888 19px, #888 20px)
-                    `,
-                    backgroundSize: '20px 20px',
-                    width: '100%',
-                    height: '100%',
-                  }}
+                  className="absolute inset-0 pointer-events-none z-10 border-2 border-dashed border-muted-foreground/50 rounded"
+                  aria-label={`${devicePreview} preview frame`}
                 />
-              )}
-              
-              {loading ? (
-                <div className="text-center py-20">
-                  <p className="text-muted-foreground">Loading...</p>
+                {/* Device preview label */}
+                <div className="absolute top-2 right-2 z-20 px-3 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-sm pointer-events-none">
+                  {devicePreview === 'tablet' ? 'Tablet Preview (900px)' : 'Mobile Preview (420px)'}
                 </div>
-              ) : photos.length === 0 ? (
-                <div className="text-center py-20">
-                  <p className="text-muted-foreground">
-                    No photos yet. Click "Add Photo" to get started.
-                  </p>
-                </div>
-              ) : (
-                photos.map((photo) => (
-                  <DraggablePhoto
-                    key={photo.id}
-                    photo={photo}
-                    isEditMode={mode === 'edit'}
-                    snapToGrid={snapToGrid}
-                    gridSize={20}
-                    onUpdate={handlePhotoUpdate}
-                    onDelete={handlePhotoDelete}
-                    onBringForward={handleBringForward}
-                    onSendBackward={handleSendBackward}
-                  />
-                ))
-              )}
-            </div>
-          </main>
+              </>
+            )}
 
-          {/* Footer outside main content flow */}
-          <div className="mt-auto">
-            <PortfolioFooter />
+            {/* Device Inner - constrained content area */}
+            <div className="device-inner flex-1 flex flex-col relative">
+              {/* Exact replica of public view */}
+              <PortfolioHeader activeCategory={categoryUpper} isAdminContext={true} topOffset="56px" />
+              
+              <main className="flex-1 flex flex-col">
+                <PhotographerBio />
+
+                {/* Photo Canvas - Dynamic height based on content */}
+                <div 
+                  className="gallery-wrapper relative w-full mx-auto px-3 md:px-5"
+                  style={{
+                    minHeight: `${canvasHeight}px`,
+                    height: `${canvasHeight}px`,
+                  }}
+                >
+                  {/* Grid overlay when snap-to-grid is enabled */}
+                  {mode === 'edit' && snapToGrid && (
+                    <div 
+                      className="absolute inset-0 pointer-events-none opacity-20"
+                      style={{
+                        backgroundImage: `
+                          repeating-linear-gradient(0deg, transparent, transparent 19px, #888 19px, #888 20px),
+                          repeating-linear-gradient(90deg, transparent, transparent 19px, #888 19px, #888 20px)
+                        `,
+                        backgroundSize: '20px 20px',
+                        width: '100%',
+                        height: '100%',
+                      }}
+                    />
+                  )}
+                  
+                  {/* Gallery container for photos */}
+                  <div className="gallery relative w-full h-full">
+                    {loading ? (
+                      <div className="text-center py-20">
+                        <p className="text-muted-foreground">Loading...</p>
+                      </div>
+                    ) : photos.length === 0 ? (
+                      <div className="text-center py-20">
+                        <p className="text-muted-foreground">
+                          No photos yet. Click "Add Photo" to get started.
+                        </p>
+                      </div>
+                    ) : (
+                      photos.map((photo) => (
+                        <DraggablePhoto
+                          key={photo.id}
+                          photo={photo}
+                          isEditMode={mode === 'edit'}
+                          snapToGrid={snapToGrid}
+                          gridSize={20}
+                          onUpdate={handlePhotoUpdate}
+                          onDelete={handlePhotoDelete}
+                          onBringForward={handleBringForward}
+                          onSendBackward={handleSendBackward}
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
+              </main>
+
+              {/* Footer outside main content flow */}
+              <div className="mt-auto">
+                <PortfolioFooter />
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -112,6 +112,34 @@ All colors MUST be HSL.
     border-radius: 0.5rem;
   }
 
+  /* Device preview frame styles for admin */
+  .device-inner {
+    position: relative;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* 
+   * Gallery wrapper and container - prevents unwanted shifts during device preview.
+   * Using !important is intentional here to override any dynamic styles that might 
+   * be applied by drag libraries or other scripts during preview mode transitions.
+   */
+  .gallery-wrapper {
+    position: relative;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    transform: none !important;
+  }
+
+  .gallery {
+    position: relative;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+  }
+
   /* Tablet: 4-column grid maintaining original card sizes */
   .gallery-tablet-grid {
     display: grid;
