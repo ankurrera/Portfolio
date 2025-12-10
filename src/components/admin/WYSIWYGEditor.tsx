@@ -276,9 +276,9 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
   const handleSave = async () => {
     try {
       // Update all photos in database
-      // NOTE: We no longer set is_draft to true here
-      // Photos remain in their current published/draft state
-      // Save only updates layout positions
+      // CRITICAL: We do NOT set is_draft here to prevent photos from disappearing from public view.
+      // Public pages filter for is_draft=false, so changing this flag would hide all photos.
+      // Save only updates layout positions while preserving publish status.
       const updates = photos.map((photo) => ({
         id: photo.id,
         position_x: photo.position_x,
@@ -382,6 +382,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
   }, [photos]);
 
   const categoryUpper = category.toUpperCase();
+  const canvasHeight = calculateCanvasHeight();
 
   return (
     <>
@@ -427,8 +428,8 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
             <div 
               className="relative w-full mx-auto px-3 md:px-5"
               style={{
-                minHeight: `${calculateCanvasHeight()}px`,
-                height: `${calculateCanvasHeight()}px`,
+                minHeight: `${canvasHeight}px`,
+                height: `${canvasHeight}px`,
               }}
             >
               {/* Grid overlay when snap-to-grid is enabled */}
