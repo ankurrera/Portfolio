@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import FocusTrap from "focus-trap-react";
@@ -21,6 +21,7 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [photoshootsOpen, setPhotoshootsOpen] = useState(false);
+  const subHeaderRef = useRef<HTMLDivElement>(null);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -37,13 +38,38 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
   // Close menu on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && mobileMenuOpen) {
-        setMobileMenuOpen(false);
+      if (e.key === 'Escape') {
+        if (mobileMenuOpen) {
+          setMobileMenuOpen(false);
+        } else if (photoshootsOpen) {
+          setPhotoshootsOpen(false);
+        }
       }
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [mobileMenuOpen]);
+  }, [mobileMenuOpen, photoshootsOpen]);
+
+  // Close secondary header when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (photoshootsOpen && subHeaderRef.current && !subHeaderRef.current.contains(event.target as Node)) {
+        // Check if click is not on the Photoshoots button itself
+        const target = event.target as HTMLElement;
+        if (!target.closest('[data-photoshoots-trigger]')) {
+          setPhotoshootsOpen(false);
+        }
+      }
+    };
+    
+    if (photoshootsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [photoshootsOpen]);
 
   return (
     <header 
@@ -78,60 +104,30 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-3">
-          {/* Photoshoots dropdown */}
-          <div 
-            className="relative"
-            onMouseEnter={() => setPhotoshootsOpen(true)}
-            onMouseLeave={() => setPhotoshootsOpen(false)}
+          {/* Photoshoots trigger button */}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              setPhotoshootsOpen(!photoshootsOpen);
+            }}
+            onMouseEnter={() => setHoveredItem('photoshoots')}
+            onMouseLeave={() => setHoveredItem(null)}
+            data-photoshoots-trigger
+            aria-expanded={photoshootsOpen}
+            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+              categories.includes(activeCategory)
+                ? "text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground/80"
+            }`}
           >
-            <Link
-              to="/photoshoots"
-              onMouseEnter={() => setHoveredItem('photoshoots')}
-              onMouseLeave={() => setHoveredItem(null)}
-              className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
-                categories.includes(activeCategory)
-                  ? "text-foreground font-medium"
-                  : "text-muted-foreground hover:text-foreground/80"
-              }`}
-            >
-              {hoveredItem === 'photoshoots' ? (
-                <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
-                  PHOTOSHOOTS
-                </TextRoll>
-              ) : (
-                "PHOTOSHOOTS"
-              )}
-            </Link>
-            
-            {/* Dropdown menu */}
-            {photoshootsOpen && (
-              <div className="absolute left-0 top-full pt-2 z-50">
-                <div className="bg-background border border-border shadow-lg min-w-[180px] py-2">
-                  {categories.map((category) => (
-                    <Link
-                      key={category}
-                      to={`/photoshoots/${category.toLowerCase()}`}
-                      onMouseEnter={() => setHoveredItem(category)}
-                      onMouseLeave={() => setHoveredItem(null)}
-                      className={`block px-4 py-2 text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors ${
-                        activeCategory === category
-                          ? "text-foreground font-medium bg-accent/5"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent/5"
-                      }`}
-                    >
-                      {hoveredItem === category ? (
-                        <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
-                          {category}
-                        </TextRoll>
-                      ) : (
-                        category
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              </div>
+            {hoveredItem === 'photoshoots' ? (
+              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                PHOTOSHOOTS
+              </TextRoll>
+            ) : (
+              "PHOTOSHOOTS"
             )}
-          </div>
+          </button>
         
         <Link
           to="/about"
@@ -213,6 +209,49 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
             </div>
           </FocusTrap>
         )}
+      </div>
+
+      {/* Secondary Header Bar for Photoshoots */}
+      <div
+        ref={subHeaderRef}
+        className={`fixed left-0 right-0 bg-background border-b border-border transition-all duration-300 ${
+          isAdminContext ? 'z-30' : 'z-40'
+        } ${
+          photoshootsOpen 
+            ? 'opacity-100 translate-y-0 visible' 
+            : 'opacity-0 -translate-y-2 invisible pointer-events-none'
+        }`}
+        style={{ 
+          top: topOffset === '0' ? '49px' : `calc(${topOffset} + 49px)`,
+        }}
+        aria-hidden={!photoshootsOpen}
+      >
+        <div className="max-w-[1600px] mx-auto px-3 md:px-5 py-3">
+          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            {categories.map((category) => (
+              <Link
+                key={category}
+                to={`/photoshoots/${category.toLowerCase()}`}
+                onMouseEnter={() => setHoveredItem(category)}
+                onMouseLeave={() => setHoveredItem(null)}
+                onClick={() => setPhotoshootsOpen(false)}
+                className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+                  activeCategory === category
+                    ? "text-foreground font-medium"
+                    : "text-muted-foreground hover:text-foreground/80"
+                }`}
+              >
+                {hoveredItem === category ? (
+                  <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                    {category}
+                  </TextRoll>
+                ) : (
+                  category
+                )}
+              </Link>
+            ))}
+          </nav>
+        </div>
       </div>
     </header>
   );
