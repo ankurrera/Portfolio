@@ -28,6 +28,11 @@ export interface PhotoPosition {
  * - z_index: Integer - Layer ordering (higher = front)
  * - is_draft: Boolean - Draft vs published state
  * - layout_config: JSONB - Additional layout data
+ * - caption: Optional descriptive text
+ * - photographer_name: Name of photographer
+ * - date_taken: Date photo was taken
+ * - device_used: Camera/device used
+ * - video_thumbnail_url: Optional thumbnail for videos
  * - created_at, updated_at: Timestamps
  */
 export interface PhotoLayoutData {
@@ -46,6 +51,11 @@ export interface PhotoLayoutData {
   z_index: number;
   is_draft: boolean;
   layout_config: Record<string, unknown>;
+  caption: string | null;
+  photographer_name: string | null;
+  date_taken: string | null;
+  device_used: string | null;
+  video_thumbnail_url: string | null;
   created_at: string;
   updated_at: string;
 }
