@@ -9,6 +9,7 @@ import PortfolioFooter from '@/components/PortfolioFooter';
 import DraggablePhoto from './DraggablePhoto';
 import EditorToolbar from './EditorToolbar';
 import PhotoUploader from './PhotoUploader';
+import PhotoEditPanel from './PhotoEditPanel';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,8 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
+  const [editingPhotoId, setEditingPhotoId] = useState<string | null>(null);
   
   // History management
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -106,9 +109,12 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       if (isRefresh) {
         toast.success('Photos refreshed successfully');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Don't show error if request was aborted (user triggered another action)
-      if (error.name === 'AbortError' || abortControllerRef.current?.signal.aborted) {
+      const isAbortError = error && typeof error === 'object' && 'name' in error && error.name === 'AbortError';
+      const isSignalAborted = abortControllerRef.current?.signal.aborted;
+      
+      if (isAbortError || isSignalAborted) {
         return;
       }
       
@@ -161,6 +167,30 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       }
     };
   }, [devicePreview]);
+
+  // Handle keyboard shortcuts (delete selected photo)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle backspace/delete if a photo is selected and not editing in a panel
+      if ((e.key === 'Backspace' || e.key === 'Delete') && selectedPhotoId && !editingPhotoId) {
+        // Check if we're not in an input/textarea
+        const target = e.target as HTMLElement;
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          handlePhotoDelete(selectedPhotoId);
+          setSelectedPhotoId(null);
+        }
+      }
+      
+      // Escape to deselect
+      if (e.key === 'Escape' && selectedPhotoId) {
+        setSelectedPhotoId(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedPhotoId, editingPhotoId, handlePhotoDelete]);
 
   // Add to history
   const addToHistory = useCallback((newPhotos: PhotoLayoutData[], description?: string) => {
@@ -235,6 +265,14 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       return newPhotos;
     });
   }, [addToHistory]);
+
+  const handlePhotoSelect = useCallback((id: string) => {
+    setSelectedPhotoId(id);
+  }, []);
+
+  const handlePhotoEdit = useCallback((id: string) => {
+    setEditingPhotoId(id);
+  }, []);
 
   const handlePhotoDelete = useCallback(async (id: string) => {
     const photo = photos.find((p) => p.id === id);
@@ -437,6 +475,9 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
   const categoryUpper = category.toUpperCase();
   const canvasHeight = calculateCanvasHeight();
   const scaleFactor = getDeviceScaleFactor();
+  
+  // Find the photo being edited for the edit panel
+  const editingPhoto = editingPhotoId ? photos.find(p => p.id === editingPhotoId) : null;
 
   return (
     <>
@@ -547,12 +588,15 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
                           key={photo.id}
                           photo={photo}
                           isEditMode={mode === 'edit'}
+                          isSelected={selectedPhotoId === photo.id}
                           snapToGrid={snapToGrid}
                           gridSize={20}
                           onUpdate={handlePhotoUpdate}
                           onDelete={handlePhotoDelete}
                           onBringForward={handleBringForward}
                           onSendBackward={handleSendBackward}
+                          onEdit={handlePhotoEdit}
+                          onSelect={handlePhotoSelect}
                         />
                       ))
                     )}
@@ -630,6 +674,15 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Photo Edit Panel */}
+      {editingPhoto && (
+        <PhotoEditPanel
+          photo={editingPhoto}
+          onClose={() => setEditingPhotoId(null)}
+          onUpdate={handlePhotoUpdate}
+        />
+      )}
     </>
   );
 }
