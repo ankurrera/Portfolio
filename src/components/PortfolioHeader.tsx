@@ -80,17 +80,17 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
     >
       <div className="max-w-[1600px] mx-auto flex items-center justify-between md:justify-center px-3 md:px-5 py-3 gap-3">
         <Link
-          to="/"
+          to="/technical"
           className="text-[10px] md:text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors font-inter whitespace-nowrap"
           onMouseEnter={() => setHoveredItem('name')}
           onMouseLeave={() => setHoveredItem(null)}
         >
           {hoveredItem === 'name' ? (
             <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
-              MORGAN BLAKE
+              ANKUR
             </TextRoll>
           ) : (
-            "MORGAN BLAKE"
+            "ANKUR"
           )}
         </Link>
 
