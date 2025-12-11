@@ -16,18 +16,12 @@ interface PhotoEditPanelProps {
 }
 
 // Validation constants
-const MAX_CAPTION_LENGTH = 500;
-const MAX_PHOTOGRAPHER_NAME_LENGTH = 100;
-const MAX_DEVICE_USED_LENGTH = 100;
-const MAX_VIDEO_THUMBNAIL_LENGTH = 500;
-const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_TITLE_LENGTH = 200;
+const MAX_DESCRIPTION_LENGTH = 500;
 
 export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPanelProps) {
-  const [caption, setCaption] = useState(photo.caption || '');
-  const [photographerName, setPhotographerName] = useState(photo.photographer_name || '');
-  const [dateTaken, setDateTaken] = useState(photo.date_taken || '');
-  const [deviceUsed, setDeviceUsed] = useState(photo.device_used || '');
-  const [videoThumbnailUrl, setVideoThumbnailUrl] = useState(photo.video_thumbnail_url || '');
+  const [title, setTitle] = useState(photo.title || '');
+  const [description, setDescription] = useState(photo.description || '');
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -35,25 +29,12 @@ export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPa
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (caption.length > MAX_CAPTION_LENGTH) {
-      newErrors.caption = `Caption must be ${MAX_CAPTION_LENGTH} characters or less`;
+    if (title.length > MAX_TITLE_LENGTH) {
+      newErrors.title = `Title must be ${MAX_TITLE_LENGTH} characters or less`;
     }
 
-    if (photographerName.length > MAX_PHOTOGRAPHER_NAME_LENGTH) {
-      newErrors.photographerName = `Photographer name must be ${MAX_PHOTOGRAPHER_NAME_LENGTH} characters or less`;
-    }
-
-    if (deviceUsed.length > MAX_DEVICE_USED_LENGTH) {
-      newErrors.deviceUsed = `Device used must be ${MAX_DEVICE_USED_LENGTH} characters or less`;
-    }
-
-    if (videoThumbnailUrl.length > MAX_VIDEO_THUMBNAIL_LENGTH) {
-      newErrors.videoThumbnailUrl = `Video thumbnail URL must be ${MAX_VIDEO_THUMBNAIL_LENGTH} characters or less`;
-    }
-
-    // Validate date format if provided
-    if (dateTaken && !DATE_FORMAT_REGEX.test(dateTaken)) {
-      newErrors.dateTaken = 'Date must be in YYYY-MM-DD format';
+    if (description.length > MAX_DESCRIPTION_LENGTH) {
+      newErrors.description = `Description must be ${MAX_DESCRIPTION_LENGTH} characters or less`;
     }
 
     setErrors(newErrors);
@@ -69,12 +50,9 @@ export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPa
     setIsSaving(true);
 
     try {
-      const updates: Partial<PhotoLayoutData> = {
-        caption: caption.trim() || null,
-        photographer_name: photographerName.trim() || null,
-        date_taken: dateTaken || null,
-        device_used: deviceUsed.trim() || null,
-        video_thumbnail_url: videoThumbnailUrl.trim() || null,
+      const updates = {
+        title: title.trim() || null,
+        description: description.trim() || null,
       };
 
       const { error } = await supabase
@@ -136,111 +114,49 @@ export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPa
           alt={photo.title || 'Photo'}
           className="w-full h-48 object-cover rounded"
         />
-        {photo.title && (
-          <p className="mt-2 text-sm font-medium text-muted-foreground">
-            {photo.title}
-          </p>
-        )}
       </div>
 
       {/* Form */}
       <div className="p-4 space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="caption">
-            Caption
+          <Label htmlFor="title">
+            Title
             <span className="text-xs text-muted-foreground ml-2">
-              ({caption.length}/{MAX_CAPTION_LENGTH})
+              ({title.length}/{MAX_TITLE_LENGTH})
+            </span>
+          </Label>
+          <Input
+            id="title"
+            type="text"
+            placeholder="Enter a title..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className={errors.title ? 'border-destructive' : ''}
+            disabled={isSaving}
+          />
+          {errors.title && (
+            <p className="text-xs text-destructive">{errors.title}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description">
+            Description
+            <span className="text-xs text-muted-foreground ml-2">
+              ({description.length}/{MAX_DESCRIPTION_LENGTH})
             </span>
           </Label>
           <Textarea
-            id="caption"
-            placeholder="Enter a descriptive caption..."
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            className={errors.caption ? 'border-destructive' : ''}
+            id="description"
+            placeholder="Enter a description..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className={errors.description ? 'border-destructive' : ''}
             rows={4}
             disabled={isSaving}
           />
-          {errors.caption && (
-            <p className="text-xs text-destructive">{errors.caption}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="photographer_name">
-            Photographer
-            <span className="text-xs text-muted-foreground ml-2">
-              ({photographerName.length}/{MAX_PHOTOGRAPHER_NAME_LENGTH})
-            </span>
-          </Label>
-          <Input
-            id="photographer_name"
-            type="text"
-            placeholder="Photographer's name"
-            value={photographerName}
-            onChange={(e) => setPhotographerName(e.target.value)}
-            className={errors.photographerName ? 'border-destructive' : ''}
-            disabled={isSaving}
-          />
-          {errors.photographerName && (
-            <p className="text-xs text-destructive">{errors.photographerName}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="date_taken">Date Taken</Label>
-          <Input
-            id="date_taken"
-            type="date"
-            value={dateTaken}
-            onChange={(e) => setDateTaken(e.target.value)}
-            className={errors.dateTaken ? 'border-destructive' : ''}
-            disabled={isSaving}
-          />
-          {errors.dateTaken && (
-            <p className="text-xs text-destructive">{errors.dateTaken}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="device_used">
-            Device Used
-            <span className="text-xs text-muted-foreground ml-2">
-              ({deviceUsed.length}/{MAX_DEVICE_USED_LENGTH})
-            </span>
-          </Label>
-          <Input
-            id="device_used"
-            type="text"
-            placeholder="e.g., iPhone 15 Pro, Nikon D850"
-            value={deviceUsed}
-            onChange={(e) => setDeviceUsed(e.target.value)}
-            className={errors.deviceUsed ? 'border-destructive' : ''}
-            disabled={isSaving}
-          />
-          {errors.deviceUsed && (
-            <p className="text-xs text-destructive">{errors.deviceUsed}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="video_thumbnail_url">
-            Video Thumbnail URL
-            <span className="text-xs text-muted-foreground ml-2">
-              ({videoThumbnailUrl.length}/{MAX_VIDEO_THUMBNAIL_LENGTH})
-            </span>
-          </Label>
-          <Input
-            id="video_thumbnail_url"
-            type="text"
-            placeholder="URL to video thumbnail"
-            value={videoThumbnailUrl}
-            onChange={(e) => setVideoThumbnailUrl(e.target.value)}
-            className={errors.videoThumbnailUrl ? 'border-destructive' : ''}
-            disabled={isSaving}
-          />
-          {errors.videoThumbnailUrl && (
-            <p className="text-xs text-destructive">{errors.videoThumbnailUrl}</p>
+          {errors.description && (
+            <p className="text-xs text-destructive">{errors.description}</p>
           )}
         </div>
       </div>

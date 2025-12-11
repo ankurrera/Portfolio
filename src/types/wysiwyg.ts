@@ -50,15 +50,13 @@ export interface PhotoLayoutData {
   rotation: number;
   z_index: number;
   is_draft: boolean;
-  layout_config: Record<string, unknown>;
-  caption: string | null;
-  photographer_name: string | null;
-  date_taken: string | null;
-  device_used: string | null;
-  video_thumbnail_url: string | null;
+  layout_config: Json;
   created_at: string;
   updated_at: string;
 }
+
+// JSON type matching Supabase
+type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export interface LayoutRevision {
   id: string;

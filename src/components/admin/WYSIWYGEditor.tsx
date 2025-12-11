@@ -168,31 +168,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
     };
   }, [devicePreview]);
 
-  // Handle keyboard shortcuts (delete selected photo)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle backspace/delete if a photo is selected and not editing in a panel
-      if ((e.key === 'Backspace' || e.key === 'Delete') && selectedPhotoId && !editingPhotoId) {
-        // Check if we're not in an input/textarea
-        const target = e.target as HTMLElement;
-        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
-          e.preventDefault();
-          handlePhotoDelete(selectedPhotoId);
-          setSelectedPhotoId(null);
-        }
-      }
-      
-      // Escape to deselect
-      if (e.key === 'Escape' && selectedPhotoId) {
-        setSelectedPhotoId(null);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedPhotoId, editingPhotoId, handlePhotoDelete]);
-
-  // Add to history
+  // Add to history - must be declared before handlers that use it
   const addToHistory = useCallback((newPhotos: PhotoLayoutData[], description?: string) => {
     const newEntry: HistoryEntry = {
       photos: JSON.parse(JSON.stringify(newPhotos)),
@@ -228,6 +204,62 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
     
     setHasUnsavedChanges(true);
   }, [historyIndex]);
+
+  // Delete photo handler - declared before useEffect that uses it
+  const handlePhotoDelete = useCallback(async (id: string) => {
+    const photo = photos.find((p) => p.id === id);
+    if (!photo) return;
+
+    try {
+      // Extract file path from URL
+      const urlParts = photo.image_url.split('/photos/');
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1];
+        await supabase.storage.from('photos').remove([filePath]);
+      }
+
+      // Delete from database
+      const { error } = await supabase
+        .from('photos')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      const newPhotos = photos.filter((p) => p.id !== id);
+      setPhotos(newPhotos);
+      addToHistory(newPhotos, 'Deleted photo');
+      toast.success('Photo deleted');
+    } catch (error) {
+      const errorMessage = formatSupabaseError(error);
+      console.error('Delete error:', errorMessage);
+      toast.error(`Failed to delete photo: ${errorMessage}`);
+    }
+  }, [photos, addToHistory]);
+
+  // Handle keyboard shortcuts (delete selected photo)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle backspace/delete if a photo is selected and not editing in a panel
+      if ((e.key === 'Backspace' || e.key === 'Delete') && selectedPhotoId && !editingPhotoId) {
+        // Check if we're not in an input/textarea
+        const target = e.target as HTMLElement;
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          handlePhotoDelete(selectedPhotoId);
+          setSelectedPhotoId(null);
+        }
+      }
+      
+      // Escape to deselect
+      if (e.key === 'Escape' && selectedPhotoId) {
+        setSelectedPhotoId(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedPhotoId, editingPhotoId, handlePhotoDelete]);
 
   const handleUndo = useCallback(() => {
     if (historyIndex > 0) {
@@ -274,36 +306,6 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
     setEditingPhotoId(id);
   }, []);
 
-  const handlePhotoDelete = useCallback(async (id: string) => {
-    const photo = photos.find((p) => p.id === id);
-    if (!photo) return;
-
-    try {
-      // Extract file path from URL
-      const urlParts = photo.image_url.split('/photos/');
-      if (urlParts.length > 1) {
-        const filePath = urlParts[1];
-        await supabase.storage.from('photos').remove([filePath]);
-      }
-
-      // Delete from database
-      const { error } = await supabase
-        .from('photos')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      const newPhotos = photos.filter((p) => p.id !== id);
-      setPhotos(newPhotos);
-      addToHistory(newPhotos, 'Deleted photo');
-      toast.success('Photo deleted');
-    } catch (error) {
-      const errorMessage = formatSupabaseError(error);
-      console.error('Delete error:', errorMessage);
-      toast.error(`Failed to delete photo: ${errorMessage}`);
-    }
-  }, [photos, addToHistory]);
 
   const handleBringForward = useCallback((id: string) => {
     setPhotos((prevPhotos) => {
