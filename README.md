@@ -173,3 +173,50 @@ Storage buckets:
 ## License
 
 MIT
+
+## Technical Page - Portfolio-Website Integration
+
+### Overview
+The Technical page (`/technical`) has been updated to showcase a modern, minimal portfolio design copied from the [ankurrera/Portfolio-Website](https://github.com/ankurrera/Portfolio-Website) repository's Home page.
+
+### What Was Copied
+This implementation is a one-to-one functional replica of the Portfolio-Website Home page, featuring:
+
+- **Split-screen Hero Section**: Dynamic light/dark split design with animations
+- **Projects Showcase**: Clean project cards with hover effects and metadata
+- **About Section**: Skills grid and experience timeline
+- **Contact Section**: Contact form with social links
+- **Minimal Navigation**: Fixed navigation bar with smooth scroll anchors
+
+### Components Added
+The following components were copied from Portfolio-Website:
+- `MinimalNavigation.tsx` - Fixed navigation with smooth scroll
+- `MinimalHero.tsx` - Split-screen hero section with stats
+- `MinimalProjects.tsx` - Project showcase grid
+- `MinimalAbout.tsx` - About section with skills and experience
+- `MinimalContact.tsx` - Contact form and information
+
+### Styling Updates
+- Added minimal design system CSS variables to `index.css`
+- Updated `tailwind.config.ts` with new theme tokens (surface colors, shadows, spacing)
+- Added custom CSS classes: `split-screen`, `star-field`, `text-display`, `minimal-card`
+- Added "minimal" variant to Button component
+
+### Dependencies
+No new dependencies were required. The page uses the existing `motion` package (compatible with `framer-motion` used in the original).
+
+### Technical Details
+- All `framer-motion` imports were converted to `motion/react` for compatibility
+- CSS variables added for surface colors, shadows, typography, and spacing
+- Tailwind config extended with custom fonts, box shadows, and animations
+- Route already existed at `/technical` in App.tsx
+
+### Testing
+- Build: ✅ Successful
+- TypeScript: ✅ No errors
+- Animations: ✅ Working (motion-based transitions)
+- Navigation: ✅ Smooth scroll to sections
+- Responsive: ✅ Mobile and desktop layouts
+
+### Attribution
+Original design from [ankurrera/Portfolio-Website](https://github.com/ankurrera/Portfolio-Website)

@@ -8,35 +8,58 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    --background: 0 0% 98%;
+    --foreground: 0 0% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 0 0% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 0 0% 8%;
 
-    --primary: 0 0% 10%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 0% 8%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 0 0% 92%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 8%;
 
-    --muted: 0 0% 85%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 0 0% 10%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 88%;
-    --input: 0 0% 85%;
-    --ring: 0 0% 10%;
+    --border: 0 0% 90%;
+    --input: 0 0% 95%;
+    --ring: 0 0% 8%;
 
-    --radius: 0rem;
+    --radius: 0.375rem;
+    --radius-lg: 0.5rem;
+    --radius-full: 9999px;
+
+    /* Additional variables for minimal design system */
+    --surface-dark: 0 0% 5%;
+    --surface-light: 0 0% 98%;
+    --success: 120 40% 40%;
+    --warning: 45 80% 55%;
+    
+    /* Shadows */
+    --subtle-shadow: 0 1px 3px hsl(0 0% 0% / 0.1);
+    --card-shadow: 0 4px 16px hsl(0 0% 0% / 0.08);
+    --hover-shadow: 0 8px 32px hsl(0 0% 0% / 0.12);
+    
+    /* Typography */
+    --font-heading: Inter, "Inter Placeholder", sans-serif;
+    --font-body: Inter, "Inter Placeholder", sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    
+    /* Layout */
+    --header-height: 80px;
+    --content-width: 1200px;
+    --section-padding: 120px;
 
     --gray-50: 0 0% 98%;
     --gray-100: 0 0% 96%;
@@ -194,12 +217,129 @@ All colors MUST be HSL.
   }
 }
 
+@layer components {
+  /* Clean Card Style */
+  .minimal-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .minimal-card:hover {
+    box-shadow: var(--hover-shadow);
+    transform: translateY(-2px);
+  }
+  
+  /* Split Screen Layout */
+  .split-screen {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+    position: relative;
+  }
+  
+  .split-light {
+    background: hsl(var(--surface-light));
+    color: hsl(var(--foreground));
+  }
+  
+  .split-dark {
+    background: hsl(var(--surface-dark));
+    color: hsl(var(--primary-foreground));
+  }
+  
+  /* Typography Hierarchy */
+  .text-display {
+    font-size: clamp(3rem, 8vw, 13.5rem);
+    font-weight: 300;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+  }
+  
+  .text-hero {
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  
+  .text-section {
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    font-weight: 300;
+    line-height: 1.2;
+  }
+  
+  /* Subtle Animations */
+  .fade-in {
+    animation: fadeIn 0.8s ease-out;
+  }
+  
+  .slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+  
+  /* Minimal Hover Effects */
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-4px);
+  }
+  
+  /* Clean Borders */
+  .border-minimal {
+    border: 1px solid hsl(var(--border));
+  }
+  
+  /* Space Theme Elements */
+  .star-field {
+    background-image: radial-gradient(circle at 20% 80%, hsl(0 0% 100% / 0.1) 1px, transparent 1px),
+                      radial-gradient(circle at 80% 20%, hsl(0 0% 100% / 0.15) 1px, transparent 1px),
+                      radial-gradient(circle at 40% 40%, hsl(0 0% 100% / 0.1) 2px, transparent 2px);
+    background-size: 200px 200px, 300px 300px, 150px 150px;
+  }
+  
+  /* Spacing Utilities */
+  .py-section {
+    padding-top: var(--section-padding);
+    padding-bottom: var(--section-padding);
+  }
+  
+  .max-w-content {
+    max-width: var(--content-width);
+  }
+}
+
 @keyframes marquee-rtl {
   0% {
     transform: translateX(0);
   }
   100% {
     transform: translateX(-50%);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
