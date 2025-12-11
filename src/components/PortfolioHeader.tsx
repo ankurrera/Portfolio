@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import FocusTrap from "focus-trap-react";
@@ -21,6 +21,7 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [photoshootsOpen, setPhotoshootsOpen] = useState(false);
+  const subHeaderRef = useRef<HTMLDivElement>(null);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -37,13 +38,40 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
   // Close menu on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && mobileMenuOpen) {
-        setMobileMenuOpen(false);
+      if (e.key === 'Escape') {
+        if (mobileMenuOpen) {
+          setMobileMenuOpen(false);
+        } else if (photoshootsOpen) {
+          setPhotoshootsOpen(false);
+        }
       }
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [mobileMenuOpen]);
+  }, [mobileMenuOpen, photoshootsOpen]);
+
+  // Close secondary header when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!event.target || !photoshootsOpen || !subHeaderRef.current) return;
+      
+      if (!subHeaderRef.current.contains(event.target as Node)) {
+        // Check if click is not on the Photoshoots button itself
+        const target = event.target as HTMLElement;
+        if (target && !target.closest('[data-photoshoots-trigger]')) {
+          setPhotoshootsOpen(false);
+        }
+      }
+    };
+    
+    if (photoshootsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [photoshootsOpen]);
 
   return (
     <header 
@@ -78,75 +106,110 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-3">
-          {/* Photoshoots dropdown */}
-          <div 
-            className="relative"
-            onMouseEnter={() => setPhotoshootsOpen(true)}
-            onMouseLeave={() => setPhotoshootsOpen(false)}
+          {/* Technical link */}
+          <Link
+            to="/technical"
+            onMouseEnter={() => setHoveredItem('technical')}
+            onMouseLeave={() => setHoveredItem(null)}
+            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+              activeCategory === "TECHNICAL"
+                ? "text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground/80"
+            }`}
           >
-            <Link
-              to="/photoshoots"
-              onMouseEnter={() => setHoveredItem('photoshoots')}
-              onMouseLeave={() => setHoveredItem(null)}
-              className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
-                categories.includes(activeCategory)
-                  ? "text-foreground font-medium"
-                  : "text-muted-foreground hover:text-foreground/80"
-              }`}
-            >
-              {hoveredItem === 'photoshoots' ? (
-                <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
-                  PHOTOSHOOTS
-                </TextRoll>
-              ) : (
-                "PHOTOSHOOTS"
-              )}
-            </Link>
-            
-            {/* Dropdown menu */}
-            {photoshootsOpen && (
-              <div className="absolute left-0 top-full pt-2 z-50">
-                <div className="bg-background border border-border shadow-lg min-w-[180px] py-2">
-                  {categories.map((category) => (
-                    <Link
-                      key={category}
-                      to={`/photoshoots/${category.toLowerCase()}`}
-                      onMouseEnter={() => setHoveredItem(category)}
-                      onMouseLeave={() => setHoveredItem(null)}
-                      className={`block px-4 py-2 text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors ${
-                        activeCategory === category
-                          ? "text-foreground font-medium bg-accent/5"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent/5"
-                      }`}
-                    >
-                      {hoveredItem === category ? (
-                        <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
-                          {category}
-                        </TextRoll>
-                      ) : (
-                        category
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              </div>
+            {hoveredItem === 'technical' ? (
+              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                TECHNICAL
+              </TextRoll>
+            ) : (
+              "TECHNICAL"
             )}
-          </div>
+          </Link>
+
+          {/* Artistic link */}
+          <Link
+            to="/artistic"
+            onMouseEnter={() => setHoveredItem('artistic')}
+            onMouseLeave={() => setHoveredItem(null)}
+            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+              activeCategory === "ARTISTIC"
+                ? "text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground/80"
+            }`}
+          >
+            {hoveredItem === 'artistic' ? (
+              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                ARTISTIC
+              </TextRoll>
+            ) : (
+              "ARTISTIC"
+            )}
+          </Link>
+
+          {/* Photoshoots trigger button */}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              setPhotoshootsOpen(!photoshootsOpen);
+            }}
+            onMouseEnter={() => setHoveredItem('photoshoots')}
+            onMouseLeave={() => setHoveredItem(null)}
+            data-photoshoots-trigger
+            aria-expanded={photoshootsOpen}
+            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+              categories.includes(activeCategory)
+                ? "text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground/80"
+            }`}
+          >
+            {hoveredItem === 'photoshoots' ? (
+              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                PHOTOSHOOTS
+              </TextRoll>
+            ) : (
+              "PHOTOSHOOTS"
+            )}
+          </button>
+
+          {/* Achievement link */}
+          <Link
+            to="/achievement"
+            onMouseEnter={() => setHoveredItem('achievement')}
+            onMouseLeave={() => setHoveredItem(null)}
+            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+              activeCategory === "ACHIEVEMENT"
+                ? "text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground/80"
+            }`}
+          >
+            {hoveredItem === 'achievement' ? (
+              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                ACHIEVEMENT
+              </TextRoll>
+            ) : (
+              "ACHIEVEMENT"
+            )}
+          </Link>
         
-        <Link
-          to="/about"
-          className="text-[10px] md:text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors font-inter whitespace-nowrap"
-          onMouseEnter={() => setHoveredItem('about')}
-          onMouseLeave={() => setHoveredItem(null)}
-        >
-          {hoveredItem === 'about' ? (
-            <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
-              ABOUT
-            </TextRoll>
-          ) : (
-            "ABOUT"
-          )}
-        </Link>
+          {/* About link */}
+          <Link
+            to="/about"
+            onMouseEnter={() => setHoveredItem('about')}
+            onMouseLeave={() => setHoveredItem(null)}
+            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+              activeCategory === "ABOUT"
+                ? "text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground/80"
+            }`}
+          >
+            {hoveredItem === 'about' ? (
+              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                ABOUT
+              </TextRoll>
+            ) : (
+              "ABOUT"
+            )}
+          </Link>
       </div>
 
         {/* Mobile Menu Overlay */}
@@ -170,18 +233,48 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
               </div>
 
               {/* Mobile Navigation Links */}
-              <nav className="flex flex-col items-center justify-center gap-8 px-8 pt-12">
+              <nav className="flex flex-col items-center justify-center gap-6 px-8 pt-12">
+                {/* Technical link */}
+                <Link
+                  to="/technical"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`text-lg uppercase tracking-widest font-inter transition-colors ${
+                    activeCategory === "TECHNICAL" 
+                      ? "text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  TECHNICAL
+                </Link>
+
+                {/* Artistic link */}
+                <Link
+                  to="/artistic"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`text-lg uppercase tracking-widest font-inter transition-colors ${
+                    activeCategory === "ARTISTIC" 
+                      ? "text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  ARTISTIC
+                </Link>
+
                 {/* Photoshoots parent link */}
                 <Link
                   to="/photoshoots"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-lg uppercase tracking-widest font-inter text-muted-foreground hover:text-foreground transition-colors"
+                  className={`text-lg uppercase tracking-widest font-inter transition-colors ${
+                    categories.includes(activeCategory) 
+                      ? "text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
                   PHOTOSHOOTS
                 </Link>
 
                 {/* Categories as sub-items */}
-                <div className="flex flex-col items-center gap-4 pl-4">
+                <div className="flex flex-col items-center gap-3 pl-4">
                   {categories.map((category) => (
                     <Link
                       key={category}
@@ -198,14 +291,31 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
                   ))}
                 </div>
 
+                {/* Achievement link */}
+                <Link
+                  to="/achievement"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`text-lg uppercase tracking-widest font-inter transition-colors ${
+                    activeCategory === "ACHIEVEMENT" 
+                      ? "text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  ACHIEVEMENT
+                </Link>
+
                 {/* Separator */}
                 <div className="w-16 h-px bg-border"></div>
 
-                {/* Page Links */}
+                {/* About Link */}
                 <Link
                   to="/about"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-lg uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors font-inter"
+                  className={`text-lg uppercase tracking-widest font-inter transition-colors ${
+                    activeCategory === "ABOUT" 
+                      ? "text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
                   ABOUT
                 </Link>
@@ -213,6 +323,49 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
             </div>
           </FocusTrap>
         )}
+      </div>
+
+      {/* Secondary Header Bar for Photoshoots */}
+      <div
+        ref={subHeaderRef}
+        className={`fixed left-0 right-0 bg-background border-b border-border transition-all duration-300 ${
+          isAdminContext ? 'z-30' : 'z-40'
+        } ${
+          photoshootsOpen 
+            ? 'opacity-100 translate-y-0 visible' 
+            : 'opacity-0 -translate-y-2 invisible pointer-events-none'
+        }`}
+        style={{ 
+          top: topOffset === '0' ? '49px' : `calc(${topOffset} + 49px)`,
+        }}
+        aria-hidden={!photoshootsOpen}
+      >
+        <div className="max-w-[1600px] mx-auto px-3 md:px-5 py-3">
+          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            {categories.map((category) => (
+              <Link
+                key={category}
+                to={`/photoshoots/${category.toLowerCase()}`}
+                onMouseEnter={() => setHoveredItem(category)}
+                onMouseLeave={() => setHoveredItem(null)}
+                onClick={() => setPhotoshootsOpen(false)}
+                className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+                  activeCategory === category
+                    ? "text-foreground font-medium"
+                    : "text-muted-foreground hover:text-foreground/80"
+                }`}
+              >
+                {hoveredItem === category ? (
+                  <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                    {category}
+                  </TextRoll>
+                ) : (
+                  category
+                )}
+              </Link>
+            ))}
+          </nav>
+        </div>
       </div>
     </header>
   );

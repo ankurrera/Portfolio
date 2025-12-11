@@ -15,6 +15,12 @@ interface GalleryItem {
   span?: number;
   width?: number;
   height?: number;
+  // Optional metadata fields
+  caption?: string;
+  photographer_name?: string;
+  date_taken?: string;
+  device_used?: string;
+  video_thumbnail_url?: string;
 }
 
 interface MasonryGalleryProps {

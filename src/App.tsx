@@ -7,11 +7,16 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./hooks/useAuth";
 import Index from "./pages/Index";
 import About from "./pages/About";
+import Technical from "./pages/Technical";
+import Artistic from "./pages/Artistic";
+import Achievement from "./pages/Achievement";
 import Project from "./pages/Project";
 import CategoryGallery from "./pages/CategoryGallery";
 import CategoryRedirect from "./pages/CategoryRedirect";
 import Photoshoots from "./pages/Photoshoots";
 import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminPhotoshootsEdit from "./pages/AdminPhotoshootsEdit";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -29,13 +34,19 @@ const App = () => (
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/technical" element={<Technical />} />
+                <Route path="/artistic" element={<Artistic />} />
+                <Route path="/achievement" element={<Achievement />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/photoshoots" element={<Photoshoots />} />
                 <Route path="/photoshoots" element={<Photoshoots />} />
                 <Route path="/photoshoots/:category" element={<CategoryGallery />} />
                 {/* Redirect old category routes to new photoshoots routes */}
                 <Route path="/category/:category" element={<CategoryRedirect />} />
                 <Route path="/project/:slug" element={<Project />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/photoshoots/:category/edit" element={<AdminPhotoshootsEdit />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
