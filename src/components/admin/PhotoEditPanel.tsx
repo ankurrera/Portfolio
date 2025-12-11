@@ -20,6 +20,7 @@ const MAX_CAPTION_LENGTH = 500;
 const MAX_PHOTOGRAPHER_NAME_LENGTH = 100;
 const MAX_DEVICE_USED_LENGTH = 100;
 const MAX_VIDEO_THUMBNAIL_LENGTH = 500;
+const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPanelProps) {
   const [caption, setCaption] = useState(photo.caption || '');
@@ -51,7 +52,7 @@ export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPa
     }
 
     // Validate date format if provided
-    if (dateTaken && !/^\d{4}-\d{2}-\d{2}$/.test(dateTaken)) {
+    if (dateTaken && !DATE_FORMAT_REGEX.test(dateTaken)) {
       newErrors.dateTaken = 'Date must be in YYYY-MM-DD format';
     }
 

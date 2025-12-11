@@ -111,10 +111,10 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       }
     } catch (error: unknown) {
       // Don't show error if request was aborted (user triggered another action)
-      if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
-        return;
-      }
-      if (abortControllerRef.current?.signal.aborted) {
+      const isAbortError = error && typeof error === 'object' && 'name' in error && error.name === 'AbortError';
+      const isSignalAborted = abortControllerRef.current?.signal.aborted;
+      
+      if (isAbortError || isSignalAborted) {
         return;
       }
       
@@ -475,6 +475,9 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
   const categoryUpper = category.toUpperCase();
   const canvasHeight = calculateCanvasHeight();
   const scaleFactor = getDeviceScaleFactor();
+  
+  // Find the photo being edited for the edit panel
+  const editingPhoto = editingPhotoId ? photos.find(p => p.id === editingPhotoId) : null;
 
   return (
     <>
@@ -673,16 +676,13 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       </Dialog>
 
       {/* Photo Edit Panel */}
-      {editingPhotoId && (() => {
-        const photo = photos.find(p => p.id === editingPhotoId);
-        return photo ? (
-          <PhotoEditPanel
-            photo={photo}
-            onClose={() => setEditingPhotoId(null)}
-            onUpdate={handlePhotoUpdate}
-          />
-        ) : null;
-      })()}
+      {editingPhoto && (
+        <PhotoEditPanel
+          photo={editingPhoto}
+          onClose={() => setEditingPhotoId(null)}
+          onUpdate={handlePhotoUpdate}
+        />
+      )}
     </>
   );
 }
