@@ -28,8 +28,8 @@ const MinimalContact = () => {
     {
       icon: Mail,
       label: 'Email',
-      value: 'ankurr.era@gamil.com',
-      href: 'mailto:ankurr.era@gamil.com'
+      value: 'ankurr.era@gmail.com',
+      href: 'mailto:ankurr.era@gmail.com'
     },
     {
       icon: MapPin,

@@ -48,7 +48,7 @@ const MinimalAbout = () => {
           duration: 0.6
         }} className="space-y-8">
             <div className="space-y-6">
-              <p className="text-lg font-light text-foreground leading-relaxed">I'm a passionate full-stack Web developer with over 1 years of experience creating digital solutions that matter.</p>
+              <p className="text-lg font-light text-foreground leading-relaxed">I'm a passionate full-stack Web developer with over 1 year of experience creating digital solutions that matter.</p>
               
               <p className="text-muted-foreground leading-relaxed">
                 My journey began with a curiosity about how things work. Today, I specialize 
@@ -128,7 +128,7 @@ const MinimalAbout = () => {
                 {[{
                 role: 'Website Developer',
                 company: 'Digital Indian pvt Solution',
-                year: '08/2025 - Present'
+                year: '08/2024 - Present'
               }, {
                 role: 'Google Map 360 Photographer',
                 company: 'Instanovate',
