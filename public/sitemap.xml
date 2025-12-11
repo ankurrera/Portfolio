@@ -18,6 +18,30 @@
     <priority>0.8</priority>
   </url>
   
+  <!-- Technical Page -->
+  <url>
+    <loc>https://raya.photo/technical</loc>
+    <lastmod>2024-01-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Artistic Page -->
+  <url>
+    <loc>https://raya.photo/artistic</loc>
+    <lastmod>2024-01-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Achievement Page -->
+  <url>
+    <loc>https://raya.photo/achievement</loc>
+    <lastmod>2024-01-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
   <!-- Photoshoots Parent Page -->
   <url>
     <loc>https://raya.photo/photoshoots</loc>

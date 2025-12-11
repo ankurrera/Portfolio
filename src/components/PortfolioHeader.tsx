@@ -106,6 +106,46 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-3">
+          {/* Technical link */}
+          <Link
+            to="/technical"
+            onMouseEnter={() => setHoveredItem('technical')}
+            onMouseLeave={() => setHoveredItem(null)}
+            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+              activeCategory === "TECHNICAL"
+                ? "text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground/80"
+            }`}
+          >
+            {hoveredItem === 'technical' ? (
+              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                TECHNICAL
+              </TextRoll>
+            ) : (
+              "TECHNICAL"
+            )}
+          </Link>
+
+          {/* Artistic link */}
+          <Link
+            to="/artistic"
+            onMouseEnter={() => setHoveredItem('artistic')}
+            onMouseLeave={() => setHoveredItem(null)}
+            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+              activeCategory === "ARTISTIC"
+                ? "text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground/80"
+            }`}
+          >
+            {hoveredItem === 'artistic' ? (
+              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                ARTISTIC
+              </TextRoll>
+            ) : (
+              "ARTISTIC"
+            )}
+          </Link>
+
           {/* Photoshoots trigger button */}
           <button
             onClick={(e) => {
@@ -130,21 +170,46 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
               "PHOTOSHOOTS"
             )}
           </button>
+
+          {/* Achievement link */}
+          <Link
+            to="/achievement"
+            onMouseEnter={() => setHoveredItem('achievement')}
+            onMouseLeave={() => setHoveredItem(null)}
+            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+              activeCategory === "ACHIEVEMENT"
+                ? "text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground/80"
+            }`}
+          >
+            {hoveredItem === 'achievement' ? (
+              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                ACHIEVEMENT
+              </TextRoll>
+            ) : (
+              "ACHIEVEMENT"
+            )}
+          </Link>
         
-        <Link
-          to="/about"
-          className="text-[10px] md:text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors font-inter whitespace-nowrap"
-          onMouseEnter={() => setHoveredItem('about')}
-          onMouseLeave={() => setHoveredItem(null)}
-        >
-          {hoveredItem === 'about' ? (
-            <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
-              ABOUT
-            </TextRoll>
-          ) : (
-            "ABOUT"
-          )}
-        </Link>
+          {/* About link */}
+          <Link
+            to="/about"
+            onMouseEnter={() => setHoveredItem('about')}
+            onMouseLeave={() => setHoveredItem(null)}
+            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+              activeCategory === "ABOUT"
+                ? "text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground/80"
+            }`}
+          >
+            {hoveredItem === 'about' ? (
+              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+                ABOUT
+              </TextRoll>
+            ) : (
+              "ABOUT"
+            )}
+          </Link>
       </div>
 
         {/* Mobile Menu Overlay */}
@@ -168,18 +233,48 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
               </div>
 
               {/* Mobile Navigation Links */}
-              <nav className="flex flex-col items-center justify-center gap-8 px-8 pt-12">
+              <nav className="flex flex-col items-center justify-center gap-6 px-8 pt-12">
+                {/* Technical link */}
+                <Link
+                  to="/technical"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`text-lg uppercase tracking-widest font-inter transition-colors ${
+                    activeCategory === "TECHNICAL" 
+                      ? "text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  TECHNICAL
+                </Link>
+
+                {/* Artistic link */}
+                <Link
+                  to="/artistic"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`text-lg uppercase tracking-widest font-inter transition-colors ${
+                    activeCategory === "ARTISTIC" 
+                      ? "text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  ARTISTIC
+                </Link>
+
                 {/* Photoshoots parent link */}
                 <Link
                   to="/photoshoots"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-lg uppercase tracking-widest font-inter text-muted-foreground hover:text-foreground transition-colors"
+                  className={`text-lg uppercase tracking-widest font-inter transition-colors ${
+                    categories.includes(activeCategory) 
+                      ? "text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
                   PHOTOSHOOTS
                 </Link>
 
                 {/* Categories as sub-items */}
-                <div className="flex flex-col items-center gap-4 pl-4">
+                <div className="flex flex-col items-center gap-3 pl-4">
                   {categories.map((category) => (
                     <Link
                       key={category}
@@ -196,14 +291,31 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
                   ))}
                 </div>
 
+                {/* Achievement link */}
+                <Link
+                  to="/achievement"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`text-lg uppercase tracking-widest font-inter transition-colors ${
+                    activeCategory === "ACHIEVEMENT" 
+                      ? "text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  ACHIEVEMENT
+                </Link>
+
                 {/* Separator */}
                 <div className="w-16 h-px bg-border"></div>
 
-                {/* Page Links */}
+                {/* About Link */}
                 <Link
                   to="/about"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-lg uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors font-inter"
+                  className={`text-lg uppercase tracking-widest font-inter transition-colors ${
+                    activeCategory === "ABOUT" 
+                      ? "text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
                   ABOUT
                 </Link>
