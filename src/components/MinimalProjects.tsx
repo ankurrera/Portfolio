@@ -1,47 +1,78 @@
 import { motion } from 'motion/react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowUpRight, Github } from 'lucide-react';
+import { ArrowUpRight, Github, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface TechnicalProject {
+  id: string;
+  title: string;
+  description: string | null;
+  tech_stack: string[];
+  year: string;
+  status: string;
+  github_link: string | null;
+  live_link: string | null;
+  thumbnail_url: string | null;
+  display_order: number;
+}
 
 const MinimalProjects = () => {
-  const projects = [
-    {
-      id: '01',
-      title: 'AI Analytics Dashboard',
-      description: 'Real-time data visualization platform with machine learning insights for enterprise clients.',
-      tech: ['React', 'TypeScript', 'Python', 'TensorFlow'],
-      year: '2024',
-      status: 'Live',
-      link: '#'
-    },
-    {
-      id: '02',
-      title: 'Blockchain Wallet',
-      description: 'Secure multi-chain cryptocurrency wallet with DeFi integration and advanced security features.',
-      tech: ['Next.js', 'Web3', 'Solidity', 'Node.js'],
-      year: '2023',
-      status: 'In Development',
-      link: '#'
-    },
-    {
-      id: '03',
-      title: 'E-commerce Platform',
-      description: 'Modern shopping experience with AR try-on features and personalized recommendations.',
-      tech: ['Vue.js', 'Express', 'MongoDB', 'AWS'],
-      year: '2023',
-      status: 'Live',
-      link: '#'
-    },
-    {
-      id: '04',
-      title: 'IoT Management System',
-      description: 'Comprehensive platform for monitoring and controlling smart devices across multiple locations.',
-      tech: ['React Native', 'MQTT', 'PostgreSQL', 'Docker'],
-      year: '2022',
-      status: 'Live',
-      link: '#'
-    }
-  ];
+  const [projects, setProjects] = useState<TechnicalProject[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const { data, error } = await supabase
+        .from('technical_projects')
+        .select('*')
+        .eq('is_published', true)
+        .order('display_order', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching projects:', error);
+      } else {
+        setProjects(data || []);
+      }
+      setIsLoading(false);
+    };
+
+    fetchProjects();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <section id="work" className="py-section bg-background">
+        <div className="max-w-content mx-auto px-8 flex justify-center items-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </section>
+    );
+  }
+
+  if (projects.length === 0) {
+    return (
+      <section id="work" className="py-section bg-background">
+        <div className="max-w-content mx-auto px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center py-20"
+          >
+            <h2 className="text-section font-heading font-light text-foreground mb-4">
+              Projects Coming Soon
+            </h2>
+            <p className="text-muted-foreground">
+              Check back later for updates on technical projects.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="work" className="py-section bg-background">
@@ -87,7 +118,7 @@ const MinimalProjects = () => {
                     {/* Project Number */}
                     <div className="order-1 lg:order-1">
                       <div className="text-6xl font-heading font-light text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors">
-                        {project.id}
+                        {String(index + 1).padStart(2, '0')}
                       </div>
                     </div>
 
@@ -103,7 +134,7 @@ const MinimalProjects = () => {
                       </div>
                       
                       <div className="flex flex-wrap gap-2">
-                        {project.tech.map((tech) => (
+                        {project.tech_stack.map((tech) => (
                           <span 
                             key={tech} 
                             className="text-xs font-mono text-muted-foreground/60 px-2 py-1 bg-muted/30 rounded"
@@ -128,20 +159,30 @@ const MinimalProjects = () => {
                       </div>
                       
                       <div className="flex gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 hover:bg-muted/50"
-                        >
-                          <ArrowUpRight className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 hover:bg-muted/50"
-                        >
-                          <Github className="w-4 h-4" />
-                        </Button>
+                        {project.live_link && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 hover:bg-muted/50"
+                            asChild
+                          >
+                            <a href={project.live_link} target="_blank" rel="noopener noreferrer">
+                              <ArrowUpRight className="w-4 h-4" />
+                            </a>
+                          </Button>
+                        )}
+                        {project.github_link && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 hover:bg-muted/50"
+                            asChild
+                          >
+                            <a href={project.github_link} target="_blank" rel="noopener noreferrer">
+                              <Github className="w-4 h-4" />
+                            </a>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>

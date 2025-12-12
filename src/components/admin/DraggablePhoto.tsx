@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { GripVertical, Maximize2, ZoomIn, MoveUp, MoveDown, Trash2 } from 'lucide-react';
+import { GripVertical, Maximize2, ZoomIn, MoveUp, MoveDown, Trash2, Pencil } from 'lucide-react';
 import { PhotoLayoutData } from '@/types/wysiwyg';
 import { Button } from '@/components/ui/button';
 
@@ -9,10 +9,13 @@ interface DraggablePhotoProps {
   isEditMode: boolean;
   snapToGrid: boolean;
   gridSize: number;
+  isSelected?: boolean;
   onUpdate: (id: string, updates: Partial<PhotoLayoutData>) => void;
   onDelete: (id: string) => void;
   onBringForward: (id: string) => void;
   onSendBackward: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onSelect?: (id: string) => void;
 }
 
 export default function DraggablePhoto({
@@ -20,10 +23,13 @@ export default function DraggablePhoto({
   isEditMode,
   snapToGrid,
   gridSize,
+  isSelected = false,
   onUpdate,
   onDelete,
   onBringForward,
   onSendBackward,
+  onEdit,
+  onSelect,
 }: DraggablePhotoProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -44,6 +50,11 @@ export default function DraggablePhoto({
     if (!isEditMode || e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
+    
+    // Handle selection on click
+    if (onSelect && !isDragging) {
+      onSelect(photo.id);
+    }
     
     setIsDragging(true);
     dragStartPos.current = {
@@ -255,8 +266,8 @@ export default function DraggablePhoto({
       />
 
       {/* Edit Mode Overlay */}
-      {isEditMode && isHovered && (
-        <div className="absolute inset-0 border-2 border-primary rounded-sm pointer-events-none">
+      {isEditMode && (isHovered || isSelected) && (
+        <div className={`absolute inset-0 border-2 ${isSelected ? 'border-primary' : 'border-primary/50'} rounded-sm pointer-events-none`}>
           {/* Position Indicator */}
           <div className="absolute -top-8 left-0 bg-primary text-primary-foreground px-2 py-1 text-xs rounded-sm">
             {Math.round(photo.position_x)}, {Math.round(photo.position_y)}
@@ -272,6 +283,17 @@ export default function DraggablePhoto({
       {/* Controls */}
       {isEditMode && isHovered && (
         <div className="absolute -top-10 -right-2 flex gap-1 pointer-events-auto">
+          {onEdit && (
+            <Button
+              size="icon"
+              variant="secondary"
+              className="h-8 w-8 shadow-md"
+              onClick={() => onEdit(photo.id)}
+              title="Edit metadata"
+            >
+              <Pencil className="h-3 w-3" />
+            </Button>
+          )}
           <Button
             size="icon"
             variant="secondary"

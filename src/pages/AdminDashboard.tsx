@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
-import { Loader2, LogOut, Camera, FolderOpen } from 'lucide-react';
+import { Loader2, LogOut, Camera, FolderOpen, Code } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -87,6 +87,35 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
+        {/* Technical Section */}
+        <section className="mb-12">
+          <div className="flex items-center gap-2 mb-6">
+            <Code className="h-5 w-5 text-foreground" />
+            <h2 className="text-lg font-semibold uppercase tracking-wider">Technical</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card 
+              className="hover:border-foreground/20 transition-all duration-300 cursor-pointer"
+              onClick={() => navigate('/admin/technical/edit')}
+            >
+              <CardHeader>
+                <CardTitle className="text-base uppercase tracking-wider">
+                  Technical Projects
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Manage technical projects, add new projects, update metadata, and reorder
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button variant="outline" size="sm" className="w-full">
+                  Manage Projects
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
         {/* Photoshoots Section */}
         <section className="mb-12">
           <div className="flex items-center gap-2 mb-6">

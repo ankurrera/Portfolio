@@ -17,6 +17,7 @@ import Photoshoots from "./pages/Photoshoots";
 import Admin from "./pages/Admin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminPhotoshootsEdit from "./pages/AdminPhotoshootsEdit";
+import AdminTechnicalEdit from "./pages/AdminTechnicalEdit";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -28,10 +29,10 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <TooltipProvider>
         <AuthProvider>
-          <ErrorBoundary>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+          <BrowserRouter>
+            <ErrorBoundary>
+              <Toaster />
+              <Sonner />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/technical" element={<Technical />} />
@@ -47,12 +48,13 @@ const App = () => (
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/photoshoots/:category/edit" element={<AdminPhotoshootsEdit />} />
+                <Route path="/admin/technical/edit" element={<AdminTechnicalEdit />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </BrowserRouter>
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </BrowserRouter>
         </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
