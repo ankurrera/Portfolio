@@ -49,12 +49,10 @@ const AdminTechnicalEdit = () => {
 
       if (error) throw error;
 
-      // Parse languages from JSONB
-      const parsedProjects = data.map(project => ({
+      // Map to TechnicalProject type
+      const parsedProjects = (data || []).map(project => ({
         ...project,
-        languages: Array.isArray(project.languages) 
-          ? project.languages 
-          : JSON.parse(project.languages as string)
+        tech_stack: project.tech_stack || []
       })) as TechnicalProject[];
 
       setProjects(parsedProjects);
