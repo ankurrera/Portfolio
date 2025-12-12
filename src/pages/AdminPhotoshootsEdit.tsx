@@ -75,7 +75,7 @@ const AdminPhotoshootsEdit = () => {
     commissioned: 'Commissioned Projects',
     editorial: 'Editorial Photography',
     personal: 'Personal Projects',
-  } as const;
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">

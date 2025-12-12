@@ -203,7 +203,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
       // Prepare external links as JSONB
       const externalLinksJson = metadata.external_links || [];
 
-      // Insert into photos table with valid fields only
+      // Insert into photos table with all metadata and original file info
       const { error: insertError } = await supabase
         .from('photos')
         .insert({
@@ -211,7 +211,6 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
           image_url: derivativeUrl,
           display_order: nextOrder,
           title: file.name.replace(/\.[^/.]+$/, ''),
-          description: metadata.caption || null,
           position_x: initialX,
           position_y: initialY,
           width: initialWidth,
@@ -220,6 +219,24 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
           rotation: 0,
           z_index: nextZIndex,
           is_draft: false,
+          caption: metadata.caption || null,
+          photographer_name: metadata.photographer_name || null,
+          date_taken: metadata.date_taken || null,
+          device_used: metadata.device_used || null,
+          video_thumbnail_url: thumbnailUrl,
+          // Original file tracking
+          original_file_url: originalUrl,
+          original_width: originalWidth,
+          original_height: originalHeight,
+          original_mime_type: file.type,
+          original_size_bytes: file.size,
+          // Extended metadata
+          year: metadata.year || null,
+          tags: metadata.tags || null,
+          credits: metadata.credits || null,
+          camera_lens: metadata.camera_lens || null,
+          project_visibility: metadata.project_visibility || 'public',
+          external_links: externalLinksJson,
         });
 
       if (insertError) throw insertError;

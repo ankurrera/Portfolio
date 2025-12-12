@@ -10,7 +10,7 @@ const WYSIWYGEditor = lazy(() => import('@/components/admin/WYSIWYGEditor'));
 const AdminArtisticEdit = () => {
   const { user, isAdmin, isLoading, signOut } = useAuth();
   const navigate = useNavigate();
-  const [activeCategory] = useState<'selected'>('selected');
+  const [activeCategory] = useState<'artistic'>('artistic');
 
   // Single effect for auth redirect - runs when auth state changes
   useEffect(() => {

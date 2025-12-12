@@ -23,10 +23,12 @@ const MinimalProjects = () => {
 
       if (error) throw error;
 
-      // Map database fields to component expectations
-      const parsedProjects = (data || []).map(project => ({
+      // Parse languages from JSONB
+      const parsedProjects = data.map(project => ({
         ...project,
-        tech_stack: project.tech_stack || []
+        languages: Array.isArray(project.languages) 
+          ? project.languages 
+          : JSON.parse(project.languages as string)
       })) as TechnicalProject[];
 
       setProjects(parsedProjects);
@@ -121,7 +123,7 @@ const MinimalProjects = () => {
                       </div>
                       
                       <div className="flex flex-wrap gap-2">
-                        {project.tech_stack.map((tech) => (
+                        {project.languages.map((tech) => (
                           <span 
                             key={tech} 
                             className="text-xs font-mono text-muted-foreground/60 px-2 py-1 bg-muted/30 rounded"
@@ -136,7 +138,7 @@ const MinimalProjects = () => {
                     <div className="order-2 lg:order-3 flex lg:flex-col items-start lg:items-end justify-between lg:justify-start gap-4">
                       <div className="text-right">
                         <div className="text-sm font-medium text-foreground mb-1">
-                          {project.year}
+                          {project.dev_year}
                         </div>
                         <div className={`text-xs font-mono uppercase tracking-widest ${
                           project.status === 'Live' ? 'text-success' : 'text-warning'

@@ -18,25 +18,25 @@ interface TechnicalProjectFormProps {
 const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFormProps) => {
   const [title, setTitle] = useState(project?.title || '');
   const [description, setDescription] = useState(project?.description || '');
-  const [year, setYear] = useState(project?.year || new Date().getFullYear().toString());
+  const [devYear, setDevYear] = useState(project?.dev_year || new Date().getFullYear().toString());
   const [status, setStatus] = useState(project?.status || 'Live');
   const [githubLink, setGithubLink] = useState(project?.github_link || '');
   const [liveLink, setLiveLink] = useState(project?.live_link || '');
   const [thumbnailUrl, setThumbnailUrl] = useState(project?.thumbnail_url || '');
-  const [techStack, setTechStack] = useState<string[]>(project?.tech_stack || []);
-  const [newTech, setNewTech] = useState('');
+  const [languages, setLanguages] = useState<string[]>(project?.languages || []);
+  const [newLanguage, setNewLanguage] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleAddTech = () => {
-    if (newTech.trim() && !techStack.includes(newTech.trim())) {
-      setTechStack([...techStack, newTech.trim()]);
-      setNewTech('');
+  const handleAddLanguage = () => {
+    if (newLanguage.trim() && !languages.includes(newLanguage.trim())) {
+      setLanguages([...languages, newLanguage.trim()]);
+      setNewLanguage('');
     }
   };
 
-  const handleRemoveTech = (tech: string) => {
-    setTechStack(techStack.filter(t => t !== tech));
+  const handleRemoveLanguage = (lang: string) => {
+    setLanguages(languages.filter(l => l !== lang));
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,12 +101,12 @@ const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFor
         const updates: TechnicalProjectUpdate = {
           title: title.trim(),
           description: description.trim(),
-          year,
+          dev_year: devYear,
           status,
           github_link: githubLink.trim() || null,
           live_link: liveLink.trim() || null,
           thumbnail_url: thumbnailUrl || null,
-          tech_stack: techStack,
+          languages,
         };
 
         const { data, error } = await supabase
@@ -118,30 +118,42 @@ const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFor
 
         if (error) throw error;
         
-        onSave(data as TechnicalProject);
+        // Parse languages from JSONB
+        const updatedProject = {
+          ...data,
+          languages: Array.isArray(data.languages) ? data.languages : JSON.parse(data.languages as string)
+        };
+        
+        onSave(updatedProject as TechnicalProject);
         toast.success('Project updated successfully');
       } else {
         // Create new project
         const insert: TechnicalProjectInsert = {
           title: title.trim(),
           description: description.trim(),
-          year,
+          dev_year: devYear,
           status,
           github_link: githubLink.trim() || null,
           live_link: liveLink.trim() || null,
           thumbnail_url: thumbnailUrl || null,
-          tech_stack: techStack,
+          languages,
         };
 
         const { data, error } = await supabase
           .from('technical_projects')
-          .insert([insert])
+          .insert(insert)
           .select()
           .single();
 
         if (error) throw error;
         
-        onSave(data as TechnicalProject);
+        // Parse languages from JSONB
+        const newProject = {
+          ...data,
+          languages: Array.isArray(data.languages) ? data.languages : JSON.parse(data.languages as string)
+        };
+        
+        onSave(newProject as TechnicalProject);
         toast.success('Project created successfully');
       }
     } catch (error) {
@@ -184,13 +196,14 @@ const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFor
             />
           </div>
 
+          {/* Dev Year and Status */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="year">Development Year *</Label>
+              <Label htmlFor="devYear">Development Year *</Label>
               <Input
-                id="year"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
+                id="devYear"
+                value={devYear}
+                onChange={(e) => setDevYear(e.target.value)}
                 placeholder="2024"
                 required
               />
@@ -251,30 +264,30 @@ const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFor
             )}
           </div>
 
-          {/* Tech Stack */}
+          {/* Languages/Technologies */}
           <div className="space-y-2">
             <Label>Languages & Technologies</Label>
             <div className="flex gap-2">
               <Input
-                value={newTech}
-                onChange={(e) => setNewTech(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTech())}
+                value={newLanguage}
+                onChange={(e) => setNewLanguage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddLanguage())}
                 placeholder="React, TypeScript, etc."
               />
-              <Button type="button" onClick={handleAddTech} size="sm">
+              <Button type="button" onClick={handleAddLanguage} size="sm">
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
-              {techStack.map((tech) => (
+              {languages.map((lang) => (
                 <div
-                  key={tech}
+                  key={lang}
                   className="flex items-center gap-1 px-3 py-1 bg-muted rounded text-sm"
                 >
-                  <span>{tech}</span>
+                  <span>{lang}</span>
                   <button
                     type="button"
-                    onClick={() => handleRemoveTech(tech)}
+                    onClick={() => handleRemoveLanguage(lang)}
                     className="hover:text-destructive"
                   >
                     <X className="h-3 w-3" />
