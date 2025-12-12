@@ -10,6 +10,7 @@ import SEO from "@/components/SEO";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
 import { GalleryImage, DEFAULT_PHOTO_WIDTH, DEFAULT_PHOTO_HEIGHT } from "@/types/gallery";
+import { ArtworkData } from "@/types/artwork";
 
 const Artistic = () => {
   const [images, setImages] = useState<GalleryImage[]>([]);
@@ -38,14 +39,13 @@ const Artistic = () => {
         setError(null);
         setErrorDetails(undefined);
         
-        console.info('[Artistic] Fetching photos for category: artistic');
+        console.info('[Artistic] Fetching artworks');
         
-        // Build query for artistic category
+        // Fetch from artworks table instead of photos
         const { data, error: fetchError } = await supabase
-          .from('photos')
+          .from('artworks')
           .select('*')
-          .eq('category', 'artistic')
-          .eq('is_draft', false)
+          .eq('is_published', true)
           .order('z_index', { ascending: true })
           .abortSignal(abortControllerRef.current.signal);
 
@@ -53,33 +53,36 @@ const Artistic = () => {
 
         if (fetchError) throw fetchError;
 
-        console.info(`[Artistic] Successfully fetched ${data?.length || 0} photos`);
+        console.info(`[Artistic] Successfully fetched ${data?.length || 0} artworks`);
 
-        // Transform Supabase photos to gallery format
-        const transformedImages = (data || []).map((photo) => ({
+        // Transform artworks to gallery format
+        const transformedImages = (data || []).map((artwork: ArtworkData) => ({
           type: 'image' as const,
-          src: photo.image_url, // Display derivative (web-optimized)
-          highResSrc: photo.original_file_url || photo.image_url, // Use original for high-res, fallback to derivative
-          alt: photo.title || 'Artistic photography',
+          src: artwork.primary_image_url, // Display derivative (web-optimized)
+          highResSrc: artwork.primary_image_original_url || artwork.primary_image_url, // Use original for high-res
+          alt: artwork.title || 'Artwork',
           photographer: 'Ankur Bag',
-          client: photo.description || '',
+          client: '',
           location: '',
-          details: photo.description || '',
-          width: photo.width || DEFAULT_PHOTO_WIDTH,
-          height: photo.height || DEFAULT_PHOTO_HEIGHT,
+          details: artwork.description || '',
+          width: artwork.width || DEFAULT_PHOTO_WIDTH,
+          height: artwork.height || DEFAULT_PHOTO_HEIGHT,
           // Include WYSIWYG layout fields
-          position_x: photo.position_x,
-          position_y: photo.position_y,
-          scale: photo.scale,
-          rotation: photo.rotation,
-          z_index: photo.z_index,
+          position_x: artwork.position_x,
+          position_y: artwork.position_y,
+          scale: artwork.scale,
+          rotation: artwork.rotation,
+          z_index: artwork.z_index,
           // Include metadata fields
-          caption: photo.caption,
-          photographer_name: photo.photographer_name,
-          date_taken: photo.date_taken,
-          device_used: photo.device_used,
-          camera_lens: photo.camera_lens,
-          credits: photo.credits,
+          caption: artwork.title,
+          photographer_name: 'Ankur Bag',
+          date_taken: artwork.creation_date,
+          device_used: artwork.paper_type,
+          camera_lens: [
+            ...(artwork.pencil_grades || []),
+            ...(artwork.charcoal_types || []),
+          ].join(', ') || undefined,
+          credits: artwork.copyright,
         }));
 
         setImages(transformedImages);
@@ -94,7 +97,7 @@ const Artistic = () => {
           return;
         }
         
-        console.error('[Artistic] Error fetching photos from Supabase:', err);
+        console.error('[Artistic] Error fetching artworks from Supabase:', err);
         const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
         setError('Failed to load images. Please try again later.');
         setErrorDetails(`Error: ${errorMessage}\n\nCheck browser console and network tab for more details.`);
@@ -174,10 +177,10 @@ const Artistic = () => {
 
         {!loading && !error && images.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-muted-foreground">No photos yet.</p>
+            <p className="text-muted-foreground">No artworks yet.</p>
             {import.meta.env.DEV && (
               <p className="text-xs text-muted-foreground mt-2">
-                Check console for errors or upload photos via /admin
+                Check console for errors or upload artworks via /admin/artistic/edit
               </p>
             )}
           </div>

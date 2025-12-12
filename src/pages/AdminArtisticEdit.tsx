@@ -4,13 +4,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { Loader2, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
-// Lazy load the WYSIWYGEditor component
-const WYSIWYGEditor = lazy(() => import('@/components/admin/WYSIWYGEditor'));
+// Lazy load the ArtworkWYSIWYGEditor component
+const ArtworkWYSIWYGEditor = lazy(() => import('@/components/admin/ArtworkWYSIWYGEditor'));
 
 const AdminArtisticEdit = () => {
   const { user, isAdmin, isLoading, signOut } = useAuth();
   const navigate = useNavigate();
-  const [activeCategory] = useState<'artistic'>('artistic');
 
   // Single effect for auth redirect - runs when auth state changes
   useEffect(() => {
@@ -73,9 +72,7 @@ const AdminArtisticEdit = () => {
           </div>
         }
       >
-        <WYSIWYGEditor 
-          category={activeCategory} 
-          onCategoryChange={() => {}} // No category switching for artistic
+        <ArtworkWYSIWYGEditor 
           onSignOut={handleSignOut}
         />
       </Suspense>
