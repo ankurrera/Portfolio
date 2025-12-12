@@ -159,15 +159,15 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
 
       {/* Date, Device, and Lens - Bottom Right (stacked vertically) */}
       {(currentImage.device_used || currentImage.camera_lens || currentImage.date_taken) && (
-        <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0">
+        <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0 space-y-0.5">
           {currentImage.device_used && (
-            <div className="mb-0.5">Device used: {currentImage.device_used}</div>
+            <div>Device used: {currentImage.device_used}</div>
           )}
           {currentImage.camera_lens && (
-            <div className="mb-0.5">Lens used: {currentImage.camera_lens}</div>
+            <div>Lens used: {currentImage.camera_lens}</div>
           )}
           {currentImage.date_taken && (
-            <div className="mt-1">
+            <div className="pt-0.5">
               Date: {new Date(currentImage.date_taken).toLocaleDateString('en-US', { 
                 year: 'numeric', 
                 month: 'long', 
