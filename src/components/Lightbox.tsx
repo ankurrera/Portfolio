@@ -13,6 +13,8 @@ interface LightboxProps {
     photographer_name?: string;
     date_taken?: string;
     device_used?: string;
+    camera_lens?: string;
+    credits?: string;
   }[];
   initialIndex: number;
   onClose: () => void;
@@ -134,34 +136,44 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
         {currentIndex + 1} of {images.length}
       </div>
 
-      {/* Caption - Top Left */}
+      {/* Caption - Upper Right Corner */}
       {currentImage.caption && (
-        <div className="fixed top-8 left-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed max-w-md md:max-w-lg pointer-events-none px-4 md:px-0">
+        <div className="fixed top-8 right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed max-w-md md:max-w-lg text-right pointer-events-none px-4 md:px-0">
           {currentImage.caption}
         </div>
       )}
 
-      {/* Photographer Name - Bottom Left */}
+      {/* Credits / Collaborators - Upper Middle Left */}
+      {currentImage.credits && (
+        <div className="fixed top-[40%] left-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed pointer-events-none px-4 md:px-0 whitespace-pre-line">
+          {currentImage.credits}
+        </div>
+      )}
+
+      {/* Photographer Name - Bottom Left (name only, no prefix) */}
       {currentImage.photographer_name && (
         <div className="fixed bottom-8 left-8 z-[101] text-foreground/60 text-sm font-inter pointer-events-none px-4 md:px-0">
           {currentImage.photographer_name}
         </div>
       )}
 
-      {/* Date and Device - Bottom Right */}
-      {(currentImage.date_taken || currentImage.device_used) && (
-        <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0">
+      {/* Date, Device, and Lens - Bottom Right (stacked vertically) */}
+      {(currentImage.device_used || currentImage.camera_lens || currentImage.date_taken) && (
+        <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0 space-y-0.5">
+          {currentImage.device_used && (
+            <div>Device used: {currentImage.device_used}</div>
+          )}
+          {currentImage.camera_lens && (
+            <div>Lens used: {currentImage.camera_lens}</div>
+          )}
           {currentImage.date_taken && (
-            <div className="mb-1">
-              {new Date(currentImage.date_taken).toLocaleDateString('en-US', { 
+            <div className="pt-0.5">
+              Date: {new Date(currentImage.date_taken).toLocaleDateString('en-US', { 
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric' 
               })}
             </div>
-          )}
-          {currentImage.device_used && (
-            <div className="text-foreground/40">Device used: {currentImage.device_used}</div>
           )}
         </div>
       )}
@@ -173,11 +185,11 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
         </div>
       )}
       {!currentImage.caption && currentImage.client && (
-        <div className="fixed top-8 left-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed max-w-md md:max-w-lg pointer-events-none px-4 md:px-0">
+        <div className="fixed top-8 right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed max-w-md md:max-w-lg text-right pointer-events-none px-4 md:px-0">
           For {currentImage.client}
         </div>
       )}
-      {!currentImage.date_taken && !currentImage.device_used && currentImage.location && currentImage.details && (
+      {!currentImage.date_taken && !currentImage.device_used && !currentImage.camera_lens && currentImage.location && currentImage.details && (
         <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0">
           Shot in {currentImage.location}. {currentImage.details}.
         </div>

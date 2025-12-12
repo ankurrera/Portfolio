@@ -205,7 +205,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                       <div className="flex flex-col items-center gap-0.5 px-4 py-3 text-center">
                         {image.photographer_name && (
                           <p className="text-sm font-medium text-white">
-                            Shot by {image.photographer_name}
+                            {image.photographer_name}
                           </p>
                         )}
                         {image.date_taken && (
@@ -311,7 +311,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                         <div className="flex flex-col items-center gap-0.5 px-4 py-3 text-center">
                           {image.photographer_name && (
                             <p className="text-sm font-medium text-white">
-                              Shot by {image.photographer_name}
+                              {image.photographer_name}
                             </p>
                           )}
                           {image.date_taken && (
@@ -421,7 +421,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                         <div className="flex flex-col items-center gap-0.5 px-4 py-3 text-center">
                           {image.photographer_name && (
                             <p className="text-sm font-medium text-white">
-                              Shot by {image.photographer_name}
+                              {image.photographer_name}
                             </p>
                           )}
                           {image.date_taken && (

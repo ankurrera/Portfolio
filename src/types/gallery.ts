@@ -25,6 +25,8 @@ export interface GalleryImage {
   photographer_name?: string;
   date_taken?: string;
   device_used?: string;
+  camera_lens?: string;
+  credits?: string;
   video_thumbnail_url?: string;
 }
 
