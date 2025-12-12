@@ -85,7 +85,7 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
       const { data, error } = await supabase
         .from('photos')
         .select('*')
-        .eq('category', category as 'selected' | 'commissioned' | 'editorial' | 'personal')
+        .eq('category', category)
         .order('z_index', { ascending: true })
         .abortSignal(abortControllerRef.current.signal);
 
@@ -626,8 +626,8 @@ export default function WYSIWYGEditor({ category, onCategoryChange, onSignOut }:
             </DialogDescription>
           </DialogHeader>
           <PhotoUploader 
-            category={category as 'selected' | 'commissioned' | 'editorial' | 'personal'} 
-            onUploadComplete={handleUploadComplete} 
+            category={category}
+            onUploadComplete={handleUploadComplete}
           />
         </DialogContent>
       </Dialog>
