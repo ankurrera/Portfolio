@@ -137,7 +137,7 @@ const TechnicalProjectList = ({ projects, onEdit, onDelete, onReorder }: Technic
 
                   {/* Meta */}
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                    <span>{project.dev_year}</span>
+                    <span>{project.year}</span>
                     {project.status && (
                       <span className={`font-mono uppercase tracking-widest ${
                         project.status === 'Live' ? 'text-success' : 'text-warning'
@@ -169,15 +169,15 @@ const TechnicalProjectList = ({ projects, onEdit, onDelete, onReorder }: Technic
                     )}
                   </div>
 
-                  {/* Languages */}
-                  {project.languages.length > 0 && (
+                  {/* Tech Stack */}
+                  {project.tech_stack.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-3">
-                      {project.languages.map((lang) => (
+                      {project.tech_stack.map((tech) => (
                         <span
-                          key={lang}
+                          key={tech}
                           className="text-xs font-mono text-muted-foreground/60 px-2 py-1 bg-muted/30 rounded"
                         >
-                          {lang}
+                          {tech}
                         </span>
                       ))}
                     </div>

@@ -40,11 +40,11 @@ const Artistic = () => {
         
         console.info('[Artistic] Fetching photos for category: artistic');
         
-        // Build query for artistic category
+        // Build query for selected category (artistic uses selected)
         const { data, error: fetchError } = await supabase
           .from('photos')
           .select('*')
-          .eq('category', 'artistic')
+          .eq('category', 'selected')
           .eq('is_draft', false)
           .order('z_index', { ascending: true })
           .abortSignal(abortControllerRef.current.signal);
@@ -58,8 +58,8 @@ const Artistic = () => {
         // Transform Supabase photos to gallery format
         const transformedImages = (data || []).map((photo) => ({
           type: 'image' as const,
-          src: photo.image_url, // Display derivative (web-optimized)
-          highResSrc: photo.original_file_url || photo.image_url, // Use original for high-res, fallback to derivative
+          src: photo.image_url,
+          highResSrc: photo.image_url,
           alt: photo.title || 'Artistic photography',
           photographer: 'Ankur Bag',
           client: photo.description || '',
@@ -67,19 +67,11 @@ const Artistic = () => {
           details: photo.description || '',
           width: photo.width || DEFAULT_PHOTO_WIDTH,
           height: photo.height || DEFAULT_PHOTO_HEIGHT,
-          // Include WYSIWYG layout fields
           position_x: photo.position_x,
           position_y: photo.position_y,
           scale: photo.scale,
           rotation: photo.rotation,
           z_index: photo.z_index,
-          // Include metadata fields
-          caption: photo.caption,
-          photographer_name: photo.photographer_name,
-          date_taken: photo.date_taken,
-          device_used: photo.device_used,
-          camera_lens: photo.camera_lens,
-          credits: photo.credits,
         }));
 
         setImages(transformedImages);

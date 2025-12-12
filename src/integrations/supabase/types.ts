@@ -77,45 +77,48 @@ export type Database = {
       technical_projects: {
         Row: {
           created_at: string
-          description: string
-          dev_year: string
+          description: string | null
           display_order: number
           github_link: string | null
           id: string
-          languages: Json
+          is_published: boolean
           live_link: string | null
-          status: string | null
+          status: string
+          tech_stack: string[]
           thumbnail_url: string | null
           title: string
           updated_at: string
+          year: string
         }
         Insert: {
           created_at?: string
-          description: string
-          dev_year: string
+          description?: string | null
           display_order?: number
           github_link?: string | null
           id?: string
-          languages?: Json
+          is_published?: boolean
           live_link?: string | null
-          status?: string | null
+          status?: string
+          tech_stack?: string[]
           thumbnail_url?: string | null
           title: string
           updated_at?: string
+          year: string
         }
         Update: {
           created_at?: string
-          description?: string
-          dev_year?: string
+          description?: string | null
           display_order?: number
           github_link?: string | null
           id?: string
-          languages?: Json
+          is_published?: boolean
           live_link?: string | null
-          status?: string | null
+          status?: string
+          tech_stack?: string[]
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
+          year?: string
         }
         Relationships: []
       }
