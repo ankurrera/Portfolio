@@ -1,51 +1,51 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowUpRight, Github, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
-interface TechnicalProject {
-  id: string;
-  title: string;
-  description: string | null;
-  tech_stack: string[];
-  year: string;
-  status: string;
-  github_link: string | null;
-  live_link: string | null;
-  thumbnail_url: string | null;
-  display_order: number;
-}
+import { TechnicalProject } from '@/types/technical';
 
 const MinimalProjects = () => {
   const [projects, setProjects] = useState<TechnicalProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
       const { data, error } = await supabase
         .from('technical_projects')
         .select('*')
-        .eq('is_published', true)
         .order('display_order', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching projects:', error);
-      } else {
-        setProjects(data || []);
-      }
-      setIsLoading(false);
-    };
+      if (error) throw error;
 
-    fetchProjects();
-  }, []);
+      // Parse languages from JSONB
+      const parsedProjects = data.map(project => ({
+        ...project,
+        languages: Array.isArray(project.languages) 
+          ? project.languages 
+          : JSON.parse(project.languages as string)
+      })) as TechnicalProject[];
+
+      setProjects(parsedProjects);
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
       <section id="work" className="py-section bg-background">
-        <div className="max-w-content mx-auto px-8 flex justify-center items-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="max-w-content mx-auto px-8">
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
         </div>
       </section>
     );
@@ -55,20 +55,9 @@ const MinimalProjects = () => {
     return (
       <section id="work" className="py-section bg-background">
         <div className="max-w-content mx-auto px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center py-20"
-          >
-            <h2 className="text-section font-heading font-light text-foreground mb-4">
-              Projects Coming Soon
-            </h2>
-            <p className="text-muted-foreground">
-              Check back later for updates on technical projects.
-            </p>
-          </motion.div>
+          <div className="text-center py-20 text-muted-foreground">
+            No projects available yet.
+          </div>
         </div>
       </section>
     );
@@ -134,7 +123,7 @@ const MinimalProjects = () => {
                       </div>
                       
                       <div className="flex flex-wrap gap-2">
-                        {project.tech_stack.map((tech) => (
+                        {project.languages.map((tech) => (
                           <span 
                             key={tech} 
                             className="text-xs font-mono text-muted-foreground/60 px-2 py-1 bg-muted/30 rounded"
@@ -149,12 +138,12 @@ const MinimalProjects = () => {
                     <div className="order-2 lg:order-3 flex lg:flex-col items-start lg:items-end justify-between lg:justify-start gap-4">
                       <div className="text-right">
                         <div className="text-sm font-medium text-foreground mb-1">
-                          {project.year}
+                          {project.dev_year}
                         </div>
                         <div className={`text-xs font-mono uppercase tracking-widest ${
                           project.status === 'Live' ? 'text-success' : 'text-warning'
                         }`}>
-                          {project.status}
+                          {project.status || 'Live'}
                         </div>
                       </div>
                       

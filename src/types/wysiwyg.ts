@@ -1,4 +1,4 @@
-export type PhotoCategory = 'selected' | 'commissioned' | 'editorial' | 'personal';
+export type PhotoCategory = 'selected' | 'commissioned' | 'editorial' | 'personal' | 'artistic';
 
 export interface PhotoPosition {
   id: string;
@@ -18,9 +18,9 @@ export interface PhotoPosition {
  * Database columns:
  * - id: UUID primary key
  * - title, description: Optional text fields
- * - image_url: Public URL from Supabase storage
+ * - image_url: Public URL from Supabase storage (web-optimized derivative)
  * - display_order: Integer for ordering
- * - category: Enum (selected | commissioned | editorial | personal)
+ * - category: Enum (selected | commissioned | editorial | personal | artistic)
  * - position_x, position_y: Float - Position in pixels
  * - width, height: Float - Dimensions in pixels
  * - scale: Float - Scale factor (1.0 = 100%)
@@ -33,6 +33,16 @@ export interface PhotoPosition {
  * - date_taken: Date photo was taken
  * - device_used: Camera/device used
  * - video_thumbnail_url: Optional thumbnail for videos
+ * - original_file_url: Original uploaded file (byte-for-byte)
+ * - original_width, original_height: Original dimensions
+ * - original_mime_type: Original file MIME type
+ * - original_size_bytes: Original file size
+ * - year: Year created
+ * - tags: Array of tags
+ * - credits: Credits for collaborators
+ * - camera_lens: Camera and lens info
+ * - project_visibility: public, private, or unlisted
+ * - external_links: Array of external links
  * - created_at, updated_at: Timestamps
  */
 export interface PhotoLayoutData {
@@ -51,6 +61,22 @@ export interface PhotoLayoutData {
   z_index: number;
   is_draft: boolean;
   layout_config: Json;
+  caption: string | null;
+  photographer_name: string | null;
+  date_taken: string | null;
+  device_used: string | null;
+  video_thumbnail_url: string | null;
+  original_file_url: string | null;
+  original_width: number | null;
+  original_height: number | null;
+  original_mime_type: string | null;
+  original_size_bytes: number | null;
+  year: number | null;
+  tags: string[] | null;
+  credits: string | null;
+  camera_lens: string | null;
+  project_visibility: string | null;
+  external_links: Json;
   created_at: string;
   updated_at: string;
 }

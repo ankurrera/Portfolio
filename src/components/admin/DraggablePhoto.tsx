@@ -260,7 +260,7 @@ export default function DraggablePhoto({
       <img
         src={photo.image_url}
         alt={photo.title || 'Photo'}
-        className="w-full h-full object-cover rounded-sm shadow-lg"
+        className="w-full h-full object-contain rounded-sm shadow-lg"
         draggable={false}
         onMouseDown={handleMouseDown}
       />

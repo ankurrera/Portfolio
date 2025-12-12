@@ -5,8 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatSupabaseError } from '@/lib/utils';
 import { toast } from 'sonner';
 import PhotoMetadataForm, { PhotoMetadata } from './PhotoMetadataForm';
-
-type PhotoCategory = 'selected' | 'commissioned' | 'editorial' | 'personal';
+import { PhotoCategory } from '@/types/wysiwyg';
 
 interface PhotoUploaderProps {
   category: PhotoCategory;
@@ -20,19 +19,20 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
   const [metadata, setMetadata] = useState<PhotoMetadata>({});
   const [videoThumbnail, setVideoThumbnail] = useState<File | null>(null);
 
-  const compressImage = useCallback(async (file: File): Promise<Blob> => {
+  // Generate web-optimized derivative with aspect ratio preservation
+  const generateDerivative = useCallback(async (file: File, originalWidth: number, originalHeight: number): Promise<Blob> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d')!;
       const img = new Image();
       
       img.onload = () => {
-        const maxWidth = 1920;
-        const maxHeight = 1920;
+        const maxDimension = 2400; // Max dimension for web derivative
         let { width, height } = img;
         
-        if (width > maxWidth || height > maxHeight) {
-          const ratio = Math.min(maxWidth / width, maxHeight / height);
+        // Preserve aspect ratio while limiting max dimension
+        if (width > maxDimension || height > maxDimension) {
+          const ratio = Math.min(maxDimension / width, maxDimension / height);
           width = Math.round(width * ratio);
           height = Math.round(height * ratio);
         }
@@ -41,10 +41,11 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
         canvas.height = height;
         ctx.drawImage(img, 0, 0, width, height);
         
+        // Use high-quality WebP encoding (0.95 quality)
         canvas.toBlob(
           (blob) => resolve(blob!),
           'image/webp',
-          0.85
+          0.95
         );
       };
       
@@ -52,11 +53,25 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
     });
   }, []);
 
+  // Get original image dimensions
+  const getImageDimensions = useCallback(async (file: File): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({ width: img.width, height: img.height });
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  }, []);
+
   const uploadFile = useCallback(async (file: File) => {
     try {
       const isVideo = file.type.startsWith('video/');
-      let publicUrl: string;
+      let derivativeUrl: string;
+      let originalUrl: string;
       let thumbnailUrl: string | null = null;
+      let originalWidth: number | null = null;
+      let originalHeight: number | null = null;
 
       if (isVideo) {
         // Upload video file directly without compression
@@ -80,11 +95,13 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
           .from('photos')
           .getPublicUrl(fileName);
         
-        publicUrl = videoUrl;
+        derivativeUrl = videoUrl;
+        originalUrl = videoUrl; // For videos, original and derivative are the same
 
         // Upload video thumbnail if provided
         if (videoThumbnail) {
-          const compressedThumbnail = await compressImage(videoThumbnail);
+          const thumbDimensions = await getImageDimensions(videoThumbnail);
+          const compressedThumbnail = await generateDerivative(videoThumbnail, thumbDimensions.width, thumbDimensions.height);
           const thumbnailFileName = `${category}/${Date.now()}-${sanitizedName || 'video'}-thumbnail.webp`;
           
           const { error: thumbError } = await supabase.storage
@@ -102,29 +119,54 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
           }
         }
       } else {
-        // Compress and upload image
-        const compressedBlob = await compressImage(file);
+        // Get original dimensions
+        const dimensions = await getImageDimensions(file);
+        originalWidth = dimensions.width;
+        originalHeight = dimensions.height;
+
         const sanitizedName = file.name
           .replace(/\.[^/.]+$/, '')
           .replace(/[^a-zA-Z0-9]/g, '-')
           .replace(/-+/g, '-')
           .replace(/^-|-$/g, '');
-        const fileName = `${category}/${Date.now()}-${sanitizedName || 'photo'}.webp`;
         
-        const { error: uploadError } = await supabase.storage
+        // Upload ORIGINAL file byte-for-byte (no compression)
+        const originalExt = file.name.split('.').pop() || 'jpg';
+        const originalFileName = `${category}/originals/${Date.now()}-${sanitizedName || 'photo'}.${originalExt}`;
+        
+        const { error: origUploadError } = await supabase.storage
           .from('photos')
-          .upload(fileName, compressedBlob, {
+          .upload(originalFileName, file, {
+            contentType: file.type,
+            cacheControl: '31536000'
+          });
+
+        if (origUploadError) throw origUploadError;
+
+        const { data: { publicUrl: origUrl } } = supabase.storage
+          .from('photos')
+          .getPublicUrl(originalFileName);
+        
+        originalUrl = origUrl;
+
+        // Generate and upload web-optimized derivative
+        const derivativeBlob = await generateDerivative(file, originalWidth, originalHeight);
+        const derivativeFileName = `${category}/derivatives/${Date.now()}-${sanitizedName || 'photo'}.webp`;
+        
+        const { error: derivUploadError } = await supabase.storage
+          .from('photos')
+          .upload(derivativeFileName, derivativeBlob, {
             contentType: 'image/webp',
             cacheControl: '31536000'
           });
 
-        if (uploadError) throw uploadError;
+        if (derivUploadError) throw derivUploadError;
 
-        const { data: { publicUrl: imageUrl } } = supabase.storage
+        const { data: { publicUrl: derivUrl } } = supabase.storage
           .from('photos')
-          .getPublicUrl(fileName);
+          .getPublicUrl(derivativeFileName);
         
-        publicUrl = imageUrl;
+        derivativeUrl = derivUrl;
       }
 
       // Get current max display order and z_index
@@ -139,29 +181,40 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
       const nextOrder = (maxOrderData?.display_order ?? -1) + 1;
       const nextZIndex = (maxOrderData?.z_index ?? -1) + 1;
 
-      // Calculate initial position for new photo (simple grid layout)
+      // Calculate initial position based on original aspect ratio
       const photosPerRow = 3;
-      const photoWidth = 300;
-      const photoHeight = 400;
+      const defaultWidth = 300;
+      let initialWidth = defaultWidth;
+      let initialHeight = 400;
+      
+      // If we have original dimensions, calculate height to preserve aspect ratio
+      if (originalWidth && originalHeight) {
+        const aspectRatio = originalHeight / originalWidth;
+        initialHeight = Math.round(defaultWidth * aspectRatio);
+      }
+      
       const gap = 20;
       const row = Math.floor(nextOrder / photosPerRow);
       const col = nextOrder % photosPerRow;
       
-      const initialX = col * (photoWidth + gap);
-      const initialY = row * (photoHeight + gap);
+      const initialX = col * (defaultWidth + gap);
+      const initialY = row * (initialHeight + gap);
 
-      // Insert into photos table with metadata
+      // Prepare external links as JSONB
+      const externalLinksJson = metadata.external_links || [];
+
+      // Insert into photos table with all metadata and original file info
       const { error: insertError } = await supabase
         .from('photos')
         .insert({
           category,
-          image_url: publicUrl,
+          image_url: derivativeUrl,
           display_order: nextOrder,
           title: file.name.replace(/\.[^/.]+$/, ''),
           position_x: initialX,
           position_y: initialY,
-          width: photoWidth,
-          height: photoHeight,
+          width: initialWidth,
+          height: initialHeight,
           scale: 1.0,
           rotation: 0,
           z_index: nextZIndex,
@@ -171,6 +224,19 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
           date_taken: metadata.date_taken || null,
           device_used: metadata.device_used || null,
           video_thumbnail_url: thumbnailUrl,
+          // Original file tracking
+          original_file_url: originalUrl,
+          original_width: originalWidth,
+          original_height: originalHeight,
+          original_mime_type: file.type,
+          original_size_bytes: file.size,
+          // Extended metadata
+          year: metadata.year || null,
+          tags: metadata.tags || null,
+          credits: metadata.credits || null,
+          camera_lens: metadata.camera_lens || null,
+          project_visibility: metadata.project_visibility || 'public',
+          external_links: externalLinksJson,
         });
 
       if (insertError) throw insertError;
@@ -181,7 +247,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
       console.error('Upload error:', errorMessage);
       throw new Error(errorMessage);
     }
-  }, [category, compressImage, metadata, videoThumbnail]);
+  }, [category, generateDerivative, getImageDimensions, metadata, videoThumbnail]);
 
   const handleFiles = useCallback(async (files: FileList) => {
     const mediaFiles = Array.from(files).filter(f => 
@@ -333,7 +399,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
               Drag and drop images or videos here, or click to select
             </p>
             <p className="text-xs text-muted-foreground">
-              Images will be optimized and converted to WebP
+              Originals preserved • Derivatives auto-generated • Aspect ratio maintained
             </p>
           </div>
         )}

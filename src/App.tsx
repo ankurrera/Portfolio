@@ -17,6 +17,7 @@ import Photoshoots from "./pages/Photoshoots";
 import Admin from "./pages/Admin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminPhotoshootsEdit from "./pages/AdminPhotoshootsEdit";
+import AdminArtisticEdit from "./pages/AdminArtisticEdit";
 import AdminTechnicalEdit from "./pages/AdminTechnicalEdit";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
@@ -48,6 +49,7 @@ const App = () => (
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/photoshoots/:category/edit" element={<AdminPhotoshootsEdit />} />
+                <Route path="/admin/artistic/edit" element={<AdminArtisticEdit />} />
                 <Route path="/admin/technical/edit" element={<AdminTechnicalEdit />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

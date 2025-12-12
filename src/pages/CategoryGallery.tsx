@@ -78,8 +78,8 @@ const CategoryGallery = () => {
         // Transform Supabase photos to gallery format
         const transformedImages = (data || []).map((photo) => ({
           type: 'image' as const,
-          src: photo.image_url,
-          highResSrc: photo.image_url,
+          src: photo.image_url, // Display derivative (web-optimized)
+          highResSrc: photo.original_file_url || photo.image_url, // Use original for high-res, fallback to derivative
           alt: photo.title || 'Portfolio image',
           photographer: 'Ankur Bag',
           client: photo.description || '',

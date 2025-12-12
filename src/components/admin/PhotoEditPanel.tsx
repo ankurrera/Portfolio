@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { formatSupabaseError } from '@/lib/utils';
@@ -18,10 +19,24 @@ interface PhotoEditPanelProps {
 // Validation constants
 const MAX_TITLE_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 500;
+const MAX_CAPTION_LENGTH = 500;
+const MAX_CREDITS_LENGTH = 500;
 
 export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPanelProps) {
   const [title, setTitle] = useState(photo.title || '');
   const [description, setDescription] = useState(photo.description || '');
+  const [caption, setCaption] = useState(photo.caption || '');
+  const [photographerName, setPhotographerName] = useState(photo.photographer_name || '');
+  const [dateTaken, setDateTaken] = useState(photo.date_taken || '');
+  const [deviceUsed, setDeviceUsed] = useState(photo.device_used || '');
+  const [year, setYear] = useState<number | ''>(photo.year || '');
+  const [tags, setTags] = useState<string>(photo.tags?.join(', ') || '');
+  const [credits, setCredits] = useState(photo.credits || '');
+  const [cameraLens, setCameraLens] = useState(photo.camera_lens || '');
+  const [projectVisibility, setProjectVisibility] = useState(photo.project_visibility || 'public');
+  const [externalLinks, setExternalLinks] = useState<Array<{ title: string; url: string }>>(
+    Array.isArray(photo.external_links) ? photo.external_links as Array<{ title: string; url: string }> : []
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -37,8 +52,32 @@ export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPa
       newErrors.description = `Description must be ${MAX_DESCRIPTION_LENGTH} characters or less`;
     }
 
+    if (caption.length > MAX_CAPTION_LENGTH) {
+      newErrors.caption = `Caption must be ${MAX_CAPTION_LENGTH} characters or less`;
+    }
+
+    if (credits.length > MAX_CREDITS_LENGTH) {
+      newErrors.credits = `Credits must be ${MAX_CREDITS_LENGTH} characters or less`;
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const addExternalLink = () => {
+    setExternalLinks([...externalLinks, { title: '', url: '' }]);
+  };
+
+  const updateExternalLink = (index: number, field: 'title' | 'url', value: string) => {
+    const newLinks = [...externalLinks];
+    newLinks[index] = { ...newLinks[index], [field]: value };
+    setExternalLinks(newLinks);
+  };
+
+  const removeExternalLink = (index: number) => {
+    const newLinks = [...externalLinks];
+    newLinks.splice(index, 1);
+    setExternalLinks(newLinks);
   };
 
   const handleSave = async () => {
@@ -50,9 +89,21 @@ export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPa
     setIsSaving(true);
 
     try {
+      const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+      
       const updates = {
         title: title.trim() || null,
         description: description.trim() || null,
+        caption: caption.trim() || null,
+        photographer_name: photographerName.trim() || null,
+        date_taken: dateTaken || null,
+        device_used: deviceUsed.trim() || null,
+        year: year || null,
+        tags: tagArray.length > 0 ? tagArray : null,
+        credits: credits.trim() || null,
+        camera_lens: cameraLens.trim() || null,
+        project_visibility: projectVisibility,
+        external_links: externalLinks.filter(link => link.title || link.url),
       };
 
       const { error } = await supabase
@@ -112,12 +163,12 @@ export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPa
         <img
           src={photo.image_url}
           alt={photo.title || 'Photo'}
-          className="w-full h-48 object-cover rounded"
+          className="w-full h-48 object-contain rounded"
         />
       </div>
 
       {/* Form */}
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4 max-h-[calc(100vh-20rem)] overflow-y-auto">
         <div className="space-y-2">
           <Label htmlFor="title">
             Title
@@ -152,13 +203,230 @@ export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPa
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className={errors.description ? 'border-destructive' : ''}
-            rows={4}
+            rows={3}
             disabled={isSaving}
           />
           {errors.description && (
             <p className="text-xs text-destructive">{errors.description}</p>
           )}
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="caption">
+            Caption
+            <span className="text-xs text-muted-foreground ml-2">
+              ({caption.length}/{MAX_CAPTION_LENGTH})
+            </span>
+          </Label>
+          <Textarea
+            id="caption"
+            placeholder="Enter a caption..."
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            className={errors.caption ? 'border-destructive' : ''}
+            rows={2}
+            disabled={isSaving}
+          />
+          {errors.caption && (
+            <p className="text-xs text-destructive">{errors.caption}</p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="photographer_name" className="text-xs">Photographer</Label>
+            <Input
+              id="photographer_name"
+              type="text"
+              placeholder="Name"
+              value={photographerName}
+              onChange={(e) => setPhotographerName(e.target.value)}
+              className="text-sm"
+              disabled={isSaving}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="year" className="text-xs">Year</Label>
+            <Input
+              id="year"
+              type="number"
+              placeholder="e.g., 2024"
+              value={year}
+              onChange={(e) => setYear(e.target.value ? parseInt(e.target.value, 10) : '')}
+              className="text-sm"
+              min="1900"
+              max="2100"
+              disabled={isSaving}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="date_taken" className="text-xs">Date Taken</Label>
+          <Input
+            id="date_taken"
+            type="date"
+            value={dateTaken}
+            onChange={(e) => setDateTaken(e.target.value)}
+            className="text-sm"
+            disabled={isSaving}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="device_used" className="text-xs">Device</Label>
+            <Input
+              id="device_used"
+              type="text"
+              placeholder="e.g., iPhone 15"
+              value={deviceUsed}
+              onChange={(e) => setDeviceUsed(e.target.value)}
+              className="text-sm"
+              disabled={isSaving}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="camera_lens" className="text-xs">Camera/Lens</Label>
+            <Input
+              id="camera_lens"
+              type="text"
+              placeholder="e.g., Canon R5"
+              value={cameraLens}
+              onChange={(e) => setCameraLens(e.target.value)}
+              className="text-sm"
+              disabled={isSaving}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="credits">
+            Credits
+            <span className="text-xs text-muted-foreground ml-2">
+              ({credits.length}/{MAX_CREDITS_LENGTH})
+            </span>
+          </Label>
+          <Textarea
+            id="credits"
+            placeholder="Model, Stylist, etc."
+            value={credits}
+            onChange={(e) => setCredits(e.target.value)}
+            className={errors.credits ? 'border-destructive' : ''}
+            rows={2}
+            disabled={isSaving}
+          />
+          {errors.credits && (
+            <p className="text-xs text-destructive">{errors.credits}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="tags" className="text-xs">Tags (comma-separated)</Label>
+          <Input
+            id="tags"
+            type="text"
+            placeholder="e.g., fashion, portrait"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            className="text-sm"
+            disabled={isSaving}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="project_visibility" className="text-xs">Visibility</Label>
+          <Select
+            value={projectVisibility}
+            onValueChange={setProjectVisibility}
+            disabled={isSaving}
+          >
+            <SelectTrigger id="project_visibility" className="text-sm">
+              <SelectValue placeholder="Select visibility" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="public">Public</SelectItem>
+              <SelectItem value="unlisted">Unlisted</SelectItem>
+              <SelectItem value="private">Private</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">External Links</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addExternalLink}
+              className="h-6 px-2 text-xs"
+              disabled={isSaving}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Add
+            </Button>
+          </div>
+          {externalLinks.length > 0 && (
+            <div className="space-y-2">
+              {externalLinks.map((link, index) => (
+                <div key={index} className="flex gap-2 items-start">
+                  <Input
+                    type="text"
+                    placeholder="Title"
+                    value={link.title}
+                    onChange={(e) => updateExternalLink(index, 'title', e.target.value)}
+                    className="text-xs flex-1"
+                    disabled={isSaving}
+                  />
+                  <Input
+                    type="url"
+                    placeholder="URL"
+                    value={link.url}
+                    onChange={(e) => updateExternalLink(index, 'url', e.target.value)}
+                    className="text-xs flex-1"
+                    disabled={isSaving}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeExternalLink(index)}
+                    className="h-8 px-2"
+                    disabled={isSaving}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Original File Info (Read-only) */}
+        {photo.original_file_url && (
+          <div className="p-3 bg-muted/50 rounded-lg space-y-1">
+            <Label className="text-xs font-semibold">Original File</Label>
+            <p className="text-xs text-muted-foreground">
+              {photo.original_width} × {photo.original_height} px
+            </p>
+            {photo.original_size_bytes && (
+              <p className="text-xs text-muted-foreground">
+                {(photo.original_size_bytes / 1024 / 1024).toFixed(2)} MB
+              </p>
+            )}
+            <a 
+              href={photo.original_file_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs text-primary hover:underline block"
+            >
+              View Original
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Footer Actions */}

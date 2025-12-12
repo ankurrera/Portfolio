@@ -153,7 +153,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                       loop
                       playsInline
                       onLoadedData={() => handleImageLoad(index)}
-                      className={`w-full h-full object-cover transition-all duration-400 ${
+                      className={`w-full h-full object-contain transition-all duration-400 ${
                         hoveredIndex !== null && hoveredIndex !== index
                           ? "grayscale"
                           : ""
@@ -170,7 +170,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                       src={image.src}
                       alt={image.alt}
                       onLoad={() => handleImageLoad(index)}
-                      className={`w-full h-full object-cover transition-all duration-400 ${
+                      className={`w-full h-full object-contain transition-all duration-400 ${
                         hoveredIndex !== null && hoveredIndex !== index
                           ? "grayscale"
                           : ""
@@ -259,7 +259,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                         loop
                         playsInline
                         onLoadedData={() => handleImageLoad(index)}
-                        className={`w-full h-full object-cover transition-all duration-400 ${
+                        className={`w-full h-full object-contain transition-all duration-400 ${
                           hoveredIndex !== null && hoveredIndex !== index
                             ? "grayscale"
                             : ""
@@ -276,7 +276,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                         src={image.src}
                         alt={image.alt}
                         onLoad={() => handleImageLoad(index)}
-                        className={`w-full h-full object-cover transition-all duration-400 ${
+                        className={`w-full h-full object-contain transition-all duration-400 ${
                           hoveredIndex !== null && hoveredIndex !== index
                             ? "grayscale"
                             : ""
@@ -369,7 +369,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                         loop
                         playsInline
                         onLoadedData={() => handleImageLoad(index)}
-                        className={`w-full h-full object-cover transition-all duration-400 ${
+                        className={`w-full h-full object-contain transition-all duration-400 ${
                           hoveredIndex !== null && hoveredIndex !== index
                             ? "grayscale"
                             : ""
@@ -386,7 +386,7 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                         src={image.src}
                         alt={image.alt}
                         onLoad={() => handleImageLoad(index)}
-                        className={`w-full h-full object-cover transition-all duration-400 ${
+                        className={`w-full h-full object-contain transition-all duration-400 ${
                           hoveredIndex !== null && hoveredIndex !== index
                             ? "grayscale"
                             : ""
