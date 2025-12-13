@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, forwardRef } from "react"
 import { cn } from "@/lib/utils"
 import { X, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react"
@@ -475,10 +473,13 @@ export function ImageLightbox({
               {projects.map((project, idx) => (
                 <img
                   key={project.id}
-                  src={project.image || "/placeholder.svg"}
+                  src={project.image}
                   alt={project.title}
                   className="w-full h-auto max-h-[70vh] object-contain bg-background flex-shrink-0"
                   style={{ minWidth: "100%" }}
+                  onError={(e) => {
+                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='600' viewBox='0 0 400 600'%3E%3Crect width='400' height='600' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='18' fill='%23999'%3EImage not found%3C/text%3E%3C/svg%3E";
+                  }}
                 />
               ))}
             </div>
@@ -587,7 +588,14 @@ export const ProjectCard = forwardRef<HTMLDivElement, ProjectCardProps>(
           onClick()
         }}
       >
-        <img src={image || "/placeholder.svg"} alt={title} className="w-full h-full object-cover" />
+        <img 
+          src={image} 
+          alt={title} 
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='112' viewBox='0 0 80 112'%3E%3Crect width='80' height='112' fill='%23f0f0f0'/%3E%3C/svg%3E";
+          }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
         <p className="absolute bottom-1.5 left-1.5 right-1.5 text-[10px] font-medium text-primary-foreground truncate">
           {title}
