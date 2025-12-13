@@ -75,6 +75,13 @@ const Index = () => {
           scale: photo.scale,
           rotation: photo.rotation,
           z_index: photo.z_index,
+          // Include metadata fields
+          caption: photo.caption,
+          photographer_name: photo.photographer_name,
+          date_taken: photo.date_taken,
+          device_used: photo.device_used,
+          camera_lens: photo.camera_lens,
+          credits: photo.credits,
         }));
 
         setDisplayImages(transformedImages);
