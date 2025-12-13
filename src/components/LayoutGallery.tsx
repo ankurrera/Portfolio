@@ -201,6 +201,10 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                         visible: { opacity: 1 },
                       }}
                       transition={{ duration: 0.2, ease: "easeOut" }}
+                      style={{
+                        transform: `scale(${1 / scale})`,
+                        transformOrigin: 'center bottom',
+                      }}
                     >
                       <div className="flex flex-col items-center gap-0.5 px-4 py-3 text-center">
                         {image.photographer_name && (
