@@ -71,6 +71,9 @@ export default {
           800: "hsl(var(--gray-800))",
           900: "hsl(var(--gray-900))",
         },
+        "folder-back": "hsl(var(--folder-back))",
+        "folder-front": "hsl(var(--folder-front))",
+        "folder-tab": "hsl(var(--folder-tab))",
       },
       boxShadow: {
         'subtle': 'var(--subtle-shadow)',
