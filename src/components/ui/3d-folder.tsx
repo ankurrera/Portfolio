@@ -77,7 +77,7 @@ export function AnimatedFolder({ title, projects, className }: AnimatedFolderPro
         <div className="relative flex items-center justify-center mb-4" style={{ height: "160px", width: "200px" }}>
           {/* Folder back layer - z-index 10 */}
           <div
-            className="absolute w-32 h-24 bg-folder-back rounded-lg shadow-md"
+            className="absolute w-32 h-24 bg-folder-back rounded-xl shadow-md"
             style={{
               transformOrigin: "bottom center",
               transform: isHovered ? "rotateX(-15deg)" : "rotateX(0deg)",
@@ -88,7 +88,7 @@ export function AnimatedFolder({ title, projects, className }: AnimatedFolderPro
 
           {/* Folder tab - z-index 10 */}
           <div
-            className="absolute w-12 h-4 bg-folder-tab rounded-t-md"
+            className="absolute w-12 h-4 bg-folder-tab rounded-t-lg"
             style={{
               top: "calc(50% - 48px - 12px)",
               left: "calc(50% - 64px + 16px)",
@@ -128,7 +128,7 @@ export function AnimatedFolder({ title, projects, className }: AnimatedFolderPro
 
           {/* Folder front layer - z-index 30 */}
           <div
-            className="absolute w-32 h-24 bg-folder-front rounded-lg shadow-lg"
+            className="absolute w-32 h-24 bg-folder-front rounded-xl shadow-lg"
             style={{
               top: "calc(50% - 48px + 4px)",
               transformOrigin: "bottom center",
@@ -140,7 +140,7 @@ export function AnimatedFolder({ title, projects, className }: AnimatedFolderPro
 
           {/* Folder shine effect - z-index 31 */}
           <div
-            className="absolute w-32 h-24 rounded-lg overflow-hidden pointer-events-none"
+            className="absolute w-32 h-24 rounded-xl overflow-hidden pointer-events-none"
             style={{
               top: "calc(50% - 48px + 4px)",
               background: "linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%)",
@@ -568,7 +568,7 @@ export const ProjectCard = forwardRef<HTMLDivElement, ProjectCardProps>(
       <div
         ref={ref}
         className={cn(
-          "absolute w-20 h-28 rounded-lg overflow-hidden shadow-xl",
+          "absolute w-20 h-28 rounded-xl overflow-hidden shadow-xl",
           "bg-card border border-border",
           "cursor-pointer hover:ring-2 hover:ring-accent/50",
           isSelected && "opacity-0",
