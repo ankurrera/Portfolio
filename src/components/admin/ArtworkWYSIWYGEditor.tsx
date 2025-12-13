@@ -35,10 +35,6 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
   const [editingArtworkId, setEditingArtworkId] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
-  // History management (simplified for artworks)
-  const [historyIndex] = useState(0);
-  const [history] = useState<any[]>([]);
-  
   // Autosave
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -314,18 +310,18 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
   };
 
   const handleUndo = useCallback(() => {
-    // Placeholder for undo functionality
-    toast.info('Undo not yet implemented for artwork editor');
+    // Undo functionality not implemented for artwork editor
+    toast.info('Undo not available for artwork editor');
   }, []);
 
   const handleRedo = useCallback(() => {
-    // Placeholder for redo functionality
-    toast.info('Redo not yet implemented for artwork editor');
+    // Redo functionality not implemented for artwork editor
+    toast.info('Redo not available for artwork editor');
   }, []);
 
   const handleShowHistory = useCallback(() => {
-    // Placeholder for history functionality
-    toast.info('History not yet implemented for artwork editor');
+    // History functionality not implemented for artwork editor
+    toast.info('History not available for artwork editor');
   }, []);
 
   // Handle keyboard shortcuts
@@ -382,8 +378,8 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
         mode={mode}
         devicePreview={devicePreview}
         snapToGrid={snapToGrid}
-        canUndo={historyIndex > 0}
-        canRedo={historyIndex < history.length - 1}
+        canUndo={false} // Undo/redo not implemented for artwork editor
+        canRedo={false} // Undo/redo not implemented for artwork editor
         hasChanges={hasUnsavedChanges}
         category={'artistic' as 'selected' | 'commissioned' | 'editorial' | 'personal' | 'artistic'}
         isRefreshing={isRefreshing}
