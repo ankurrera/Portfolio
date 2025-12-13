@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { GripVertical, Trash2, Pencil, MoveUp, MoveDown } from 'lucide-react';
+import { GripVertical, Trash2, Pencil, MoveUp, MoveDown, ZoomIn } from 'lucide-react';
 import { ArtworkData } from '@/types/artwork';
 import { Button } from '@/components/ui/button';
 
@@ -18,6 +18,11 @@ interface DraggableArtworkProps {
   onSelect?: (id: string) => void;
 }
 
+// Scaling constants
+const SCALE_HOLD_DELAY = 500; // ms to hold before scaling activates
+const SCALE_DRAG_SENSITIVITY = 200; // px movement for 1x scale change
+const WHEEL_SCALE_SENSITIVITY = 1000; // wheel delta divisor
+
 export default function DraggableArtwork({
   artwork,
   isEditMode,
@@ -33,9 +38,14 @@ export default function DraggableArtwork({
 }: DraggableArtworkProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [isScaling, setIsScaling] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const dragStartPos = useRef({ x: 0, y: 0, artworkX: 0, artworkY: 0 });
   const resizeStartPos = useRef({ x: 0, y: 0, width: 0, height: 0 });
+  const scaleStartPos = useRef({ x: 0, y: 0, scale: 1 });
+  const scaleHoldTimer = useRef<NodeJS.Timeout | null>(null);
+  const touchStartDistance = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const snapValue = useCallback((value: number) => {
     if (!snapToGrid) return value;
@@ -75,6 +85,119 @@ export default function DraggableArtwork({
     };
   };
 
+  // Hold-and-pull scaling for mouse
+  const handleScaleStart = (e: React.MouseEvent) => {
+    if (!isEditMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    scaleHoldTimer.current = setTimeout(() => {
+      setIsScaling(true);
+      scaleStartPos.current = {
+        x: e.clientX,
+        y: e.clientY,
+        scale: artwork.scale,
+      };
+    }, SCALE_HOLD_DELAY);
+  };
+
+  const handleScaleEnd = () => {
+    if (scaleHoldTimer.current) {
+      clearTimeout(scaleHoldTimer.current);
+      scaleHoldTimer.current = null;
+    }
+    setIsScaling(false);
+  };
+
+  // Mouse wheel scaling
+  const handleWheel = (e: React.WheelEvent) => {
+    if (!isEditMode || !isHovered) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const delta = -e.deltaY / WHEEL_SCALE_SENSITIVITY;
+    const newScale = Math.max(0.5, Math.min(3, artwork.scale + delta));
+    
+    onUpdate(artwork.id, {
+      scale: newScale,
+    });
+  };
+
+  // Touch handlers for pinch-to-zoom
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isEditMode) return;
+    
+    if (e.touches.length === 2) {
+      // Pinch gesture
+      e.preventDefault();
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      touchStartDistance.current = distance;
+      scaleStartPos.current = {
+        x: 0,
+        y: 0,
+        scale: artwork.scale,
+      };
+    } else if (e.touches.length === 1) {
+      // Single touch for dragging
+      const touch = e.touches[0];
+      if (onSelect && !isDragging) {
+        onSelect(artwork.id);
+      }
+      setIsDragging(true);
+      dragStartPos.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        artworkX: artwork.position_x,
+        artworkY: artwork.position_y,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isEditMode) return;
+    
+    if (e.touches.length === 2) {
+      // Pinch scaling
+      e.preventDefault();
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      const scaleFactor = distance / touchStartDistance.current;
+      const newScale = Math.max(0.5, Math.min(3, scaleStartPos.current.scale * scaleFactor));
+      
+      onUpdate(artwork.id, {
+        scale: newScale,
+      });
+    } else if (e.touches.length === 1 && isDragging) {
+      // Single touch dragging
+      const touch = e.touches[0];
+      const dx = touch.clientX - dragStartPos.current.x;
+      const dy = touch.clientY - dragStartPos.current.y;
+      
+      const newX = snapValue(dragStartPos.current.artworkX + dx);
+      const newY = snapValue(dragStartPos.current.artworkY + dy);
+      
+      onUpdate(artwork.id, {
+        position_x: newX,
+        position_y: newY,
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    touchStartDistance.current = 0;
+  };
+
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (isDragging) {
       const dx = e.clientX - dragStartPos.current.x;
@@ -100,17 +223,36 @@ export default function DraggableArtwork({
         width: snapValue(newWidth),
         height: snapValue(newHeight),
       });
+    } else if (isScaling) {
+      const dx = e.clientX - scaleStartPos.current.x;
+      const scaleFactor = 1 + (dx / SCALE_DRAG_SENSITIVITY);
+      const newScale = Math.max(0.5, Math.min(3, scaleStartPos.current.scale * scaleFactor));
+      
+      onUpdate(artwork.id, {
+        scale: newScale,
+      });
     }
-  }, [isDragging, isResizing, artwork.id, onUpdate, snapValue]);
+  }, [isDragging, isResizing, isScaling, artwork.id, onUpdate, snapValue]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
     setIsResizing(false);
+    handleScaleEnd();
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (scaleHoldTimer.current) {
+        clearTimeout(scaleHoldTimer.current);
+        scaleHoldTimer.current = null;
+      }
+    };
   }, []);
 
   // Mouse event listeners
   useEffect(() => {
-    if (isDragging || isResizing) {
+    if (isDragging || isResizing || isScaling) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
       
@@ -119,7 +261,7 @@ export default function DraggableArtwork({
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
+  }, [isDragging, isResizing, isScaling, handleMouseMove, handleMouseUp]);
 
   const handleRotate = () => {
     const newRotation = (artwork.rotation + 90) % 360;
@@ -128,13 +270,14 @@ export default function DraggableArtwork({
 
   return (
     <motion.div
+      ref={containerRef}
       style={{
         position: 'absolute',
         left: artwork.position_x,
         top: artwork.position_y,
         width: artwork.width,
         height: artwork.height,
-        zIndex: artwork.z_index,
+        zIndex: isDragging || isResizing || isScaling ? 9999 : artwork.z_index,
         transform: `scale(${artwork.scale}) rotate(${artwork.rotation}deg)`,
         transformOrigin: 'center',
       }}
@@ -147,9 +290,13 @@ export default function DraggableArtwork({
       onMouseDown={handleMouseDown}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onWheel={handleWheel}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       initial={false}
       animate={{
-        opacity: isDragging || isResizing ? 0.7 : 1,
+        opacity: isDragging || isResizing || isScaling ? 0.7 : 1,
       }}
     >
       {/* Image */}
@@ -239,10 +386,28 @@ export default function DraggableArtwork({
             <div className="absolute bottom-1 right-1 w-3 h-3 border-r-2 border-b-2 border-primary rounded-br" />
           </div>
 
+          {/* Scale Handle (Hold to scale) */}
+          <div
+            className="absolute top-0 right-0 w-6 h-6 bg-secondary rounded-full cursor-pointer shadow-md flex items-center justify-center pointer-events-auto"
+            onMouseDown={handleScaleStart}
+            onMouseUp={handleScaleEnd}
+            onMouseLeave={handleScaleEnd}
+            title="Hold and drag to scale (or use mouse wheel)"
+          >
+            <ZoomIn className="h-3 w-3 text-secondary-foreground" />
+          </div>
+
           {/* Dimensions Label */}
           <div className="absolute -bottom-6 left-0 text-xs text-muted-foreground bg-background/95 backdrop-blur-sm px-2 py-0.5 rounded border">
-            {Math.round(artwork.width)} × {Math.round(artwork.height)}
+            {Math.round(artwork.width)} × {Math.round(artwork.height)} | {artwork.scale.toFixed(2)}x
           </div>
+        </div>
+      )}
+
+      {/* Scaling indicator */}
+      {isScaling && (
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 text-xs rounded-sm whitespace-nowrap">
+          Scaling: {artwork.scale.toFixed(2)}x
         </div>
       )}
 

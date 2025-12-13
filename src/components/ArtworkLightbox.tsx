@@ -179,7 +179,7 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
         )}
       </div>
 
-      {/* BOTTOM RIGHT CORNER - Materials & Creation Details */}
+      {/* BOTTOM RIGHT CORNER - Materials Only */}
       <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0 space-y-0.5">
         {/* Paper Types (from paper_type field) */}
         {getPaperTypes() && (
@@ -195,13 +195,6 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
         {getCharcoalTypes() && (
           <div>Charcoal Types: {getCharcoalTypes()}</div>
         )}
-        
-        {/* Date (creation date) */}
-        {currentArtwork.creation_date && (
-          <div className="pt-0.5">
-            Date: {formatDate(currentArtwork.creation_date)}
-          </div>
-        )}
       </div>
 
       {/* BOTTOM LEFT CORNER - Artist Credit */}
@@ -209,9 +202,12 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
         {ARTIST_NAME}
       </div>
 
-      {/* BOTTOM CENTER - Copyright */}
-      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[101] text-foreground/60 text-xs font-inter pointer-events-none px-4 md:px-0">
-        {COPYRIGHT_TEXT}
+      {/* BOTTOM CENTER - Copyright and Date */}
+      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[101] text-foreground/60 text-xs font-inter pointer-events-none px-4 md:px-0 text-center space-y-0.5">
+        <div>{COPYRIGHT_TEXT}</div>
+        {currentArtwork.creation_date && (
+          <div>Date: {formatDate(currentArtwork.creation_date)}</div>
+        )}
       </div>
 
       {/* Image Container */}
