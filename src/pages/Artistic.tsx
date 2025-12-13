@@ -5,7 +5,7 @@ import PortfolioFooter from "@/components/PortfolioFooter";
 import PageLayout from "@/components/PageLayout";
 import DevErrorBanner from "@/components/DevErrorBanner";
 import LayoutGallery from "@/components/LayoutGallery";
-import Lightbox from "@/components/Lightbox";
+import ArtworkLightbox from "@/components/ArtworkLightbox";
 import SEO from "@/components/SEO";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,7 @@ import { ArtworkData } from "@/types/artwork";
 
 const Artistic = () => {
   const [images, setImages] = useState<GalleryImage[]>([]);
+  const [artworks, setArtworks] = useState<ArtworkData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | undefined>(undefined);
@@ -55,7 +56,10 @@ const Artistic = () => {
 
         console.info(`[Artistic] Successfully fetched ${data?.length || 0} artworks`);
 
-        // Transform artworks to gallery format
+        // Store original artworks for lightbox
+        setArtworks(data || []);
+
+        // Transform artworks to gallery format for grid display
         const transformedImages = (data || []).map((artwork: ArtworkData) => ({
           type: 'image' as const,
           src: artwork.primary_image_url, // Display derivative (web-optimized)
@@ -187,9 +191,9 @@ const Artistic = () => {
         )}
       </main>
 
-      {lightboxOpen && images.length > 0 && (
-        <Lightbox
-          images={images}
+      {lightboxOpen && artworks.length > 0 && (
+        <ArtworkLightbox
+          artworks={artworks}
           initialIndex={lightboxIndex}
           onClose={() => setLightboxOpen(false)}
         />
