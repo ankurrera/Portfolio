@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
-import { Loader2, LogOut, Camera, FolderOpen, Code2 } from 'lucide-react';
+import { Loader2, LogOut, Camera, FolderOpen, Code2, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -147,7 +147,7 @@ const AdminDashboard = () => {
         </section>
 
         {/* Artistic Section */}
-        <section>
+        <section className="mb-12">
           <div className="flex items-center gap-2 mb-6">
             <Camera className="h-5 w-5 text-foreground" />
             <h2 className="text-lg font-semibold uppercase tracking-wider">Artistic</h2>
@@ -168,6 +168,33 @@ const AdminDashboard = () => {
             <CardContent>
               <Button variant="outline" size="sm" className="w-full">
                 Edit Artworks
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Achievements Section */}
+        <section>
+          <div className="flex items-center gap-2 mb-6">
+            <Trophy className="h-5 w-5 text-foreground" />
+            <h2 className="text-lg font-semibold uppercase tracking-wider">Achievements</h2>
+          </div>
+          
+          <Card 
+            className="hover:border-foreground/20 transition-all duration-300 cursor-pointer max-w-md"
+            onClick={() => navigate('/admin/achievement/edit')}
+          >
+            <CardHeader>
+              <CardTitle className="text-base uppercase tracking-wider">
+                Achievement Certificates
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Manage achievement certificates across 5 categories with drag-and-drop ranking
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" size="sm" className="w-full">
+                Manage Achievements
               </Button>
             </CardContent>
           </Card>
