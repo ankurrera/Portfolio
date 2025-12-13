@@ -74,6 +74,54 @@ export type Database = {
         }
         Relationships: []
       }
+      achievements: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          category: string
+          image_url: string
+          image_original_url: string | null
+          image_width: number | null
+          image_height: number | null
+          display_order: number
+          is_published: boolean
+          external_link: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          category: string
+          image_url: string
+          image_original_url?: string | null
+          image_width?: number | null
+          image_height?: number | null
+          display_order?: number
+          is_published?: boolean
+          external_link?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          category?: string
+          image_url?: string
+          image_original_url?: string | null
+          image_width?: number | null
+          image_height?: number | null
+          display_order?: number
+          is_published?: boolean
+          external_link?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       technical_projects: {
         Row: {
           created_at: string
