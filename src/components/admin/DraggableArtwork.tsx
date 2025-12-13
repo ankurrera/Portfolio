@@ -18,6 +18,11 @@ interface DraggableArtworkProps {
   onSelect?: (id: string) => void;
 }
 
+// Scaling constants
+const SCALE_HOLD_DELAY = 500; // ms to hold before scaling activates
+const SCALE_DRAG_SENSITIVITY = 200; // px movement for 1x scale change
+const WHEEL_SCALE_SENSITIVITY = 1000; // wheel delta divisor
+
 export default function DraggableArtwork({
   artwork,
   isEditMode,
@@ -86,7 +91,6 @@ export default function DraggableArtwork({
     e.preventDefault();
     e.stopPropagation();
     
-    // Hold for 500ms to start scaling
     scaleHoldTimer.current = setTimeout(() => {
       setIsScaling(true);
       scaleStartPos.current = {
@@ -94,7 +98,7 @@ export default function DraggableArtwork({
         y: e.clientY,
         scale: artwork.scale,
       };
-    }, 500);
+    }, SCALE_HOLD_DELAY);
   };
 
   const handleScaleEnd = () => {
@@ -111,7 +115,7 @@ export default function DraggableArtwork({
     e.preventDefault();
     e.stopPropagation();
     
-    const delta = -e.deltaY / 1000; // Normalize wheel delta
+    const delta = -e.deltaY / WHEEL_SCALE_SENSITIVITY;
     const newScale = Math.max(0.5, Math.min(3, artwork.scale + delta));
     
     onUpdate(artwork.id, {
@@ -221,7 +225,7 @@ export default function DraggableArtwork({
       });
     } else if (isScaling) {
       const dx = e.clientX - scaleStartPos.current.x;
-      const scaleFactor = 1 + (dx / 200); // 200px movement = 1x scale change
+      const scaleFactor = 1 + (dx / SCALE_DRAG_SENSITIVITY);
       const newScale = Math.max(0.5, Math.min(3, scaleStartPos.current.scale * scaleFactor));
       
       onUpdate(artwork.id, {
@@ -234,6 +238,16 @@ export default function DraggableArtwork({
     setIsDragging(false);
     setIsResizing(false);
     handleScaleEnd();
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (scaleHoldTimer.current) {
+        clearTimeout(scaleHoldTimer.current);
+        scaleHoldTimer.current = null;
+      }
+    };
   }, []);
 
   // Mouse event listeners
