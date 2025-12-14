@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
@@ -26,7 +25,7 @@ const categories: AchievementCategory[] = [
 
 const AchievementForm = ({ achievement, onSave, onCancel }: AchievementFormProps) => {
   const [title, setTitle] = useState(achievement?.title || '');
-  const [description, setDescription] = useState(achievement?.description || '');
+  const [year, setYear] = useState(achievement?.year || null);
   const [category, setCategory] = useState<AchievementCategory>(achievement?.category || 'School');
   const [externalLink, setExternalLink] = useState(achievement?.external_link || '');
   const [displayOrder, setDisplayOrder] = useState(achievement?.display_order || 0);
@@ -36,10 +35,13 @@ const AchievementForm = ({ achievement, onSave, onCancel }: AchievementFormProps
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Calculate max year once
+  const maxYear = new Date().getFullYear() + 1;
+
   useEffect(() => {
     if (achievement) {
       setTitle(achievement.title);
-      setDescription(achievement.description || '');
+      setYear(achievement.year || null);
       setCategory(achievement.category);
       setExternalLink(achievement.external_link || '');
       setDisplayOrder(achievement.display_order);
@@ -157,7 +159,7 @@ const AchievementForm = ({ achievement, onSave, onCancel }: AchievementFormProps
 
       const achievementData = {
         title: title.trim(),
-        description: description.trim() || null,
+        year: year || null,
         category,
         image_url: imageUrl,
         image_original_url: imageUrl,
@@ -233,14 +235,22 @@ const AchievementForm = ({ achievement, onSave, onCancel }: AchievementFormProps
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Brief description of the achievement"
-            rows={3}
+          <Label htmlFor="year">Year of Achievement</Label>
+          <Input
+            id="year"
+            type="number"
+            value={year || ''}
+            onChange={(e) => {
+              const value = e.target.value ? parseInt(e.target.value, 10) : null;
+              setYear(value && !isNaN(value) ? value : null);
+            }}
+            placeholder="e.g., 2024"
+            min="1900"
+            max={maxYear}
           />
+          <p className="text-xs text-muted-foreground">
+            The year you received this achievement
+          </p>
         </div>
 
         <div className="space-y-2">

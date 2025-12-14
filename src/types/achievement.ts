@@ -20,6 +20,7 @@ export interface AchievementData {
   // Core achievement information
   title: string;
   description: string | null;
+  year: number | null;
   category: AchievementCategory;
   
   // Image information
@@ -43,7 +44,7 @@ export interface AchievementData {
  */
 export interface AchievementFormData {
   title: string;
-  description?: string;
+  year?: number;
   category: AchievementCategory;
   image_url: string;
   image_original_url?: string;
@@ -61,6 +62,7 @@ export interface AchievementProject {
   id: string;
   image: string;
   title: string;
+  year?: number;
   externalLink?: string;
 }
 
@@ -80,6 +82,7 @@ export function transformToProject(achievement: AchievementData): AchievementPro
     id: achievement.id,
     image: achievement.image_url,
     title: achievement.title,
+    year: achievement.year || undefined,
     externalLink: achievement.external_link || undefined,
   };
 }

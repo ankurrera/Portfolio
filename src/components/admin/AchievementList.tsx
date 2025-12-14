@@ -137,9 +137,9 @@ const AchievementList = ({ achievements, onEdit, onDelete, onRefresh }: Achievem
                     </div>
                     <CardContent className="p-4">
                       <h4 className="font-semibold mb-2 line-clamp-2">{achievement.title}</h4>
-                      {achievement.description && (
-                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                          {achievement.description}
+                      {achievement.year && (
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Year: {achievement.year}
                         </p>
                       )}
                       <div className="flex gap-2">
