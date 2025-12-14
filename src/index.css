@@ -72,9 +72,9 @@ All colors MUST be HSL.
     --gray-900: 0 0% 10%;
 
     /* Folder colors */
-    --folder-back: 45 80% 65%;
-    --folder-front: 45 85% 70%;
-    --folder-tab: 45 75% 60%;
+    --folder-back: 23 99% 70%;
+    --folder-front: 23 99% 75%;
+    --folder-tab: 23 94% 65%;
   }
 
   .dark {
@@ -116,9 +116,9 @@ All colors MUST be HSL.
     --gray-800: 227 40% 85%;
 
     /* Folder colors - dark mode */
-    --folder-back: 45 70% 55%;
-    --folder-front: 45 75% 60%;
-    --folder-tab: 45 65% 50%;
+    --folder-back: 23 94% 60%;
+    --folder-front: 23 99% 65%;
+    --folder-tab: 23 89% 55%;
   }
 }
 
