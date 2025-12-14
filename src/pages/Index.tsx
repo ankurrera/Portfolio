@@ -127,7 +127,7 @@ const Index = () => {
     "jobTitle": "Production Photographer",
     "description": "Production photographer specializing in fashion, editorial, and commercial photography. Creating compelling imagery for global brands and publications.",
     "url": "https://morganblake.com",
-    "image": "https://morganblake.com/og-image.jpg",
+    "image": "https://morganblake.com/og-preview.png",
     "sameAs": [
       "https://www.instagram.com/ankurr.tf/"
     ],

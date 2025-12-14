@@ -5,24 +5,15 @@ import Footer from "@/components/Footer";
 import PageLayout from "@/components/PageLayout";
 import SEO from "@/components/SEO";
 
-import alpine1 from "@/assets/projects/alpine-1.jpg";
-import alpine2 from "@/assets/projects/alpine-2.jpg";
-import alpine3 from "@/assets/projects/alpine-3.jpg";
-import alpine4 from "@/assets/projects/alpine-4.jpg";
-import alpine5 from "@/assets/projects/alpine-5.jpg";
-import alpine6 from "@/assets/projects/alpine-6.jpg";
-import alpine7 from "@/assets/projects/alpine-7.jpg";
-import alpine8 from "@/assets/projects/alpine-8.jpg";
-
 const projectImages = [
-  { src: alpine1, caption: "First Light on Summit Ridge" },
-  { src: alpine2, caption: "Valley Mist" },
-  { src: alpine3, caption: "Alpine Meadow" },
-  { src: alpine4, caption: "Glacial Lake" },
-  { src: alpine5, caption: "Ridge Line" },
-  { src: alpine6, caption: "Morning Reflection" },
-  { src: alpine7, caption: "Alpine Stream" },
-  { src: alpine8, caption: "Golden Hour Peak" },
+  { src: "/og-preview.png", caption: "First Light on Summit Ridge" },
+  { src: "/og-preview.png", caption: "Valley Mist" },
+  { src: "/og-preview.png", caption: "Alpine Meadow" },
+  { src: "/og-preview.png", caption: "Glacial Lake" },
+  { src: "/og-preview.png", caption: "Ridge Line" },
+  { src: "/og-preview.png", caption: "Morning Reflection" },
+  { src: "/og-preview.png", caption: "Alpine Stream" },
+  { src: "/og-preview.png", caption: "Golden Hour Peak" },
 ];
 
 const Project = () => {

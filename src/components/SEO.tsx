@@ -15,7 +15,7 @@ const SEO = ({
   description,
   canonicalUrl,
   ogType = "website",
-  ogImage = "/og-image.jpg",
+  ogImage = "/og-preview.png",
   twitterCard = "summary_large_image",
   jsonLd,
 }: SEOProps) => {
