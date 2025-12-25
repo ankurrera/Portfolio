@@ -20,6 +20,7 @@ import AdminArtisticEdit from "./pages/AdminArtisticEdit";
 import AdminTechnicalEdit from "./pages/AdminTechnicalEdit";
 import AdminAchievementEdit from "./pages/AdminAchievementEdit";
 import AdminHeroEdit from "./pages/AdminHeroEdit";
+import AdminAboutEdit from "./pages/AdminAboutEdit";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -53,6 +54,7 @@ const App = () => (
                 <Route path="/admin/technical/edit" element={<AdminTechnicalEdit />} />
                 <Route path="/admin/achievement/edit" element={<AdminAchievementEdit />} />
                 <Route path="/admin/hero/edit" element={<AdminHeroEdit />} />
+                <Route path="/admin/about/edit" element={<AdminAboutEdit />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

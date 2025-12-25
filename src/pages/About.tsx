@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useHeroText } from "@/hooks/useHeroText";
+import { useAboutPage } from "@/hooks/useAboutPage";
 import { Loader2 } from "lucide-react";
 
 const contactSchema = z.object({
@@ -37,6 +38,7 @@ const About = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { heroText, loading: heroLoading } = useHeroText('about');
+  const { aboutData, loading: aboutLoading } = useAboutPage();
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
@@ -64,7 +66,19 @@ const About = () => {
   useEffect(() => {
     const loadPortrait = async () => {
       try {
-        // Fetch a portrait from Supabase uploads - try 'personal' category first
+        // First, try to use the profile image from about_page
+        if (aboutData?.profile_image_url) {
+          setPortrait({
+            src: aboutData.profile_image_url,
+            alt: 'Portrait',
+            width: DEFAULT_PHOTO_WIDTH,
+            height: DEFAULT_PHOTO_HEIGHT,
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Fallback: Fetch a portrait from Supabase uploads - try 'personal' category
         const { data, error: fetchError } = await supabase
           .from('photos')
           .select('*')
@@ -91,8 +105,11 @@ const About = () => {
       }
     };
 
-    loadPortrait();
-  }, []);
+    // Only load portrait when aboutData is ready
+    if (!aboutLoading) {
+      loadPortrait();
+    }
+  }, [aboutData, aboutLoading]);
 
   return (
     <PageLayout>
@@ -158,24 +175,56 @@ const About = () => {
 
           {/* Bio Section */}
           <div className="max-w-2xl mx-auto px-3 md:px-5 space-y-8 text-center text-foreground/80 text-sm leading-relaxed mb-16">
-            <p>
-              Production photographer specializing in fashion, editorial, and commercial photography.
-              Creating compelling imagery with technical precision and creative vision for global brands
-              and publications.
-            </p>
+            {aboutLoading ? (
+              <div className="flex items-center justify-center min-h-[200px]">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : aboutData?.bio_text ? (
+              // Display bio from database, preserving line breaks
+              aboutData.bio_text.split('\n').map((paragraph, index) => (
+                paragraph.trim() && <p key={index}>{paragraph}</p>
+              ))
+            ) : (
+              // Fallback content
+              <>
+                <p>
+                  Production photographer specializing in fashion, editorial, and commercial photography.
+                  Creating compelling imagery with technical precision and creative vision for global brands
+                  and publications.
+                </p>
 
-            <p>
-              Full production services including art buying, location scouting, casting, and on-set
-              management. Collaborative approach ensuring seamless execution from concept to delivery.
-            </p>
+                <p>
+                  Full production services including art buying, location scouting, casting, and on-set
+                  management. Collaborative approach ensuring seamless execution from concept to delivery.
+                </p>
+              </>
+            )}
 
-            <div className="pt-8">
-              <h2 className="font-playfair text-xl text-foreground mb-4">Services</h2>
-              <p className="text-foreground/70 text-xs uppercase tracking-wider leading-loose">
-                Fashion & Editorial Photography / Commercial Production / Art Buying & Creative Direction /
-                Location Scouting / Casting & Talent Coordination
-              </p>
-            </div>
+            {/* Services Section */}
+            {!aboutLoading && aboutData?.services && Array.isArray(aboutData.services) && aboutData.services.length > 0 && (
+              <div className="pt-8">
+                <h2 className="font-playfair text-xl text-foreground mb-4">Services</h2>
+                <div className="space-y-4">
+                  {aboutData.services.map((service) => (
+                    <div key={service.id} className="text-left border-l-2 border-foreground/20 pl-4">
+                      <h3 className="font-semibold text-foreground mb-1">{service.title}</h3>
+                      <p className="text-foreground/70 text-xs">{service.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Show fallback services if no services in database */}
+            {!aboutLoading && (!aboutData?.services || !Array.isArray(aboutData.services) || aboutData.services.length === 0) && (
+              <div className="pt-8">
+                <h2 className="font-playfair text-xl text-foreground mb-4">Services</h2>
+                <p className="text-foreground/70 text-xs uppercase tracking-wider leading-loose">
+                  Fashion & Editorial Photography / Commercial Production / Art Buying & Creative Direction /
+                  Location Scouting / Casting & Talent Coordination
+                </p>
+              </div>
+            )}
 
             <div className="pt-4">
               <h2 className="font-playfair text-xl text-foreground mb-4">Select Clients</h2>
