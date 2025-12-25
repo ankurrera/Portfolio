@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import PortfolioHeader from "@/components/PortfolioHeader";
-import PhotographerBio from "@/components/PhotographerBio";
+import DynamicHero from "@/components/DynamicHero";
 import PortfolioFooter from "@/components/PortfolioFooter";
 import PageLayout from "@/components/PageLayout";
 import DevErrorBanner from "@/components/DevErrorBanner";
@@ -127,7 +127,7 @@ const Index = () => {
     "jobTitle": "Production Photographer",
     "description": "Production photographer specializing in fashion, editorial, and commercial photography. Creating compelling imagery for global brands and publications.",
     "url": "https://morganblake.com",
-    "image": "https://morganblake.com/og-image.jpg",
+    "image": "https://morganblake.com/og-preview.png",
     "sameAs": [
       "https://www.instagram.com/ankurr.tf/"
     ],
@@ -162,7 +162,12 @@ const Index = () => {
       />
       
       <main className="flex-1">
-        <PhotographerBio />
+        <DynamicHero 
+          pageSlug="home"
+          fallbackTitle="Ankur Bag"
+          fallbackSubtitle="FASHION PRODUCTION & PHOTOGRAPHY"
+          fallbackDescription="Production photographer specializing in fashion, editorial, and commercial work. Creating compelling imagery for global brands and publications."
+        />
 
         {error && (
           <div className="text-center py-20">

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import PortfolioHeader from "@/components/PortfolioHeader";
-import PhotographerBio from "@/components/PhotographerBio";
+import DynamicHero from "@/components/DynamicHero";
 import PortfolioFooter from "@/components/PortfolioFooter";
 import PageLayout from "@/components/PageLayout";
 import SEO from "@/components/SEO";
@@ -54,7 +54,12 @@ const Photoshoots = () => {
       <PortfolioHeader activeCategory="" />
 
       <main className="flex-1">
-        <PhotographerBio />
+        <DynamicHero 
+          pageSlug="photoshoots"
+          fallbackTitle="Ankur Bag"
+          fallbackSubtitle="FASHION PRODUCTION & PHOTOGRAPHY"
+          fallbackDescription="Production photographer specializing in fashion, editorial, and commercial work. Creating compelling imagery for global brands and publications."
+        />
         
         {/* Breadcrumbs */}
         <Breadcrumbs

@@ -20,6 +20,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useHeroText } from "@/hooks/useHeroText";
+import { Loader2 } from "lucide-react";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, { message: "Name is required" }).max(100, { message: "Name must be less than 100 characters" }),
@@ -34,6 +36,7 @@ const About = () => {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { heroText, loading: heroLoading } = useHeroText('about');
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
@@ -106,14 +109,20 @@ const About = () => {
       <main className="flex-1">
         <section className="max-w-[1600px] mx-auto pt-20 pb-12 md:pt-24 md:pb-16">
           <div className="text-center space-y-8 mb-16 px-3 md:px-5 max-w-2xl mx-auto">
-            <div className="space-y-4">
-              <h1 className="font-playfair text-4xl md:text-5xl text-foreground">
-                Ankur Bag
-              </h1>
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-inter">
-                PRODUCTION & PHOTOGRAPHY
-              </p>
-            </div>
+            {heroLoading ? (
+              <div className="flex items-center justify-center min-h-[200px]">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h1 className="font-playfair text-4xl md:text-5xl text-foreground">
+                  {heroText?.hero_title || 'Ankur Bag'}
+                </h1>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-inter">
+                  {heroText?.hero_subtitle || 'PRODUCTION & PHOTOGRAPHY'}
+                </p>
+              </div>
+            )}
 
             {/* Portrait */}
             {!loading && portrait && (

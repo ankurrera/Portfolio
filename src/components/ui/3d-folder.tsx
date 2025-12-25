@@ -6,6 +6,7 @@ interface Project {
   id: string
   image: string
   title: string
+  year?: number
 }
 
 interface AnimatedFolderProps {
@@ -509,30 +510,37 @@ export function ImageLightbox({
                 <h3 className="text-lg font-medium text-foreground tracking-tight truncate h-7">
                   {currentProject?.title}
                 </h3>
-                <div className="flex items-center gap-3 mt-1">
-                  <p className="text-sm text-muted-foreground">
-                    <kbd className="px-1.5 py-0.5 mx-0.5 text-xs font-medium bg-muted text-muted-foreground rounded border border-border">
-                      ←
-                    </kbd>
-                    <kbd className="px-1.5 py-0.5 mx-0.5 text-xs font-medium bg-muted text-muted-foreground rounded border border-border">
-                      →
-                    </kbd>{" "}
-                    to navigate
-                  </p>
-                  <div className="flex items-center gap-1.5">
-                    {projects.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleDotClick(idx)}
-                        className={cn(
-                          "w-2 h-2 rounded-full transition-all duration-300",
-                          idx === internalIndex
-                            ? "bg-foreground scale-110"
-                            : "bg-muted-foreground/40 hover:bg-muted-foreground/60",
-                        )}
-                      />
-                    ))}
+                <div className="flex items-center justify-between gap-3 mt-1">
+                  <div className="flex items-center gap-3">
+                    <p className="text-sm text-muted-foreground">
+                      <kbd className="px-1.5 py-0.5 mx-0.5 text-xs font-medium bg-muted text-muted-foreground rounded border border-border">
+                        ←
+                      </kbd>
+                      <kbd className="px-1.5 py-0.5 mx-0.5 text-xs font-medium bg-muted text-muted-foreground rounded border border-border">
+                        →
+                      </kbd>{" "}
+                      to navigate
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      {projects.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleDotClick(idx)}
+                          className={cn(
+                            "w-2 h-2 rounded-full transition-all duration-300",
+                            idx === internalIndex
+                              ? "bg-foreground scale-110"
+                              : "bg-muted-foreground/40 hover:bg-muted-foreground/60",
+                          )}
+                        />
+                      ))}
+                    </div>
                   </div>
+                  {currentProject?.year && (
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {currentProject.year}
+                    </p>
+                  )}
                 </div>
               </div>
 

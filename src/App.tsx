@@ -10,7 +10,6 @@ import About from "./pages/About";
 import Technical from "./pages/Technical";
 import Artistic from "./pages/Artistic";
 import Achievement from "./pages/Achievement";
-import Project from "./pages/Project";
 import CategoryGallery from "./pages/CategoryGallery";
 import CategoryRedirect from "./pages/CategoryRedirect";
 import Photoshoots from "./pages/Photoshoots";
@@ -20,6 +19,7 @@ import AdminPhotoshootsEdit from "./pages/AdminPhotoshootsEdit";
 import AdminArtisticEdit from "./pages/AdminArtisticEdit";
 import AdminTechnicalEdit from "./pages/AdminTechnicalEdit";
 import AdminAchievementEdit from "./pages/AdminAchievementEdit";
+import AdminHeroEdit from "./pages/AdminHeroEdit";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -46,13 +46,13 @@ const App = () => (
                 <Route path="/photoshoots/:category" element={<CategoryGallery />} />
                 {/* Redirect old category routes to new photoshoots routes */}
                 <Route path="/category/:category" element={<CategoryRedirect />} />
-                <Route path="/project/:slug" element={<Project />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/photoshoots/:category/edit" element={<AdminPhotoshootsEdit />} />
                 <Route path="/admin/artistic/edit" element={<AdminArtisticEdit />} />
                 <Route path="/admin/technical/edit" element={<AdminTechnicalEdit />} />
                 <Route path="/admin/achievement/edit" element={<AdminAchievementEdit />} />
+                <Route path="/admin/hero/edit" element={<AdminHeroEdit />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
