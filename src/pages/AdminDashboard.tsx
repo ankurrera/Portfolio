@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
-import { Loader2, LogOut, Camera, FolderOpen, Code2, Trophy } from 'lucide-react';
+import { Loader2, LogOut, Camera, FolderOpen, Code2, Trophy, Type } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -87,6 +87,33 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
+        {/* Hero Sections */}
+        <section className="mb-12">
+          <div className="flex items-center gap-2 mb-6">
+            <Type className="h-5 w-5 text-foreground" />
+            <h2 className="text-lg font-semibold uppercase tracking-wider">Hero Sections</h2>
+          </div>
+          
+          <Card 
+            className="hover:border-foreground/20 transition-all duration-300 cursor-pointer max-w-md"
+            onClick={() => navigate('/admin/hero/edit')}
+          >
+            <CardHeader>
+              <CardTitle className="text-base uppercase tracking-wider">
+                Hero Text Management
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Manage hero sections across all pages from one central location
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" size="sm" className="w-full">
+                Edit Hero Sections
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Photoshoots Section */}
         <section className="mb-12">
           <div className="flex items-center gap-2 mb-6">

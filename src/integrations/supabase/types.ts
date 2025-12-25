@@ -188,6 +188,45 @@ export type Database = {
         }
         Relationships: []
       }
+      hero_text: {
+        Row: {
+          id: string
+          page_slug: string
+          hero_title: string | null
+          hero_subtitle: string | null
+          hero_description: string | null
+          cta_text: string | null
+          cta_link: string | null
+          background_media_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          page_slug: string
+          hero_title?: string | null
+          hero_subtitle?: string | null
+          hero_description?: string | null
+          cta_text?: string | null
+          cta_link?: string | null
+          background_media_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          page_slug?: string
+          hero_title?: string | null
+          hero_subtitle?: string | null
+          hero_description?: string | null
+          cta_text?: string | null
+          cta_link?: string | null
+          background_media_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

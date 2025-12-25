@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import PortfolioHeader from "@/components/PortfolioHeader";
+import DynamicHero from "@/components/DynamicHero";
 import PortfolioFooter from "@/components/PortfolioFooter";
 import PageLayout from "@/components/PageLayout";
 import SEO from "@/components/SEO";
@@ -85,15 +86,15 @@ const Achievement = () => {
         canonicalUrl="/achievement"
       />
       <PortfolioHeader activeCategory="ACHIEVEMENT" />
-      <main id="main-content" className="min-h-screen pt-24 px-4 md:px-8 pb-16">
+      <main id="main-content" className="min-h-screen pt-8 px-4 md:px-8 pb-16">
+        <DynamicHero 
+          pageSlug="achievement"
+          fallbackTitle="Achievements"
+          fallbackSubtitle="AWARDS & RECOGNITIONS"
+          fallbackDescription="Explore achievements across different categories. Hover over each folder to preview certificates."
+        />
+        
         <div className="max-w-[1400px] mx-auto">
-          <h1 className="text-3xl md:text-4xl font-light tracking-wide mb-4 text-center">
-            Achievements
-          </h1>
-          <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12">
-            Explore achievements across different categories. Hover over each folder to preview certificates.
-          </p>
-          
           {loading && (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

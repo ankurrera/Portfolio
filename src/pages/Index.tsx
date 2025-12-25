@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import PortfolioHeader from "@/components/PortfolioHeader";
-import PhotographerBio from "@/components/PhotographerBio";
+import DynamicHero from "@/components/DynamicHero";
 import PortfolioFooter from "@/components/PortfolioFooter";
 import PageLayout from "@/components/PageLayout";
 import DevErrorBanner from "@/components/DevErrorBanner";
@@ -162,7 +162,12 @@ const Index = () => {
       />
       
       <main className="flex-1">
-        <PhotographerBio />
+        <DynamicHero 
+          pageSlug="home"
+          fallbackTitle="Ankur Bag"
+          fallbackSubtitle="FASHION PRODUCTION & PHOTOGRAPHY"
+          fallbackDescription="Production photographer specializing in fashion, editorial, and commercial work. Creating compelling imagery for global brands and publications."
+        />
 
         {error && (
           <div className="text-center py-20">
