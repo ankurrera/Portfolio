@@ -212,9 +212,10 @@ const AdminHeroEdit = () => {
 
       setEditDialogOpen(false);
       loadHeroes();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving hero:', err);
-      if (err.code === '23505') {
+      const error = err as { code?: string; message?: string };
+      if (error.code === '23505') {
         toast.error('A hero section with this page slug already exists');
       } else {
         toast.error('Failed to save hero section');

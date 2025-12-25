@@ -1,4 +1,5 @@
 import { useHeroText } from '@/hooks/useHeroText';
+import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 
 interface DynamicHeroProps {
@@ -31,6 +32,28 @@ const DynamicHero = ({
   const subtitle = heroText?.hero_subtitle || fallbackSubtitle;
   const description = heroText?.hero_description || fallbackDescription;
 
+  // Check if CTA link is internal (starts with /) or external
+  const isInternalLink = heroText?.cta_link?.startsWith('/');
+  const ctaElement = heroText?.cta_text && heroText?.cta_link && (
+    isInternalLink ? (
+      <Link
+        to={heroText.cta_link}
+        className="inline-block px-6 py-3 text-sm uppercase tracking-wider border border-foreground/20 hover:bg-foreground hover:text-background transition-all"
+      >
+        {heroText.cta_text}
+      </Link>
+    ) : (
+      <a
+        href={heroText.cta_link}
+        className="inline-block px-6 py-3 text-sm uppercase tracking-wider border border-foreground/20 hover:bg-foreground hover:text-background transition-all"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {heroText.cta_text}
+      </a>
+    )
+  );
+
   return (
     <section 
       className="max-w-[1600px] mx-auto px-3 md:px-5 pt-16 pb-12 md:pt-20 md:pb-16"
@@ -54,14 +77,9 @@ const DynamicHero = ({
             {description}
           </p>
         )}
-        {heroText?.cta_text && heroText?.cta_link && (
+        {ctaElement && (
           <div className="pt-4">
-            <a
-              href={heroText.cta_link}
-              className="inline-block px-6 py-3 text-sm uppercase tracking-wider border border-foreground/20 hover:bg-foreground hover:text-background transition-all"
-            >
-              {heroText.cta_text}
-            </a>
+            {ctaElement}
           </div>
         )}
       </div>

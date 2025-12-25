@@ -48,9 +48,6 @@ BEFORE UPDATE ON public.hero_text
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
 
--- Create unique index on page_slug
-CREATE UNIQUE INDEX hero_text_page_slug_idx ON public.hero_text(page_slug);
-
 -- Add check constraint to prevent null page_slug
 ALTER TABLE public.hero_text ADD CONSTRAINT hero_text_page_slug_not_empty CHECK (page_slug <> '');
 

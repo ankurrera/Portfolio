@@ -31,9 +31,17 @@ export const useHeroText = (pageSlug: string) => {
           .eq('page_slug', pageSlug)
           .single();
 
-        if (fetchError) throw fetchError;
-
-        setHeroText(data);
+        if (fetchError) {
+          // PGRST116 means no rows returned - this is expected for pages without hero text
+          if (fetchError.code === 'PGRST116') {
+            console.log(`No hero text found for ${pageSlug}, will use fallback`);
+            setHeroText(null);
+          } else {
+            throw fetchError;
+          }
+        } else {
+          setHeroText(data);
+        }
       } catch (err) {
         console.error(`Error fetching hero text for ${pageSlug}:`, err);
         setError(err instanceof Error ? err.message : 'Failed to load hero content');
