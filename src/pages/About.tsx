@@ -283,9 +283,9 @@ const About = () => {
                     <h2 className="font-playfair text-2xl text-foreground mb-8">Education</h2>
                     <div className="space-y-6">
                       {education.map((edu) => (
-                        <div key={edu.id} className="flex items-start gap-4 text-left">
-                          {/* Logo */}
-                          <div className="flex-shrink-0 w-16 h-16 md:w-20 md:h-20">
+                        <div key={edu.id} className="flex items-center gap-6 text-left">
+                          {/* Logo - Circular with fixed size */}
+                          <div className="flex-shrink-0 w-16 h-16 rounded-full overflow-hidden border border-foreground/10 flex items-center justify-center bg-white p-2">
                             <img
                               src={edu.logo_url}
                               alt={edu.institution_name}
@@ -295,10 +295,10 @@ const About = () => {
                           
                           {/* Details */}
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-foreground text-base">
+                            <h3 className="font-semibold text-foreground text-base leading-tight">
                               {edu.institution_name}
                             </h3>
-                            <p className="text-foreground/70 text-sm mt-1">
+                            <p className="text-foreground/70 text-sm mt-1 leading-tight">
                               {edu.degree}
                             </p>
                           </div>
@@ -321,9 +321,9 @@ const About = () => {
                     <h2 className="font-playfair text-2xl text-foreground mb-8">Experience</h2>
                     <div className="space-y-6">
                       {experience.map((exp) => (
-                        <div key={exp.id} className="flex items-start gap-4 text-left">
-                          {/* Logo */}
-                          <div className="flex-shrink-0 w-16 h-16 md:w-20 md:h-20">
+                        <div key={exp.id} className="flex items-center gap-6 text-left">
+                          {/* Logo - Circular with fixed size */}
+                          <div className="flex-shrink-0 w-16 h-16 rounded-full overflow-hidden border border-foreground/10 flex items-center justify-center bg-white p-2">
                             <img
                               src={exp.logo_url}
                               alt={exp.company_name}
@@ -333,10 +333,10 @@ const About = () => {
                           
                           {/* Details */}
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-foreground text-base">
+                            <h3 className="font-semibold text-foreground text-base leading-tight">
                               {exp.company_name}
                             </h3>
-                            <p className="text-foreground/70 text-sm mt-1">
+                            <p className="text-foreground/70 text-sm mt-1 leading-tight">
                               {exp.role}
                             </p>
                           </div>
