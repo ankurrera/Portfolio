@@ -12,6 +12,8 @@ export interface Education {
   start_year: string;
   end_year: string;
   display_order: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AboutExperience {
@@ -22,6 +24,8 @@ export interface AboutExperience {
   start_date: string; // format: "YYYY-MM"
   end_date: string | null; // format: "YYYY-MM" or null for current
   display_order: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Keep legacy name for backward compatibility
