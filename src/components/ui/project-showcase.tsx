@@ -58,7 +58,7 @@ export function ProjectShowcase({ projects }: ProjectShowcaseProps) {
       <div ref={containerRef} className="relative w-full max-w-5xl px-4 md:px-8" onMouseMove={handleMouseMove}>
         {/* Oversized index number - positioned behind content as background layer */}
         <motion.div
-          className="absolute -left-8 md:-left-16 top-1/2 -translate-y-1/2 text-[16rem] md:text-[28rem] font-bold text-foreground/[0.03] select-none pointer-events-none leading-none tracking-tighter z-0"
+          className="absolute -left-8 md:-left-16 top-1/2 -translate-y-1/2 text-[16rem] md:text-[28rem] lg:text-[32rem] font-bold text-foreground/[0.06] select-none pointer-events-none leading-none tracking-tighter z-0"
           style={{ x: numberX, y: numberY }}
         >
           <AnimatePresence mode="wait">
