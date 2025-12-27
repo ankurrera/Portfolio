@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowUpRight, Github, Loader2 } from 'lucide-react';
+import { ArrowUpRight, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { TechnicalProject } from '@/types/technical';
+import { ProjectShowcase } from '@/components/ui/project-showcase';
 
 const MinimalProjects = () => {
   const [projects, setProjects] = useState<TechnicalProject[]>([]);
@@ -72,7 +72,7 @@ const MinimalProjects = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mb-20"
+          className="mb-12"
         >
           <div className="flex items-end justify-between mb-8">
             <div>
@@ -90,96 +90,8 @@ const MinimalProjects = () => {
           </div>
         </motion.div>
 
-        {/* Projects Grid */}
-        <div className="space-y-24">
-          {projects.map((project, index) => (
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="group"
-            >
-              <Card className="minimal-card border-0 shadow-none bg-transparent hover:bg-card/50 transition-all duration-500">
-                <CardContent className="p-0">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center py-12 border-b border-border/50">
-                    {/* Project Number */}
-                    <div className="order-1 lg:order-1">
-                      <div className="text-6xl font-heading font-light text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors">
-                        {String(index + 1).padStart(2, '0')}
-                      </div>
-                    </div>
-
-                    {/* Project Info */}
-                    <div className="order-3 lg:order-2 space-y-4">
-                      <div>
-                        <h3 className="text-xl font-heading font-medium text-foreground mb-2 group-hover:text-primary transition-colors">
-                          {project.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {project.description}
-                        </p>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        {project.languages.map((tech) => (
-                          <span 
-                            key={tech} 
-                            className="text-xs font-mono text-muted-foreground/60 px-2 py-1 bg-muted/30 rounded"
-                          >
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Project Meta */}
-                    <div className="order-2 lg:order-3 flex lg:flex-col items-start lg:items-end justify-between lg:justify-start gap-4">
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-foreground mb-1">
-                          {project.dev_year}
-                        </div>
-                        <div className={`text-xs font-mono uppercase tracking-widest ${
-                          project.status === 'Live' ? 'text-success' : 'text-warning'
-                        }`}>
-                          {project.status || 'Live'}
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        {project.live_link && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 hover:bg-muted/50"
-                            asChild
-                          >
-                            <a href={project.live_link} target="_blank" rel="noopener noreferrer">
-                              <ArrowUpRight className="w-4 h-4" />
-                            </a>
-                          </Button>
-                        )}
-                        {project.github_link && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 hover:bg-muted/50"
-                            asChild
-                          >
-                            <a href={project.github_link} target="_blank" rel="noopener noreferrer">
-                              <Github className="w-4 h-4" />
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+        {/* Animated Project Showcase */}
+        <ProjectShowcase projects={projects} />
 
         {/* CTA */}
         <motion.div
