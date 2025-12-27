@@ -25,7 +25,7 @@ const MinimalAbout = () => {
   const loadExperiences = async () => {
     try {
       const { data, error } = await supabase
-        .from('experience')
+        .from('technical_experience')
         .select('*')
         .order('display_order', { ascending: true });
 

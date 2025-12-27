@@ -43,7 +43,7 @@ const AdminExperienceEdit = () => {
   const loadExperiences = async () => {
     try {
       const { data, error } = await supabase
-        .from('experience')
+        .from('technical_experience')
         .select('*')
         .order('display_order', { ascending: true });
 
@@ -88,7 +88,7 @@ const AdminExperienceEdit = () => {
   const handleDelete = async (experienceId: string) => {
     try {
       const { error } = await supabase
-        .from('experience')
+        .from('technical_experience')
         .delete()
         .eq('id', experienceId);
 
