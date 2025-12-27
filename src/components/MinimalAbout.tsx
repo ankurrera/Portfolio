@@ -1,25 +1,48 @@
 import { motion } from 'motion/react';
 import { Card, CardContent } from '@/components/ui/card';
+import { useTechnicalSkills } from '@/hooks/useTechnicalSkills';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Experience } from '@/types/experience';
+import { Loader2 } from 'lucide-react';
 
 const MinimalAbout = () => {
-  const skills = [
-    {
-      category: 'Frontend',
-      items: ['React', 'TypeScript', 'Next.js', 'Vue.js']
-    },
-    {
-      category: 'Backend',
-      items: ['Node.js', 'Python', 'PostgreSQL', 'MongoDB']
-    },
-    {
-      category: 'Tools',
-      items: ['AWS', 'Docker', 'Git', 'Figma']
-    },
-    {
-      category: 'Specialties',
-      items: ['AI/ML', 'Web3', 'Performance', 'Security']
+  const { skills: skillsData, loading } = useTechnicalSkills();
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [loadingExperiences, setLoadingExperiences] = useState(true);
+  
+  // Transform data to match existing structure
+  const skills = skillsData.map(skill => ({
+    category: skill.category,
+    items: skill.skills
+  }));
+
+  // Load experiences from Supabase
+  useEffect(() => {
+    loadExperiences();
+  }, []);
+
+  const loadExperiences = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('experience')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+
+      setExperiences(data as Experience[]);
+    } catch (error) {
+      console.error('Error loading experiences:', error);
+    } finally {
+      setLoadingExperiences(false);
     }
-  ];
+  };
+
+  const formatDateDisplay = (exp: Experience) => {
+    const endDate = exp.is_current ? 'Present' : (exp.end_date || '');
+    return `${exp.start_date} - ${endDate}`;
+  };
 
   return (
     <section id="about" className="py-section bg-muted/20">
@@ -123,8 +146,9 @@ const MinimalAbout = () => {
             }}
             className="space-y-8"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {skills.map((skillGroup, index) => (
+            {!loading && skills.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {skills.map((skillGroup, index) => (
                 <motion.div
                   key={skillGroup.category}
                   initial={{
@@ -160,61 +184,56 @@ const MinimalAbout = () => {
                 </motion.div>
               ))}
             </div>
+            )}
 
             {/* Experience Timeline */}
             <div className="space-y-6 pt-8">
               <h4 className="text-sm font-medium text-foreground">Experience</h4>
-              <div className="space-y-4">
-                {[
-                  {
-                    role: 'Website Developer',
-                    company: 'Digital Indian pvt Solution',
-                    year: '08/2025 - Present'
-                  },
-                  {
-                    role: 'Google Map 360 Photographer',
-                    company: 'Instanovate',
-                    year: '02/2025 - 03/2025'
-                  },
-                  {
-                    role: 'Cinematography/ Editing',
-                    company: 'Freelance',
-                    year: '2019 - Current'
-                  }
-                ].map((exp, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{
-                      opacity: 0,
-                      x: 20
-                    }}
-                    whileInView={{
-                      opacity: 1,
-                      x: 0
-                    }}
-                    viewport={{
-                      once: true
-                    }}
-                    transition={{
-                      duration: 0.4,
-                      delay: index * 0.1
-                    }}
-                    className="flex justify-between items-start py-3 border-b border-border/50 last:border-0"
-                  >
-                    <div>
-                      <div className="text-sm font-medium text-foreground">
-                        {exp.role}
+              {loadingExperiences ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : experiences.length === 0 ? (
+                <div className="text-sm text-muted-foreground py-4">
+                  No experience entries yet.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {experiences.map((exp, index) => (
+                    <motion.div
+                      key={exp.id}
+                      initial={{
+                        opacity: 0,
+                        x: 20
+                      }}
+                      whileInView={{
+                        opacity: 1,
+                        x: 0
+                      }}
+                      viewport={{
+                        once: true
+                      }}
+                      transition={{
+                        duration: 0.4,
+                        delay: index * 0.1
+                      }}
+                      className="flex justify-between items-start py-3 border-b border-border/50 last:border-0"
+                    >
+                      <div>
+                        <div className="text-sm font-medium text-foreground">
+                          {exp.role_title}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {exp.company_name}
+                        </div>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {exp.company}
+                      <div className="text-xs font-mono text-muted-foreground">
+                        {formatDateDisplay(exp)}
                       </div>
-                    </div>
-                    <div className="text-xs font-mono text-muted-foreground">
-                      {exp.year}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

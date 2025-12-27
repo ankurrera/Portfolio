@@ -194,6 +194,33 @@ export type Database = {
         }
         Relationships: []
       }
+      technical_skills: {
+        Row: {
+          id: string
+          category: string
+          skills: string[]
+          order_index: number
+          is_visible: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          category: string
+          skills: string[]
+          order_index?: number
+          is_visible?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          category?: string
+          skills?: string[]
+          order_index?: number
+          is_visible?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
