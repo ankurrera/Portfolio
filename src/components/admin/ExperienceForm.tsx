@@ -140,12 +140,12 @@ const ExperienceForm = ({ experience, onSave, onCancel }: ExperienceFormProps) =
           {/* Employment Type */}
           <div className="space-y-2">
             <Label htmlFor="employmentType">Employment Type</Label>
-            <Select value={employmentType} onValueChange={setEmploymentType}>
+            <Select value={employmentType || "none"} onValueChange={(value) => setEmploymentType(value === "none" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select type (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 <SelectItem value="Full-time">Full-time</SelectItem>
                 <SelectItem value="Part-time">Part-time</SelectItem>
                 <SelectItem value="Freelance">Freelance</SelectItem>
