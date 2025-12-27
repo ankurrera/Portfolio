@@ -123,14 +123,6 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
-  .animate-marquee-rtl {
-    animation: marquee-rtl 40s linear infinite;
-  }
-  
-  .animate-marquee-rtl:hover {
-    animation-play-state: paused;
-  }
-
   /* Custom styles for react-medium-image-zoom dark mode support */
   [data-rmiz-modal-overlay] {
     background-color: hsl(var(--background) / 0.95) !important;
@@ -319,15 +311,6 @@ All colors MUST be HSL.
   
   .max-w-content {
     max-width: var(--content-width);
-  }
-}
-
-@keyframes marquee-rtl {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
   }
 }
 

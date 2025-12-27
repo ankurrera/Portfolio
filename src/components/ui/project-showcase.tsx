@@ -56,27 +56,26 @@ export function ProjectShowcase({ projects }: ProjectShowcaseProps) {
   return (
     <div className="flex items-center justify-center min-h-[600px] bg-background overflow-hidden py-12">
       <div ref={containerRef} className="relative w-full max-w-5xl px-4 md:px-8" onMouseMove={handleMouseMove}>
-        {/* Oversized index number - positioned to bleed off left edge */}
-        <motion.div
-          className="absolute -left-4 md:-left-8 top-1/2 -translate-y-1/2 text-[16rem] md:text-[28rem] font-bold text-foreground/[0.03] select-none pointer-events-none leading-none tracking-tighter"
-          style={{ x: numberX, y: numberY }}
-        >
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={activeIndex}
-              initial={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }}
-              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-              exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="block"
-            >
-              {String(activeIndex + 1).padStart(2, "0")}
-            </motion.span>
-          </AnimatePresence>
-        </motion.div>
-
         {/* Main content - asymmetric layout */}
-        <div className="relative flex flex-col md:flex-row">
+        <div className="relative flex flex-col md:flex-row z-10">
+          {/* Oversized index number - positioned behind content as background layer */}
+          <motion.div
+            className="absolute -left-8 md:-left-16 top-1/2 -translate-y-1/2 text-[16rem] md:text-[28rem] font-bold text-foreground/[0.03] select-none pointer-events-none leading-none tracking-tighter -z-10"
+            style={{ x: numberX, y: numberY }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={activeIndex}
+                initial={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }}
+                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                className="block"
+              >
+                {String(activeIndex + 1).padStart(2, "0")}
+              </motion.span>
+            </AnimatePresence>
+          </motion.div>
           {/* Left column - vertical text */}
           <div className="hidden md:flex flex-col items-center justify-center pr-8 md:pr-16 border-r border-border">
             <motion.span
@@ -316,20 +315,7 @@ export function ProjectShowcase({ projects }: ProjectShowcaseProps) {
           </div>
         </div>
 
-        {/* Bottom ticker - subtle repeating project titles */}
-        <div className="absolute -bottom-12 md:-bottom-20 left-0 right-0 overflow-hidden opacity-[0.08] pointer-events-none">
-          <motion.div
-            className="flex whitespace-nowrap text-4xl md:text-6xl font-bold tracking-tight"
-            animate={{ x: [0, -1000] }}
-            transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-          >
-            {[...Array(10)].map((_, i) => (
-              <span key={i} className="mx-8">
-                {projects.map((p) => p.title).join(" • ")} •
-              </span>
-            ))}
-          </motion.div>
-        </div>
+
       </div>
     </div>
   )
