@@ -49,7 +49,7 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const fetchPhotos = async (isRefresh = false) => {
+  const fetchPhotos = useCallback(async (isRefresh = false) => {
     // Cancel any in-flight requests
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -130,7 +130,7 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
       setIsRefreshing(false);
       abortControllerRef.current = null;
     }
-  };
+  }, [historyInitialized]);
 
   useEffect(() => {
     fetchPhotos();
@@ -144,7 +144,7 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
         clearTimeout(refreshTimeoutRef.current);
       }
     };
-  }, []);
+  }, [fetchPhotos]);
 
   // Handle device preview changes to ensure layout recalculation
   useEffect(() => {
@@ -410,7 +410,7 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
     if (isRefreshing) return;
     
     fetchPhotos(true);
-  }, [isRefreshing, category]);
+  }, [isRefreshing, fetchPhotos]);
 
   const handleUploadComplete = () => {
     setShowUploader(false);
