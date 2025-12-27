@@ -7,9 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Loader2, Plus, Trash2, Upload, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Trash2, Upload, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
-import { AboutPage, Service } from '@/types/about';
+import { AboutPage, Service, Education, Experience } from '@/types/about';
 
 const AdminAboutEdit = () => {
   const { user, isAdmin, isLoading, signOut } = useAuth();
@@ -25,6 +25,12 @@ const AdminAboutEdit = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [heroTitle, setHeroTitle] = useState<string>('');
   const [heroSubtitle, setHeroSubtitle] = useState<string>('');
+  
+  // Education and Experience
+  const [education, setEducation] = useState<Education[]>([]);
+  const [experience, setExperience] = useState<Experience[]>([]);
+  const [educationLoading, setEducationLoading] = useState(true);
+  const [experienceLoading, setExperienceLoading] = useState(true);
 
   // Auth redirect effect
   useEffect(() => {
@@ -47,7 +53,45 @@ const AdminAboutEdit = () => {
     if (!user || !isAdmin) return;
     
     loadAboutData();
+    loadEducation();
+    loadExperience();
   }, [user, isAdmin]);
+
+  const loadEducation = async () => {
+    try {
+      setEducationLoading(true);
+      const { data, error } = await supabase
+        .from('education')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      setEducation(data || []);
+    } catch (error) {
+      console.error('Error loading education:', error);
+      toast.error('Failed to load education data');
+    } finally {
+      setEducationLoading(false);
+    }
+  };
+
+  const loadExperience = async () => {
+    try {
+      setExperienceLoading(true);
+      const { data, error } = await supabase
+        .from('experience')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      setExperience(data || []);
+    } catch (error) {
+      console.error('Error loading experience:', error);
+      toast.error('Failed to load experience data');
+    } finally {
+      setExperienceLoading(false);
+    }
+  };
 
   const loadAboutData = async () => {
     try {
@@ -182,6 +226,300 @@ const AdminAboutEdit = () => {
     setServices(newServices);
   };
 
+  // Education CRUD operations
+  const handleAddEducation = () => {
+    const newEducation: Education = {
+      id: crypto.randomUUID(),
+      logo_url: '',
+      institution_name: '',
+      degree: '',
+      start_year: '',
+      end_year: '',
+      display_order: education.length
+    };
+    setEducation([...education, newEducation]);
+  };
+
+  const handleUpdateEducation = (id: string, field: keyof Education, value: string | number) => {
+    setEducation(education.map(edu => 
+      edu.id === id ? { ...edu, [field]: value } : edu
+    ));
+  };
+
+  const handleDeleteEducation = async (id: string) => {
+    // If it's a new item (UUID format), just remove from state
+    if (id.includes('-')) {
+      setEducation(education.filter(edu => edu.id !== id));
+      return;
+    }
+
+    // Otherwise, delete from database
+    try {
+      const { error } = await supabase
+        .from('education')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      await loadEducation();
+      toast.success('Education entry deleted');
+    } catch (error) {
+      console.error('Error deleting education:', error);
+      toast.error('Failed to delete education entry');
+    }
+  };
+
+  const handleMoveEducationUp = (index: number) => {
+    if (index === 0) return;
+    const newEducation = [...education];
+    [newEducation[index - 1], newEducation[index]] = [newEducation[index], newEducation[index - 1]];
+    // Update display_order
+    newEducation.forEach((edu, idx) => {
+      edu.display_order = idx;
+    });
+    setEducation(newEducation);
+  };
+
+  const handleMoveEducationDown = (index: number) => {
+    if (index === education.length - 1) return;
+    const newEducation = [...education];
+    [newEducation[index], newEducation[index + 1]] = [newEducation[index + 1], newEducation[index]];
+    // Update display_order
+    newEducation.forEach((edu, idx) => {
+      edu.display_order = idx;
+    });
+    setEducation(newEducation);
+  };
+
+  const handleEducationImageUpload = async (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `education-${Date.now()}.${fileExt}`;
+      const filePath = `about/education/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('photos')
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('photos')
+        .getPublicUrl(filePath);
+
+      handleUpdateEducation(education[index].id, 'logo_url', publicUrl);
+      toast.success('Logo uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast.error('Failed to upload logo');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSaveEducation = async () => {
+    try {
+      setSaving(true);
+
+      // Validate all education entries
+      for (const edu of education) {
+        if (!edu.logo_url || !edu.institution_name || !edu.degree || !edu.start_year || !edu.end_year) {
+          toast.error('Please fill all education fields');
+          return;
+        }
+      }
+
+      // Delete all existing education and insert new ones (simpler than update logic)
+      const { error: deleteError } = await supabase
+        .from('education')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+
+      if (deleteError) throw deleteError;
+
+      // Insert all education entries
+      const educationToInsert = education.map((edu, index) => ({
+        logo_url: edu.logo_url,
+        institution_name: edu.institution_name,
+        degree: edu.degree,
+        start_year: edu.start_year,
+        end_year: edu.end_year,
+        display_order: index
+      }));
+
+      const { error: insertError } = await supabase
+        .from('education')
+        .insert(educationToInsert);
+
+      if (insertError) throw insertError;
+
+      await loadEducation();
+      toast.success('Education saved successfully');
+    } catch (error) {
+      console.error('Error saving education:', error);
+      toast.error('Failed to save education');
+      throw error;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Experience CRUD operations
+  const handleAddExperience = () => {
+    const newExperience: Experience = {
+      id: crypto.randomUUID(),
+      logo_url: '',
+      company_name: '',
+      role: '',
+      start_date: '',
+      end_date: null,
+      display_order: experience.length
+    };
+    setExperience([...experience, newExperience]);
+  };
+
+  const handleUpdateExperience = (id: string, field: keyof Experience, value: string | number | null) => {
+    setExperience(experience.map(exp => 
+      exp.id === id ? { ...exp, [field]: value } : exp
+    ));
+  };
+
+  const handleDeleteExperience = async (id: string) => {
+    // If it's a new item (UUID format), just remove from state
+    if (id.includes('-')) {
+      setExperience(experience.filter(exp => exp.id !== id));
+      return;
+    }
+
+    // Otherwise, delete from database
+    try {
+      const { error } = await supabase
+        .from('experience')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      await loadExperience();
+      toast.success('Experience entry deleted');
+    } catch (error) {
+      console.error('Error deleting experience:', error);
+      toast.error('Failed to delete experience entry');
+    }
+  };
+
+  const handleMoveExperienceUp = (index: number) => {
+    if (index === 0) return;
+    const newExperience = [...experience];
+    [newExperience[index - 1], newExperience[index]] = [newExperience[index], newExperience[index - 1]];
+    // Update display_order
+    newExperience.forEach((exp, idx) => {
+      exp.display_order = idx;
+    });
+    setExperience(newExperience);
+  };
+
+  const handleMoveExperienceDown = (index: number) => {
+    if (index === experience.length - 1) return;
+    const newExperience = [...experience];
+    [newExperience[index], newExperience[index + 1]] = [newExperience[index + 1], newExperience[index]];
+    // Update display_order
+    newExperience.forEach((exp, idx) => {
+      exp.display_order = idx;
+    });
+    setExperience(newExperience);
+  };
+
+  const handleExperienceImageUpload = async (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `experience-${Date.now()}.${fileExt}`;
+      const filePath = `about/experience/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('photos')
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('photos')
+        .getPublicUrl(filePath);
+
+      handleUpdateExperience(experience[index].id, 'logo_url', publicUrl);
+      toast.success('Logo uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast.error('Failed to upload logo');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSaveExperience = async () => {
+    try {
+      setSaving(true);
+
+      // Validate all experience entries
+      for (const exp of experience) {
+        if (!exp.logo_url || !exp.company_name || !exp.role || !exp.start_date) {
+          toast.error('Please fill all required experience fields');
+          return;
+        }
+      }
+
+      // Delete all existing experience and insert new ones
+      const { error: deleteError } = await supabase
+        .from('experience')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+
+      if (deleteError) throw deleteError;
+
+      // Insert all experience entries
+      const experienceToInsert = experience.map((exp, index) => ({
+        logo_url: exp.logo_url,
+        company_name: exp.company_name,
+        role: exp.role,
+        start_date: exp.start_date,
+        end_date: exp.end_date || null,
+        display_order: index
+      }));
+
+      const { error: insertError } = await supabase
+        .from('experience')
+        .insert(experienceToInsert);
+
+      if (insertError) throw insertError;
+
+      await loadExperience();
+      toast.success('Experience saved successfully');
+    } catch (error) {
+      console.error('Error saving experience:', error);
+      toast.error('Failed to save experience');
+      throw error;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -226,8 +564,20 @@ const AdminAboutEdit = () => {
         
       if (heroError) throw heroError;
 
+      // Save education
+      if (education.length > 0) {
+        await handleSaveEducation();
+      }
+
+      // Save experience
+      if (experience.length > 0) {
+        await handleSaveExperience();
+      }
+
       toast.success('About page updated successfully');
       await loadAboutData();
+      await loadEducation();
+      await loadExperience();
     } catch (error) {
       console.error('Error saving about data:', error);
       toast.error('Failed to save About page data');
@@ -465,6 +815,263 @@ const AdminAboutEdit = () => {
                               variant="destructive"
                               size="sm"
                               onClick={() => handleDeleteService(service.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Education Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Education</CardTitle>
+                  <CardDescription>
+                    Add, edit, or reorder education history
+                  </CardDescription>
+                </div>
+                <Button onClick={handleAddEducation} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Education
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {educationLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : education.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No education entries yet. Click "Add Education" to get started.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {education.map((edu, index) => (
+                    <Card key={edu.id} className="relative">
+                      <CardContent className="pt-6 space-y-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-4">
+                            <div>
+                              <Label>Logo</Label>
+                              {edu.logo_url ? (
+                                <div className="mt-2 flex items-center gap-4">
+                                  <img src={edu.logo_url} alt="Logo" className="h-16 w-16 object-contain border rounded" />
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleUpdateEducation(edu.id, 'logo_url', '')}
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              ) : (
+                                <Input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handleEducationImageUpload(index, e)}
+                                  className="mt-2"
+                                  disabled={uploading}
+                                />
+                              )}
+                            </div>
+                            <div>
+                              <Label>Institution Name</Label>
+                              <Input
+                                value={edu.institution_name}
+                                onChange={(e) => handleUpdateEducation(edu.id, 'institution_name', e.target.value)}
+                                placeholder="e.g., University of Arts"
+                                className="mt-2"
+                              />
+                            </div>
+                            <div>
+                              <Label>Degree / Board</Label>
+                              <Input
+                                value={edu.degree}
+                                onChange={(e) => handleUpdateEducation(edu.id, 'degree', e.target.value)}
+                                placeholder="e.g., Bachelor of Fine Arts"
+                                className="mt-2"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label>Start Year</Label>
+                                <Input
+                                  value={edu.start_year}
+                                  onChange={(e) => handleUpdateEducation(edu.id, 'start_year', e.target.value)}
+                                  placeholder="e.g., 2015"
+                                  className="mt-2"
+                                />
+                              </div>
+                              <div>
+                                <Label>End Year</Label>
+                                <Input
+                                  value={edu.end_year}
+                                  onChange={(e) => handleUpdateEducation(edu.id, 'end_year', e.target.value)}
+                                  placeholder="e.g., 2019"
+                                  className="mt-2"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleMoveEducationUp(index)}
+                              disabled={index === 0}
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleMoveEducationDown(index)}
+                              disabled={index === education.length - 1}
+                            >
+                              <ChevronDown className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteEducation(edu.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Experience Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Experience</CardTitle>
+                  <CardDescription>
+                    Add, edit, or reorder work experience
+                  </CardDescription>
+                </div>
+                <Button onClick={handleAddExperience} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Experience
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {experienceLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : experience.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No experience entries yet. Click "Add Experience" to get started.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {experience.map((exp, index) => (
+                    <Card key={exp.id} className="relative">
+                      <CardContent className="pt-6 space-y-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-4">
+                            <div>
+                              <Label>Logo</Label>
+                              {exp.logo_url ? (
+                                <div className="mt-2 flex items-center gap-4">
+                                  <img src={exp.logo_url} alt="Logo" className="h-16 w-16 object-contain border rounded" />
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleUpdateExperience(exp.id, 'logo_url', '')}
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              ) : (
+                                <Input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handleExperienceImageUpload(index, e)}
+                                  className="mt-2"
+                                  disabled={uploading}
+                                />
+                              )}
+                            </div>
+                            <div>
+                              <Label>Company Name</Label>
+                              <Input
+                                value={exp.company_name}
+                                onChange={(e) => handleUpdateExperience(exp.id, 'company_name', e.target.value)}
+                                placeholder="e.g., Tech Company Inc."
+                                className="mt-2"
+                              />
+                            </div>
+                            <div>
+                              <Label>Role / Work Done</Label>
+                              <Textarea
+                                value={exp.role}
+                                onChange={(e) => handleUpdateExperience(exp.id, 'role', e.target.value)}
+                                placeholder="e.g., Senior Designer"
+                                className="mt-2"
+                                rows={2}
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label>Start Date (YYYY-MM)</Label>
+                                <Input
+                                  value={exp.start_date}
+                                  onChange={(e) => handleUpdateExperience(exp.id, 'start_date', e.target.value)}
+                                  placeholder="e.g., 2020-01"
+                                  className="mt-2"
+                                />
+                              </div>
+                              <div>
+                                <Label>End Date (YYYY-MM or leave empty for current)</Label>
+                                <Input
+                                  value={exp.end_date || ''}
+                                  onChange={(e) => handleUpdateExperience(exp.id, 'end_date', e.target.value || null)}
+                                  placeholder="e.g., 2023-12 or leave empty"
+                                  className="mt-2"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleMoveExperienceUp(index)}
+                              disabled={index === 0}
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleMoveExperienceDown(index)}
+                              disabled={index === experience.length - 1}
+                            >
+                              <ChevronDown className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteExperience(exp.id)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>

@@ -4,6 +4,26 @@ export interface Service {
   description: string;
 }
 
+export interface Education {
+  id: string;
+  logo_url: string;
+  institution_name: string;
+  degree: string;
+  start_year: string;
+  end_year: string;
+  display_order: number;
+}
+
+export interface Experience {
+  id: string;
+  logo_url: string;
+  company_name: string;
+  role: string;
+  start_date: string; // format: "YYYY-MM"
+  end_date: string | null; // format: "YYYY-MM" or null for current
+  display_order: number;
+}
+
 export interface AboutPage {
   id: string;
   profile_image_url: string | null;

@@ -8,6 +8,7 @@ import PageLayout from "@/components/PageLayout";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { Portrait, DEFAULT_PHOTO_WIDTH, DEFAULT_PHOTO_HEIGHT } from "@/types/gallery";
+import { Education, Experience } from "@/types/about";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +37,10 @@ const About = () => {
   const [portrait, setPortrait] = useState<Portrait | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [education, setEducation] = useState<Education[]>([]);
+  const [experience, setExperience] = useState<Experience[]>([]);
+  const [loadingEducation, setLoadingEducation] = useState(true);
+  const [loadingExperience, setLoadingExperience] = useState(true);
   const { toast } = useToast();
   const { heroText, loading: heroLoading } = useHeroText('about');
   const { aboutData, loading: aboutLoading } = useAboutPage();
@@ -62,6 +67,50 @@ const About = () => {
       setIsSubmitting(false);
     }, 1000);
   };
+
+  // Load education data
+  useEffect(() => {
+    const loadEducation = async () => {
+      try {
+        setLoadingEducation(true);
+        const { data, error } = await supabase
+          .from('education')
+          .select('*')
+          .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        setEducation(data || []);
+      } catch (err) {
+        console.error('Error fetching education:', err);
+      } finally {
+        setLoadingEducation(false);
+      }
+    };
+
+    loadEducation();
+  }, []);
+
+  // Load experience data
+  useEffect(() => {
+    const loadExperience = async () => {
+      try {
+        setLoadingExperience(true);
+        const { data, error } = await supabase
+          .from('experience')
+          .select('*')
+          .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        setExperience(data || []);
+      } catch (err) {
+        console.error('Error fetching experience:', err);
+      } finally {
+        setLoadingExperience(false);
+      }
+    };
+
+    loadExperience();
+  }, []);
 
   useEffect(() => {
     const loadPortrait = async () => {
@@ -223,6 +272,87 @@ const About = () => {
                   Fashion & Editorial Photography / Commercial Production / Art Buying & Creative Direction /
                   Location Scouting / Casting & Talent Coordination
                 </p>
+              </div>
+            )}
+
+            {/* Education & Experience Section */}
+            {(!loadingEducation || !loadingExperience) && (education.length > 0 || experience.length > 0) && (
+              <div className="pt-16 space-y-12">
+                {/* Education Section */}
+                {education.length > 0 && (
+                  <div>
+                    <h2 className="font-playfair text-2xl text-foreground mb-8">Education</h2>
+                    <div className="space-y-6">
+                      {education.map((edu) => (
+                        <div key={edu.id} className="flex items-start gap-4 text-left">
+                          {/* Logo */}
+                          <div className="flex-shrink-0 w-16 h-16 md:w-20 md:h-20">
+                            <img
+                              src={edu.logo_url}
+                              alt={edu.institution_name}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          
+                          {/* Details */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-foreground text-base">
+                              {edu.institution_name}
+                            </h3>
+                            <p className="text-foreground/70 text-sm mt-1">
+                              {edu.degree}
+                            </p>
+                          </div>
+                          
+                          {/* Year */}
+                          <div className="flex-shrink-0 text-right">
+                            <p className="text-foreground/60 text-sm">
+                              {edu.start_year} - {edu.end_year}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Experience Section */}
+                {experience.length > 0 && (
+                  <div>
+                    <h2 className="font-playfair text-2xl text-foreground mb-8">Experience</h2>
+                    <div className="space-y-6">
+                      {experience.map((exp) => (
+                        <div key={exp.id} className="flex items-start gap-4 text-left">
+                          {/* Logo */}
+                          <div className="flex-shrink-0 w-16 h-16 md:w-20 md:h-20">
+                            <img
+                              src={exp.logo_url}
+                              alt={exp.company_name}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          
+                          {/* Details */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-foreground text-base">
+                              {exp.company_name}
+                            </h3>
+                            <p className="text-foreground/70 text-sm mt-1">
+                              {exp.role}
+                            </p>
+                          </div>
+                          
+                          {/* Duration */}
+                          <div className="flex-shrink-0 text-right">
+                            <p className="text-foreground/60 text-sm">
+                              {exp.start_date} - {exp.end_date || 'Present'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
