@@ -10,6 +10,7 @@ import Technical from "./pages/Technical";
 import Artistic from "./pages/Artistic";
 import Achievement from "./pages/Achievement";
 import Photoshoots from "./pages/Photoshoots";
+import ProjectShowcaseDemo from "./pages/ProjectShowcaseDemo";
 import Admin from "./pages/Admin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminPhotoshootsEdit from "./pages/AdminPhotoshootsEdit";
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/achievement" element={<Achievement />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/photoshoots" element={<Photoshoots />} />
+                <Route path="/demo/project-showcase" element={<ProjectShowcaseDemo />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/photoshoots/edit" element={<AdminPhotoshootsEdit />} />
