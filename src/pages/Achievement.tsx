@@ -86,7 +86,7 @@ const Achievement = () => {
         canonicalUrl="/achievement"
       />
       <PortfolioHeader activeCategory="ACHIEVEMENT" />
-      <main id="main-content" className="min-h-screen pt-24 px-4 md:px-8 pb-16">
+      <main id="main-content" className="flex-1">
         <DynamicHero 
           pageSlug="achievement"
           fallbackTitle="Achievements"
@@ -94,7 +94,7 @@ const Achievement = () => {
           fallbackDescription="Explore achievements across different categories. Hover over each folder to preview certificates."
         />
         
-        <div className="max-w-[1400px] mx-auto">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-16">
           {loading && (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -111,13 +111,13 @@ const Achievement = () => {
           )}
 
           {!loading && !error && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 items-start justify-items-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 md:gap-10 lg:gap-12 items-start justify-items-center">
               {achievementFolders.map((folder) => (
                 <AnimatedFolder 
                   key={folder.title} 
                   title={folder.title} 
                   projects={folder.projects}
-                  className="w-full max-w-[320px]"
+                  className="w-full max-w-[300px]"
                 />
               ))}
             </div>

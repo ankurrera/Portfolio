@@ -1,5 +1,3 @@
-export type PhotoCategory = 'selected' | 'commissioned' | 'editorial' | 'personal' | 'artistic';
-
 export interface PhotoPosition {
   id: string;
   x: number;
@@ -20,7 +18,6 @@ export interface PhotoPosition {
  * - title, description: Optional text fields
  * - image_url: Public URL from Supabase storage (web-optimized derivative)
  * - display_order: Integer for ordering
- * - category: Enum (selected | commissioned | editorial | personal | artistic)
  * - position_x, position_y: Float - Position in pixels
  * - width, height: Float - Dimensions in pixels
  * - scale: Float - Scale factor (1.0 = 100%)
@@ -51,7 +48,6 @@ export interface PhotoLayoutData {
   description: string | null;
   image_url: string;
   display_order: number;
-  category: PhotoCategory;
   position_x: number;
   position_y: number;
   width: number;
@@ -86,7 +82,6 @@ type Json = string | number | boolean | null | { [key: string]: Json | undefined
 
 export interface LayoutRevision {
   id: string;
-  category: PhotoCategory;
   revision_name: string;
   layout_data: PhotoLayoutData[];
   created_by: string | null;

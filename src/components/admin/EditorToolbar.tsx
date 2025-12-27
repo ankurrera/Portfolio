@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { EditorMode, DevicePreview, PhotoCategory } from '@/types/wysiwyg';
+import { EditorMode, DevicePreview } from '@/types/wysiwyg';
 
 interface EditorToolbarProps {
   mode: EditorMode;
@@ -40,7 +40,6 @@ interface EditorToolbarProps {
   canUndo: boolean;
   canRedo: boolean;
   hasChanges: boolean;
-  category: PhotoCategory;
   isRefreshing?: boolean;
   onModeChange: (mode: EditorMode) => void;
   onDevicePreviewChange: (device: DevicePreview) => void;
@@ -52,7 +51,6 @@ interface EditorToolbarProps {
   onShowHistory: () => void;
   onAddPhoto: () => void;
   onRefresh: () => void;
-  onCategoryChange: (category: PhotoCategory) => void;
   onSignOut: () => void;
 }
 
@@ -63,7 +61,6 @@ export default function EditorToolbar({
   canUndo,
   canRedo,
   hasChanges,
-  category,
   isRefreshing = false,
   onModeChange,
   onDevicePreviewChange,
@@ -75,7 +72,6 @@ export default function EditorToolbar({
   onShowHistory,
   onAddPhoto,
   onRefresh,
-  onCategoryChange,
   onSignOut,
 }: EditorToolbarProps) {
   const [showSettings, setShowSettings] = useState(false);
@@ -83,22 +79,8 @@ export default function EditorToolbar({
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border shadow-sm">
       <div className="container mx-auto px-4 py-2 flex items-center justify-between gap-4">
-        {/* Left Section: Category Selector & Mode Toggle */}
+        {/* Left Section: Mode Toggle */}
         <div className="flex items-center gap-2">
-          <Select value={category} onValueChange={(value) => onCategoryChange(value as PhotoCategory)}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="selected">Selected</SelectItem>
-              <SelectItem value="commissioned">Commissioned</SelectItem>
-              <SelectItem value="editorial">Editorial</SelectItem>
-              <SelectItem value="personal">Personal</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Separator orientation="vertical" className="h-6" />
-          
           <Button
             variant={mode === 'preview' ? 'default' : 'ghost'}
             size="sm"

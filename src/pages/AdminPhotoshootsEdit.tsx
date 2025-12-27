@@ -1,10 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { PhotoCategory } from '@/types/wysiwyg';
-import { Button } from '@/components/ui/button';
 
 // Lazy load the WYSIWYGEditor component
 const WYSIWYGEditor = lazy(() => import('@/components/admin/WYSIWYGEditor'));
@@ -12,22 +10,6 @@ const WYSIWYGEditor = lazy(() => import('@/components/admin/WYSIWYGEditor'));
 const AdminPhotoshootsEdit = () => {
   const { user, isAdmin, isLoading, signOut } = useAuth();
   const navigate = useNavigate();
-  const { category } = useParams<{ category: string }>();
-  const [activeCategory, setActiveCategory] = useState<PhotoCategory>(
-    (category as PhotoCategory) || 'selected'
-  );
-
-  // Validate category parameter
-  useEffect(() => {
-    const validCategories: PhotoCategory[] = ['selected', 'commissioned', 'editorial', 'personal'];
-    if (category && !validCategories.includes(category as PhotoCategory)) {
-      navigate('/admin/dashboard', { replace: true });
-      return;
-    }
-    if (category) {
-      setActiveCategory(category as PhotoCategory);
-    }
-  }, [category, navigate]);
 
   // Single effect for auth redirect - runs when auth state changes
   useEffect(() => {
@@ -53,11 +35,6 @@ const AdminPhotoshootsEdit = () => {
     navigate('/admin/login');
   };
 
-  const handleCategoryChange = (newCategory: PhotoCategory) => {
-    setActiveCategory(newCategory);
-    navigate(`/admin/photoshoots/${newCategory}/edit`, { replace: true });
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -69,13 +46,6 @@ const AdminPhotoshootsEdit = () => {
   if (!user || !isAdmin) {
     return null;
   }
-
-  const categoryTitles: Record<PhotoCategory, string> = {
-    selected: 'Selected Works',
-    commissioned: 'Commissioned Projects',
-    editorial: 'Editorial Photography',
-    personal: 'Personal Projects',
-  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -90,7 +60,7 @@ const AdminPhotoshootsEdit = () => {
             Back to Dashboard
           </Link>
           <div className="mt-2 text-xs text-muted-foreground">
-            Admin / Photoshoots / {categoryTitles[activeCategory]}
+            Admin / Photoshoots
           </div>
         </div>
       </div>
@@ -103,8 +73,6 @@ const AdminPhotoshootsEdit = () => {
         }
       >
         <WYSIWYGEditor 
-          category={activeCategory} 
-          onCategoryChange={handleCategoryChange}
           onSignOut={handleSignOut}
         />
       </Suspense>

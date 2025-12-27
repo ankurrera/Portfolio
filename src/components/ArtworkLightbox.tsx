@@ -155,29 +155,36 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
         {currentIndex + 1} of {artworks.length}
       </div>
 
-      {/* TOP RIGHT CORNER - Primary Information Block */}
-      <div className="fixed top-8 right-8 z-[101] text-right pointer-events-none px-4 md:px-0 max-w-md md:max-w-lg space-y-2">
-        {/* Artwork Title - largest text, bold */}
-        {currentArtwork.title && (
-          <div className="text-foreground text-lg md:text-xl font-bold leading-tight">
-            {currentArtwork.title}
-          </div>
-        )}
-        
-        {/* Description / Concept - 2-3 lines, muted color */}
-        {currentArtwork.description && (
-          <div className="text-foreground/60 text-sm font-inter leading-relaxed line-clamp-3">
-            {currentArtwork.description}
-          </div>
-        )}
-        
-        {/* Time Taken to Complete */}
-        {currentArtwork.time_taken && (
-          <div className="text-foreground/60 text-xs font-inter">
-            Time taken: {currentArtwork.time_taken}
-          </div>
-        )}
-      </div>
+      {/* Right Side Metadata Block - Aligned with top of image */}
+      {imageRef.current && (
+        <div 
+          className="fixed right-8 z-[101] text-right pointer-events-none px-4 md:px-0 max-w-xs space-y-4"
+          style={{
+            top: `${imageRef.current.getBoundingClientRect().top}px`
+          }}
+        >
+          {/* Artwork Title */}
+          {currentArtwork.title && (
+            <div className="text-foreground text-lg md:text-xl font-normal leading-tight">
+              {currentArtwork.title}
+            </div>
+          )}
+          
+          {/* Description / Concept */}
+          {currentArtwork.description && (
+            <div className="text-foreground/60 text-sm font-inter font-normal leading-relaxed">
+              {currentArtwork.description}
+            </div>
+          )}
+          
+          {/* Time Taken to Complete */}
+          {currentArtwork.time_taken && (
+            <div className="text-foreground/60 text-xs font-inter">
+              Time taken: {currentArtwork.time_taken}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* BOTTOM RIGHT CORNER - Materials Only */}
       <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0 space-y-0.5">

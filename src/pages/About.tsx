@@ -8,6 +8,7 @@ import PageLayout from "@/components/PageLayout";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { Portrait, DEFAULT_PHOTO_WIDTH, DEFAULT_PHOTO_HEIGHT } from "@/types/gallery";
+import { Education, Experience } from "@/types/about";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useHeroText } from "@/hooks/useHeroText";
+import { useAboutPage } from "@/hooks/useAboutPage";
 import { Loader2 } from "lucide-react";
 
 const contactSchema = z.object({
@@ -35,8 +37,13 @@ const About = () => {
   const [portrait, setPortrait] = useState<Portrait | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [education, setEducation] = useState<Education[]>([]);
+  const [experience, setExperience] = useState<Experience[]>([]);
+  const [loadingEducation, setLoadingEducation] = useState(true);
+  const [loadingExperience, setLoadingExperience] = useState(true);
   const { toast } = useToast();
   const { heroText, loading: heroLoading } = useHeroText('about');
+  const { aboutData, loading: aboutLoading } = useAboutPage();
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
@@ -61,14 +68,69 @@ const About = () => {
     }, 1000);
   };
 
+  // Load education data
+  useEffect(() => {
+    const loadEducation = async () => {
+      try {
+        setLoadingEducation(true);
+        const { data, error } = await supabase
+          .from('education')
+          .select('*')
+          .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        setEducation(data || []);
+      } catch (err) {
+        console.error('Error fetching education:', err);
+      } finally {
+        setLoadingEducation(false);
+      }
+    };
+
+    loadEducation();
+  }, []);
+
+  // Load experience data
+  useEffect(() => {
+    const loadExperience = async () => {
+      try {
+        setLoadingExperience(true);
+        const { data, error } = await supabase
+          .from('experience')
+          .select('*')
+          .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        setExperience(data || []);
+      } catch (err) {
+        console.error('Error fetching experience:', err);
+      } finally {
+        setLoadingExperience(false);
+      }
+    };
+
+    loadExperience();
+  }, []);
+
   useEffect(() => {
     const loadPortrait = async () => {
       try {
-        // Fetch a portrait from Supabase uploads - try 'personal' category first
+        // First, try to use the profile image from about_page
+        if (aboutData?.profile_image_url) {
+          setPortrait({
+            src: aboutData.profile_image_url,
+            alt: 'Portrait',
+            width: DEFAULT_PHOTO_WIDTH,
+            height: DEFAULT_PHOTO_HEIGHT,
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Fallback: Fetch a portrait from Supabase uploads
         const { data, error: fetchError } = await supabase
           .from('photos')
           .select('*')
-          .eq('category', 'personal')
           .eq('is_draft', false)
           .order('display_order', { ascending: true })
           .limit(1);
@@ -91,8 +153,11 @@ const About = () => {
       }
     };
 
-    loadPortrait();
-  }, []);
+    // Only load portrait when aboutData is ready
+    if (!aboutLoading) {
+      loadPortrait();
+    }
+  }, [aboutData, aboutLoading]);
 
   return (
     <PageLayout>
@@ -103,7 +168,7 @@ const About = () => {
       />
 
       <PortfolioHeader
-        activeCategory=""
+        activeCategory="ABOUT"
       />
       
       <main className="flex-1">
@@ -158,24 +223,137 @@ const About = () => {
 
           {/* Bio Section */}
           <div className="max-w-2xl mx-auto px-3 md:px-5 space-y-8 text-center text-foreground/80 text-sm leading-relaxed mb-16">
-            <p>
-              Production photographer specializing in fashion, editorial, and commercial photography.
-              Creating compelling imagery with technical precision and creative vision for global brands
-              and publications.
-            </p>
+            {aboutLoading ? (
+              <div className="flex items-center justify-center min-h-[200px]">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : aboutData?.bio_text ? (
+              // Display bio from database, preserving line breaks
+              aboutData.bio_text.split('\n').map((paragraph, index) => (
+                paragraph.trim() && <p key={index}>{paragraph}</p>
+              ))
+            ) : (
+              // Fallback content
+              <>
+                <p>
+                  Production photographer specializing in fashion, editorial, and commercial photography.
+                  Creating compelling imagery with technical precision and creative vision for global brands
+                  and publications.
+                </p>
 
-            <p>
-              Full production services including art buying, location scouting, casting, and on-set
-              management. Collaborative approach ensuring seamless execution from concept to delivery.
-            </p>
+                <p>
+                  Full production services including art buying, location scouting, casting, and on-set
+                  management. Collaborative approach ensuring seamless execution from concept to delivery.
+                </p>
+              </>
+            )}
 
-            <div className="pt-8">
-              <h2 className="font-playfair text-xl text-foreground mb-4">Services</h2>
-              <p className="text-foreground/70 text-xs uppercase tracking-wider leading-loose">
-                Fashion & Editorial Photography / Commercial Production / Art Buying & Creative Direction /
-                Location Scouting / Casting & Talent Coordination
-              </p>
-            </div>
+            {/* Services Section */}
+            {!aboutLoading && aboutData?.services && Array.isArray(aboutData.services) && aboutData.services.length > 0 && (
+              <div className="pt-8">
+                <h2 className="font-playfair text-xl text-foreground mb-4">Services</h2>
+                <div className="space-y-4">
+                  {aboutData.services.map((service) => (
+                    <div key={service.id} className="text-left border-l-2 border-foreground/20 pl-4">
+                      <h3 className="font-semibold text-foreground mb-1">{service.title}</h3>
+                      <p className="text-foreground/70 text-xs">{service.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Show fallback services if no services in database */}
+            {!aboutLoading && (!aboutData?.services || !Array.isArray(aboutData.services) || aboutData.services.length === 0) && (
+              <div className="pt-8">
+                <h2 className="font-playfair text-xl text-foreground mb-4">Services</h2>
+                <p className="text-foreground/70 text-xs uppercase tracking-wider leading-loose">
+                  Fashion & Editorial Photography / Commercial Production / Art Buying & Creative Direction /
+                  Location Scouting / Casting & Talent Coordination
+                </p>
+              </div>
+            )}
+
+            {/* Education & Experience Section */}
+            {(!loadingEducation || !loadingExperience) && (education.length > 0 || experience.length > 0) && (
+              <div className="pt-16 space-y-12">
+                {/* Education Section */}
+                {education.length > 0 && (
+                  <div>
+                    <h2 className="font-playfair text-2xl text-foreground mb-8">Education</h2>
+                    <div className="space-y-6">
+                      {education.map((edu) => (
+                        <div key={edu.id} className="flex items-start gap-4 text-left">
+                          {/* Logo */}
+                          <div className="flex-shrink-0 w-16 h-16 md:w-20 md:h-20">
+                            <img
+                              src={edu.logo_url}
+                              alt={edu.institution_name}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          
+                          {/* Details */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-foreground text-base">
+                              {edu.institution_name}
+                            </h3>
+                            <p className="text-foreground/70 text-sm mt-1">
+                              {edu.degree}
+                            </p>
+                          </div>
+                          
+                          {/* Year */}
+                          <div className="flex-shrink-0 text-right">
+                            <p className="text-foreground/60 text-sm">
+                              {edu.start_year} - {edu.end_year}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Experience Section */}
+                {experience.length > 0 && (
+                  <div>
+                    <h2 className="font-playfair text-2xl text-foreground mb-8">Experience</h2>
+                    <div className="space-y-6">
+                      {experience.map((exp) => (
+                        <div key={exp.id} className="flex items-start gap-4 text-left">
+                          {/* Logo */}
+                          <div className="flex-shrink-0 w-16 h-16 md:w-20 md:h-20">
+                            <img
+                              src={exp.logo_url}
+                              alt={exp.company_name}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          
+                          {/* Details */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-foreground text-base">
+                              {exp.company_name}
+                            </h3>
+                            <p className="text-foreground/70 text-sm mt-1">
+                              {exp.role}
+                            </p>
+                          </div>
+                          
+                          {/* Duration */}
+                          <div className="flex-shrink-0 text-right">
+                            <p className="text-foreground/60 text-sm">
+                              {exp.start_date} - {exp.end_date || 'Present'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="pt-4">
               <h2 className="font-playfair text-xl text-foreground mb-4">Select Clients</h2>

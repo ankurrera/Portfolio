@@ -136,17 +136,31 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
         {currentIndex + 1} of {images.length}
       </div>
 
-      {/* Caption - Upper Right Corner */}
-      {currentImage.caption && (
-        <div className="fixed top-8 right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed max-w-md md:max-w-lg text-right pointer-events-none px-4 md:px-0">
-          {currentImage.caption}
-        </div>
-      )}
-
-      {/* Credits / Collaborators - Upper Middle Left */}
-      {currentImage.credits && (
-        <div className="fixed top-[40%] left-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed pointer-events-none px-4 md:px-0 whitespace-pre-line">
-          {currentImage.credits}
+      {/* Right Side Metadata Block - Aligned with top of image */}
+      {imageRef.current && (
+        <div 
+          className="fixed right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed pointer-events-none px-4 md:px-0 max-w-xs space-y-4"
+          style={{
+            top: `${imageRef.current.getBoundingClientRect().top}px`
+          }}
+        >
+          {/* Caption / Description */}
+          {currentImage.caption && (
+            <div className="text-base">
+              {currentImage.caption}
+            </div>
+          )}
+          
+          {/* Credits / Collaborators */}
+          {currentImage.credits && (
+            <div className="text-xs whitespace-pre-line border-l-2 border-foreground/20 pl-3">
+              <div className="font-semibold mb-1">Credits</div>
+              {currentImage.credits}
+            </div>
+          )}
+          
+          {/* Tags (if available) */}
+          {/* Tags would come from a tags field if it existed */}
         </div>
       )}
 

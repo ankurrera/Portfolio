@@ -98,7 +98,7 @@ export default function PhotoGrid({ photos, onUpdate }: PhotoGridProps) {
   if (photos.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        No photos in this category yet. Upload some above!
+        No photos yet. Upload some above!
       </div>
     );
   }

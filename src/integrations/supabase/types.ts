@@ -74,6 +74,33 @@ export type Database = {
         }
         Relationships: []
       }
+      about_page: {
+        Row: {
+          id: string
+          profile_image_url: string | null
+          bio_text: string | null
+          services: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          profile_image_url?: string | null
+          bio_text?: string | null
+          services?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          profile_image_url?: string | null
+          bio_text?: string | null
+          services?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       achievements: {
         Row: {
           id: string

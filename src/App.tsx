@@ -5,13 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./hooks/useAuth";
-import Index from "./pages/Index";
 import About from "./pages/About";
 import Technical from "./pages/Technical";
 import Artistic from "./pages/Artistic";
 import Achievement from "./pages/Achievement";
-import CategoryGallery from "./pages/CategoryGallery";
-import CategoryRedirect from "./pages/CategoryRedirect";
 import Photoshoots from "./pages/Photoshoots";
 import Admin from "./pages/Admin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -20,6 +17,7 @@ import AdminArtisticEdit from "./pages/AdminArtisticEdit";
 import AdminTechnicalEdit from "./pages/AdminTechnicalEdit";
 import AdminAchievementEdit from "./pages/AdminAchievementEdit";
 import AdminHeroEdit from "./pages/AdminHeroEdit";
+import AdminAboutEdit from "./pages/AdminAboutEdit";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -36,23 +34,20 @@ const App = () => (
               <Toaster />
               <Sonner />
               <Routes>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<About />} />
                 <Route path="/technical" element={<Technical />} />
                 <Route path="/artistic" element={<Artistic />} />
                 <Route path="/achievement" element={<Achievement />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/photoshoots" element={<Photoshoots />} />
-                <Route path="/photoshoots" element={<Photoshoots />} />
-                <Route path="/photoshoots/:category" element={<CategoryGallery />} />
-                {/* Redirect old category routes to new photoshoots routes */}
-                <Route path="/category/:category" element={<CategoryRedirect />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/photoshoots/:category/edit" element={<AdminPhotoshootsEdit />} />
+                <Route path="/admin/photoshoots/edit" element={<AdminPhotoshootsEdit />} />
                 <Route path="/admin/artistic/edit" element={<AdminArtisticEdit />} />
                 <Route path="/admin/technical/edit" element={<AdminTechnicalEdit />} />
                 <Route path="/admin/achievement/edit" element={<AdminAchievementEdit />} />
                 <Route path="/admin/hero/edit" element={<AdminHeroEdit />} />
+                <Route path="/admin/about/edit" element={<AdminAboutEdit />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

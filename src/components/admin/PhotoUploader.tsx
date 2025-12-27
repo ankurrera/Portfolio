@@ -1,23 +1,27 @@
 import { useState, useCallback } from 'react';
-import { Upload, X, Loader2, Video } from 'lucide-react';
+import { Upload, X, Loader2, Video, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { formatSupabaseError } from '@/lib/utils';
 import { toast } from 'sonner';
 import PhotoMetadataForm, { PhotoMetadata } from './PhotoMetadataForm';
-import { PhotoCategory } from '@/types/wysiwyg';
 
 interface PhotoUploaderProps {
-  category: PhotoCategory;
   onUploadComplete: () => void;
 }
 
-export default function PhotoUploader({ category, onUploadComplete }: PhotoUploaderProps) {
+interface PendingFile {
+  file: File;
+  previewUrl: string;
+}
+
+export default function PhotoUploader({ onUploadComplete }: PhotoUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string[]>([]);
   const [metadata, setMetadata] = useState<PhotoMetadata>({});
   const [videoThumbnail, setVideoThumbnail] = useState<File | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
 
   // Generate web-optimized derivative with aspect ratio preservation
   const generateDerivative = useCallback(async (file: File, originalWidth: number, originalHeight: number): Promise<Blob> => {
@@ -80,7 +84,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
           .replace(/[^a-zA-Z0-9]/g, '-')
           .replace(/-+/g, '-')
           .replace(/^-|-$/g, '');
-        const fileName = `${category}/${Date.now()}-${sanitizedName || 'video'}.mp4`;
+        const fileName = `photoshoots/${Date.now()}-${sanitizedName || 'video'}.mp4`;
         
         const { error: uploadError } = await supabase.storage
           .from('photos')
@@ -102,7 +106,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
         if (videoThumbnail) {
           const thumbDimensions = await getImageDimensions(videoThumbnail);
           const compressedThumbnail = await generateDerivative(videoThumbnail, thumbDimensions.width, thumbDimensions.height);
-          const thumbnailFileName = `${category}/${Date.now()}-${sanitizedName || 'video'}-thumbnail.webp`;
+          const thumbnailFileName = `photoshoots/${Date.now()}-${sanitizedName || 'video'}-thumbnail.webp`;
           
           const { error: thumbError } = await supabase.storage
             .from('photos')
@@ -132,7 +136,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
         
         // Upload ORIGINAL file byte-for-byte (no compression)
         const originalExt = file.name.split('.').pop() || 'jpg';
-        const originalFileName = `${category}/originals/${Date.now()}-${sanitizedName || 'photo'}.${originalExt}`;
+        const originalFileName = `photoshoots/originals/${Date.now()}-${sanitizedName || 'photo'}.${originalExt}`;
         
         const { error: origUploadError } = await supabase.storage
           .from('photos')
@@ -151,7 +155,7 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
 
         // Generate and upload web-optimized derivative
         const derivativeBlob = await generateDerivative(file, originalWidth, originalHeight);
-        const derivativeFileName = `${category}/derivatives/${Date.now()}-${sanitizedName || 'photo'}.webp`;
+        const derivativeFileName = `photoshoots/derivatives/${Date.now()}-${sanitizedName || 'photo'}.webp`;
         
         const { error: derivUploadError } = await supabase.storage
           .from('photos')
@@ -173,7 +177,6 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
       const { data: maxOrderData } = await supabase
         .from('photos')
         .select('display_order, z_index')
-        .eq('category', category)
         .order('display_order', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -207,7 +210,6 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
       const { error: insertError } = await supabase
         .from('photos')
         .insert({
-          category,
           image_url: derivativeUrl,
           display_order: nextOrder,
           title: file.name.replace(/\.[^/.]+$/, ''),
@@ -247,9 +249,10 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
       console.error('Upload error:', errorMessage);
       throw new Error(errorMessage);
     }
-  }, [category, generateDerivative, getImageDimensions, metadata, videoThumbnail]);
+  }, [generateDerivative, getImageDimensions, metadata, videoThumbnail]);
 
-  const handleFiles = useCallback(async (files: FileList) => {
+  // Handle file selection (preview only, no upload yet)
+  const handleFiles = useCallback((files: FileList) => {
     const mediaFiles = Array.from(files).filter(f => 
       f.type.startsWith('image/') || f.type.startsWith('video/')
     );
@@ -259,10 +262,27 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
       return;
     }
 
+    // Create preview URLs for selected files
+    const newPendingFiles: PendingFile[] = mediaFiles.map(file => ({
+      file,
+      previewUrl: URL.createObjectURL(file)
+    }));
+
+    setPendingFiles(prev => [...prev, ...newPendingFiles]);
+    toast.success(`${mediaFiles.length} file(s) selected. Fill metadata and click "Upload & Publish" to confirm.`);
+  }, []);
+
+  // Handle actual upload when user clicks the button
+  const handleUploadAndPublish = useCallback(async () => {
+    if (pendingFiles.length === 0) {
+      toast.error('No files selected for upload');
+      return;
+    }
+
     setUploading(true);
     setUploadProgress([]);
 
-    for (const file of mediaFiles) {
+    for (const { file } of pendingFiles) {
       try {
         setUploadProgress(prev => [...prev, `Uploading ${file.name}...`]);
         await uploadFile(file);
@@ -279,14 +299,29 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
     }
 
     setUploading(false);
-    toast.success(`Uploaded ${mediaFiles.length} file(s)`);
+    toast.success(`Uploaded ${pendingFiles.length} file(s)`);
     
-    // Reset metadata and video thumbnail after successful upload
+    // Clean up preview URLs
+    pendingFiles.forEach(({ previewUrl }) => URL.revokeObjectURL(previewUrl));
+    
+    // Reset everything after successful upload
+    setPendingFiles([]);
     setMetadata({});
     setVideoThumbnail(null);
     
     onUploadComplete();
-  }, [uploadFile, onUploadComplete]);
+  }, [pendingFiles, uploadFile, onUploadComplete]);
+
+  const handleRemovePendingFile = useCallback((index: number) => {
+    setPendingFiles(prev => {
+      const newFiles = [...prev];
+      // Clean up preview URL
+      URL.revokeObjectURL(newFiles[index].previewUrl);
+      newFiles.splice(index, 1);
+      return newFiles;
+    });
+    toast.info('File removed from upload queue');
+  }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -399,11 +434,92 @@ export default function PhotoUploader({ category, onUploadComplete }: PhotoUploa
               Drag and drop images or videos here, or click to select
             </p>
             <p className="text-xs text-muted-foreground">
-              Originals preserved • Derivatives auto-generated • Aspect ratio maintained
+              Files will not be uploaded until you click "Upload & Publish"
             </p>
           </div>
         )}
       </div>
+
+      {/* Pending Files Preview */}
+      {pendingFiles.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">
+              Selected Files ({pendingFiles.length})
+            </h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                pendingFiles.forEach(({ previewUrl }) => URL.revokeObjectURL(previewUrl));
+                setPendingFiles([]);
+                toast.info('All files removed');
+              }}
+              disabled={uploading}
+            >
+              Clear All
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {pendingFiles.map(({ file, previewUrl }, index) => (
+              <div key={index} className="relative group border rounded-lg overflow-hidden">
+                {file.type.startsWith('image/') ? (
+                  <img 
+                    src={previewUrl} 
+                    alt={file.name} 
+                    className="w-full h-32 object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-32 bg-secondary flex items-center justify-center">
+                    <Video className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemovePendingFile(index);
+                    }}
+                    disabled={uploading}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Remove
+                  </Button>
+                </div>
+                <div className="p-2 bg-secondary/50">
+                  <p className="text-xs truncate" title={file.name}>
+                    {file.name}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Upload & Publish Button */}
+          <div className="flex justify-end pt-2">
+            <Button
+              onClick={handleUploadAndPublish}
+              disabled={uploading || pendingFiles.length === 0}
+              size="lg"
+              className="font-semibold"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload & Publish {pendingFiles.length > 0 && `(${pendingFiles.length})`}
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {uploadProgress.length > 0 && (
         <div className="text-xs space-y-1 max-h-32 overflow-y-auto bg-secondary/50 p-3 rounded">

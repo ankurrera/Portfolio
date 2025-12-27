@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
-import { Loader2, LogOut, Camera, FolderOpen, Code2, Trophy, Type } from 'lucide-react';
+import { Loader2, LogOut, Camera, FolderOpen, Code2, Trophy, Type, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,29 +45,6 @@ const AdminDashboard = () => {
   if (!user || !isAdmin) {
     return null;
   }
-
-  const photoshootCategories = [
-    {
-      category: 'selected',
-      title: 'Selected Works',
-      description: 'Curated selection of luxury fashion campaigns and editorial work',
-    },
-    {
-      category: 'commissioned',
-      title: 'Commissioned Projects',
-      description: 'Commercial fashion campaigns for luxury brands',
-    },
-    {
-      category: 'editorial',
-      title: 'Editorial Photography',
-      description: 'Editorial fashion photography for leading publications',
-    },
-    {
-      category: 'personal',
-      title: 'Personal Projects',
-      description: 'Artistic personal projects and creative experimentation',
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -121,29 +98,24 @@ const AdminDashboard = () => {
             <h2 className="text-lg font-semibold uppercase tracking-wider">Photoshoots</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {photoshootCategories.map((item) => (
-              <Card 
-                key={item.category} 
-                className="hover:border-foreground/20 transition-all duration-300 cursor-pointer"
-                onClick={() => navigate(`/admin/photoshoots/${item.category}/edit`)}
-              >
-                <CardHeader>
-                  <CardTitle className="text-base uppercase tracking-wider">
-                    {item.title}
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    {item.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="outline" size="sm" className="w-full">
-                    Edit Photos
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <Card 
+            className="hover:border-foreground/20 transition-all duration-300 cursor-pointer max-w-md"
+            onClick={() => navigate('/admin/photoshoots/edit')}
+          >
+            <CardHeader>
+              <CardTitle className="text-base uppercase tracking-wider">
+                Photoshoot Management
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Manage all photoshoots in one unified location. Upload photos and assign category tags: selected, commissioned, editorial, or personal.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" size="sm" className="w-full">
+                Manage Photoshoots
+              </Button>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Technical Projects Section */}
@@ -195,6 +167,33 @@ const AdminDashboard = () => {
             <CardContent>
               <Button variant="outline" size="sm" className="w-full">
                 Edit Artworks
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* About Page Section */}
+        <section className="mb-12">
+          <div className="flex items-center gap-2 mb-6">
+            <User className="h-5 w-5 text-foreground" />
+            <h2 className="text-lg font-semibold uppercase tracking-wider">About Page</h2>
+          </div>
+          
+          <Card 
+            className="hover:border-foreground/20 transition-all duration-300 cursor-pointer max-w-md"
+            onClick={() => navigate('/admin/about/edit')}
+          >
+            <CardHeader>
+              <CardTitle className="text-base uppercase tracking-wider">
+                About Page Content
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Manage profile image, bio, and services for the About page
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" size="sm" className="w-full">
+                Edit About Page
               </Button>
             </CardContent>
           </Card>
