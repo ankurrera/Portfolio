@@ -46,10 +46,21 @@ export function isValidEmail(email: string): boolean {
 
 // Sanitize input to prevent XSS and injection attacks
 export function sanitizeInput(input: string): string {
-  return input
+  let sanitized = input
     .replace(/[<>'"]/g, '') // Remove potential HTML/script tags and quotes
     .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+\s*=/gi, '') // Remove event handlers like onclick=
-    .trim()
-    .substring(0, VALIDATION_RULES.message.max); // Limit length
+    .replace(/data:/gi, '') // Remove data: protocol
+    .replace(/vbscript:/gi, '') // Remove vbscript: protocol
+    .trim();
+  
+  // Remove event handlers like onclick=, onload=, etc.
+  // Repeat until no more matches to handle nested patterns
+  let prevLength;
+  do {
+    prevLength = sanitized.length;
+    sanitized = sanitized.replace(/on\w+\s*=/gi, '');
+  } while (sanitized.length !== prevLength);
+  
+  // Limit length
+  return sanitized.substring(0, VALIDATION_RULES.message.max);
 }
