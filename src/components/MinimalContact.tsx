@@ -13,6 +13,7 @@ import {
   VALIDATION_RULES, 
   VALIDATION_MESSAGES 
 } from '@/lib/validation/contactFormValidation';
+import { parseApiResponse } from '@/lib/utils';
 
 const MinimalContact = () => {
   const [formData, setFormData] = useState({
@@ -92,18 +93,10 @@ const MinimalContact = () => {
         }),
       });
 
-      let data;
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        data = await response.json();
-      } else {
-        // If response is not JSON, get it as text
-        const text = await response.text();
-        data = { error: text || 'Server returned non-JSON response' };
-      }
+      const data = await parseApiResponse(response);
 
       if (!response.ok) {
-        throw new Error(data.details || data.error || 'Failed to send message');
+        throw new Error(data.details as string || data.error as string || 'Failed to send message');
       }
 
       toast({

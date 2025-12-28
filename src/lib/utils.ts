@@ -53,3 +53,19 @@ export function formatSupabaseError(error: unknown): string {
   
   return String(error);
 }
+
+/**
+ * Safely parses a fetch response, checking content-type before parsing as JSON
+ * @param response - The fetch Response object
+ * @returns A promise that resolves to the parsed data object
+ */
+export async function parseApiResponse(response: Response): Promise<Record<string, unknown>> {
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.toLowerCase().includes('application/json')) {
+    return await response.json();
+  } else {
+    // If response is not JSON, get it as text
+    const text = await response.text();
+    return { error: text || 'Server returned non-JSON response' };
+  }
+}

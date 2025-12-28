@@ -26,6 +26,7 @@ import { useAboutPage } from "@/hooks/useAboutPage";
 import { Loader2 } from "lucide-react";
 import SocialLinks from "@/components/SocialLinks";
 import { VALIDATION_RULES, VALIDATION_MESSAGES } from "@/lib/validation/contactFormValidation";
+import { parseApiResponse } from "@/lib/utils";
 
 const contactSchema = z.object({
   name: z.string().trim()
@@ -79,18 +80,10 @@ const About = () => {
         }),
       });
 
-      let result;
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        result = await response.json();
-      } else {
-        // If response is not JSON, get it as text
-        const text = await response.text();
-        result = { error: text || 'Server returned non-JSON response' };
-      }
+      const result = await parseApiResponse(response);
 
       if (!response.ok) {
-        throw new Error(result.details || result.error || 'Failed to send message');
+        throw new Error(result.details as string || result.error as string || 'Failed to send message');
       }
 
       toast({
