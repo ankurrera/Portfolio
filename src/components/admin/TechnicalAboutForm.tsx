@@ -20,6 +20,8 @@ export const TechnicalAboutForm = ({ aboutData, onSave, onCancel }: TechnicalAbo
   const [stats, setStats] = useState<TechnicalAboutStat[]>(
     aboutData?.stats || [{ value: '', label: '' }]
   );
+  const [location, setLocation] = useState(aboutData?.location || 'Kolkata, WB');
+  const [coordinates, setCoordinates] = useState(aboutData?.coordinates || '22.5726° N, 88.3639° E');
 
   const handleAddContentBlock = () => {
     setContentBlocks([...contentBlocks, '']);
@@ -77,6 +79,8 @@ export const TechnicalAboutForm = ({ aboutData, onSave, onCancel }: TechnicalAbo
       heading: heading.trim(),
       content_blocks: filteredBlocks,
       stats: filteredStats,
+      location: location.trim(),
+      coordinates: coordinates.trim(),
     };
 
     if (aboutData?.id) {
@@ -236,6 +240,37 @@ export const TechnicalAboutForm = ({ aboutData, onSave, onCancel }: TechnicalAbo
             <p className="text-xs text-muted-foreground">
               Add key statistics or highlights (e.g., projects delivered, happy clients)
             </p>
+          </div>
+
+          {/* Location Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-foreground">Location Information</h3>
+            
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g., Kolkata, WB"
+              />
+              <p className="text-xs text-muted-foreground">
+                Location displayed in the LocationMap component
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="coordinates">Coordinates</Label>
+              <Input
+                id="coordinates"
+                value={coordinates}
+                onChange={(e) => setCoordinates(e.target.value)}
+                placeholder="e.g., 22.5726° N, 88.3639° E"
+              />
+              <p className="text-xs text-muted-foreground">
+                Coordinates shown when the map is expanded
+              </p>
+            </div>
           </div>
 
           {/* Action Buttons */}

@@ -4,9 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Mail, MapPin } from 'lucide-react';
-import { useState } from 'react';
+import { Mail } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import TechnicalSocialLinks from '@/components/TechnicalSocialLinks';
+import { LocationMap } from '@/components/ui/expand-map';
+import { supabase } from '@/integrations/supabase/client';
+import { TechnicalAbout } from '@/types/technicalAbout';
 
 const MinimalContact = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +17,29 @@ const MinimalContact = () => {
     email: '',
     message: ''
   });
+
+  const [locationData, setLocationData] = useState<{ location: string; coordinates: string }>({
+    location: 'Kolkata, WB',
+    coordinates: '22.5726° N, 88.3639° E'
+  });
+
+  useEffect(() => {
+    const fetchLocationData = async () => {
+      const { data, error } = await supabase
+        .from('technical_about')
+        .select('location, coordinates')
+        .single();
+
+      if (data && !error) {
+        setLocationData({
+          location: data.location || 'Kolkata, WB',
+          coordinates: data.coordinates || '22.5726° N, 88.3639° E'
+        });
+      }
+    };
+
+    fetchLocationData();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -31,12 +57,6 @@ const MinimalContact = () => {
       label: 'Email',
       value: 'ankurr.era@gmail.com',
       href: 'mailto:ankurr.era@gmail.com'
-    },
-    {
-      icon: MapPin,
-      label: 'India',
-      value: 'Kolkata, WB',
-      href: '#'
     }
   ];
 
@@ -103,6 +123,23 @@ const MinimalContact = () => {
                 </motion.a>
               ))}
             </div>
+
+            {/* Location Map */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              className="space-y-4"
+            >
+              <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
+                Location
+              </div>
+              <LocationMap 
+                location={locationData.location}
+                coordinates={locationData.coordinates}
+              />
+            </motion.div>
 
             {/* Social Links */}
             <div className="space-y-4">

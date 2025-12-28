@@ -11,6 +11,8 @@ export interface TechnicalAbout {
   heading: string;
   content_blocks: string[]; // Array of paragraph text
   stats: TechnicalAboutStat[];
+  location?: string;
+  coordinates?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -20,4 +22,6 @@ export interface TechnicalAboutFormData {
   heading: string;
   content_blocks: string[];
   stats: TechnicalAboutStat[];
+  location?: string;
+  coordinates?: string;
 }
