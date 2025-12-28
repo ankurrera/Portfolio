@@ -1,6 +1,7 @@
 import { useHeroText } from '@/hooks/useHeroText';
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { TextGenerateEffect } from '@/components/ui/text-generate-effect';
 
 interface DynamicHeroProps {
   pageSlug: string;
@@ -73,9 +74,12 @@ const DynamicHero = ({
           </p>
         )}
         {description && (
-          <p className="text-sm text-foreground/80 max-w-2xl leading-relaxed mx-auto">
-            {description}
-          </p>
+          <TextGenerateEffect
+            words={description}
+            className="text-sm text-foreground/80 max-w-2xl leading-relaxed mx-auto font-normal"
+            filter={false}
+            duration={0.5}
+          />
         )}
         {ctaElement && (
           <div className="pt-4">

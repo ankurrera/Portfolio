@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { ArrowDown } from 'lucide-react';
+import { TextGenerateEffect } from '@/components/ui/text-generate-effect';
 
 const MinimalHero = () => {
   const scrollToWork = () => {
@@ -41,9 +42,12 @@ const MinimalHero = () => {
           </div>
           
           <div className="space-y-6">
-            <p className="text-muted-foreground max-w-md leading-relaxed font-normal text-base">
-              Crafting digital experiences with precision, creativity, and a passion for clean code.
-            </p>
+            <TextGenerateEffect
+              words="Crafting digital experiences with precision, creativity, and a passion for clean code."
+              className="text-muted-foreground max-w-md leading-relaxed font-normal text-base"
+              filter={false}
+              duration={0.5}
+            />
             
             <div className="flex items-center gap-4">
               <Button onClick={scrollToWork} variant="minimal" className="group">
@@ -113,11 +117,12 @@ const MinimalHero = () => {
               </div>
             </div>
             
-            <p className="text-sm text-primary-foreground/70 leading-relaxed font-semibold">
-              Building tomorrow's technology with today's vision. 
-              Specializing in modern web applications, AI integration, 
-              and seamless user experiences.
-            </p>
+            <TextGenerateEffect
+              words="Building tomorrow's technology with today's vision. Specializing in modern web applications, AI integration, and seamless user experiences."
+              className="text-sm text-primary-foreground/70 leading-relaxed font-semibold"
+              filter={false}
+              duration={0.5}
+            />
           </div>
         </motion.div>
       </div>
