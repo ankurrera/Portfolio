@@ -30,7 +30,7 @@ const MinimalContact = () => {
         .single();
 
       if (error) {
-        console.error('Error fetching location data:', error);
+        console.error('Failed to fetch location data from database:', error);
         return;
       }
 
