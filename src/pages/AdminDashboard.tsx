@@ -219,6 +219,25 @@ const AdminDashboard = () => {
               </Button>
             </CardContent>
           </Card>
+
+          <Card 
+            className="hover:border-foreground/20 transition-all duration-300 cursor-pointer h-fit"
+            onClick={() => navigate('/admin/technical/social-links/edit')}
+          >
+            <CardHeader className="p-4 pb-3">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wider">
+                Social Links
+              </CardTitle>
+              <CardDescription className="text-xs leading-tight">
+                Manage GitHub, LinkedIn, and Twitter links
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <Button variant="outline" size="sm" className="ml-auto">
+                Manage
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Creative & Personal Section Header */}

@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Mail, MapPin, Github, Linkedin, Twitter } from 'lucide-react';
+import { Mail, MapPin } from 'lucide-react';
 import { useState } from 'react';
+import TechnicalSocialLinks from '@/components/TechnicalSocialLinks';
 
 const MinimalContact = () => {
   const [formData, setFormData] = useState({
@@ -37,12 +38,6 @@ const MinimalContact = () => {
       value: 'Kolkata, WB',
       href: '#'
     }
-  ];
-
-  const socialLinks = [
-    { icon: Github, href: '#', label: 'GitHub' },
-    { icon: Linkedin, href: '#', label: 'LinkedIn' },
-    { icon: Twitter, href: '#', label: 'Twitter' }
   ];
 
   return (
@@ -114,20 +109,7 @@ const MinimalContact = () => {
               <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
                 Connect
               </div>
-              <div className="flex gap-4">
-                {socialLinks.map((social) => (
-                  <motion.a
-                    key={social.label}
-                    href={social.href}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="p-3 rounded-lg border border-border/50 hover:border-border hover:bg-muted/20 transition-all"
-                    aria-label={social.label}
-                  >
-                    <social.icon className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-                  </motion.a>
-                ))}
-              </div>
+              <TechnicalSocialLinks />
             </div>
           </motion.div>
 

@@ -1,7 +1,9 @@
 export type SocialLinkType = 'resume' | 'github' | 'linkedin' | 'twitter' | 'telegram';
+export type PageContext = 'about' | 'technical';
 
 export interface SocialLink {
   id: string;
+  page_context: PageContext;
   link_type: SocialLinkType;
   url: string;
   is_visible: boolean;
@@ -11,6 +13,7 @@ export interface SocialLink {
 }
 
 export interface SocialLinkInsert {
+  page_context: PageContext;
   link_type: SocialLinkType;
   url: string;
   is_visible?: boolean;

@@ -536,6 +536,7 @@ const AdminAboutEdit = () => {
       const { data, error } = await supabase
         .from('social_links')
         .select('*')
+        .eq('page_context', 'about')
         .order('display_order', { ascending: true });
 
       if (error) throw error;
