@@ -85,7 +85,11 @@ const About = () => {
 
       // Check for success in response data
       if (!response.ok || !result.success) {
-        const errorMessage = String(result.details || result.error || 'Failed to send message');
+        // Properly serialize error details
+        const errorDetail = result.details || result.error || 'Failed to send message';
+        const errorMessage = typeof errorDetail === 'string' 
+          ? errorDetail 
+          : JSON.stringify(errorDetail);
         throw new Error(errorMessage);
       }
 

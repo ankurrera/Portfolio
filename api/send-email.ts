@@ -4,7 +4,7 @@ import {
   EMAIL_REGEX, 
   VALIDATION_RULES, 
   sanitizeInput 
-} from '../src/lib/validation/contactFormValidation';
+} from '../src/lib/validation/contactFormValidation.js';
 
 // Rate limiting using in-memory store
 // NOTE: In-memory rate limiting has limitations in serverless environments:

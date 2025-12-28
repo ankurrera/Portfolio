@@ -98,7 +98,11 @@ const MinimalContact = () => {
 
       // Check for success in response data
       if (!response.ok || !data.success) {
-        const errorMessage = String(data.details || data.error || 'Failed to send message');
+        // Properly serialize error details
+        const errorDetail = data.details || data.error || 'Failed to send message';
+        const errorMessage = typeof errorDetail === 'string' 
+          ? errorDetail 
+          : JSON.stringify(errorDetail);
         throw new Error(errorMessage);
       }
 
