@@ -16,6 +16,7 @@ const SocialLinks = () => {
       const { data, error } = await supabase
         .from('social_links')
         .select('*')
+        .eq('page_context', 'about')
         .eq('is_visible', true)
         .order('display_order', { ascending: true });
 
