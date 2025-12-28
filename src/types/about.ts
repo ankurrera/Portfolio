@@ -12,9 +12,11 @@ export interface Education {
   start_year: string;
   end_year: string;
   display_order: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface Experience {
+export interface AboutExperience {
   id: string;
   logo_url: string;
   company_name: string;
@@ -22,7 +24,12 @@ export interface Experience {
   start_date: string; // format: "YYYY-MM"
   end_date: string | null; // format: "YYYY-MM" or null for current
   display_order: number;
+  created_at?: string;
+  updated_at?: string;
 }
+
+// Keep legacy name for backward compatibility
+export type Experience = AboutExperience;
 
 export interface AboutPage {
   id: string;

@@ -79,7 +79,7 @@ const AdminAboutEdit = () => {
     try {
       setExperienceLoading(true);
       const { data, error } = await supabase
-        .from('experience')
+        .from('about_experience')
         .select('*')
         .order('display_order', { ascending: true });
 
@@ -403,7 +403,7 @@ const AdminAboutEdit = () => {
     // Otherwise, delete from database
     try {
       const { error } = await supabase
-        .from('experience')
+        .from('about_experience')
         .delete()
         .eq('id', id);
 
@@ -487,7 +487,7 @@ const AdminAboutEdit = () => {
 
       // Delete all existing experience and insert new ones
       const { error: deleteError } = await supabase
-        .from('experience')
+        .from('about_experience')
         .delete()
         .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
 
@@ -504,7 +504,7 @@ const AdminAboutEdit = () => {
       }));
 
       const { error: insertError } = await supabase
-        .from('experience')
+        .from('about_experience')
         .insert(experienceToInsert);
 
       if (insertError) throw insertError;

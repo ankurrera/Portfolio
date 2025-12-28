@@ -96,7 +96,7 @@ const About = () => {
       try {
         setLoadingExperience(true);
         const { data, error } = await supabase
-          .from('experience')
+          .from('about_experience')
           .select('*')
           .order('display_order', { ascending: true });
 

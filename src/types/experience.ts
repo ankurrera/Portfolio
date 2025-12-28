@@ -1,4 +1,4 @@
-export interface Experience {
+export interface TechnicalExperience {
   id: string;
   role_title: string;
   company_name: string;
@@ -10,3 +10,6 @@ export interface Experience {
   created_at: string;
   updated_at: string;
 }
+
+// Keep legacy name for backward compatibility
+export type Experience = TechnicalExperience;

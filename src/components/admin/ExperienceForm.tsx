@@ -56,7 +56,7 @@ const ExperienceForm = ({ experience, onSave, onCancel }: ExperienceFormProps) =
         };
 
         const { data, error } = await supabase
-          .from('experience')
+          .from('technical_experience')
           .update(updates)
           .eq('id', experience.id)
           .select()
@@ -69,7 +69,7 @@ const ExperienceForm = ({ experience, onSave, onCancel }: ExperienceFormProps) =
       } else {
         // Create new experience - get max display_order first
         const { data: maxOrderData } = await supabase
-          .from('experience')
+          .from('technical_experience')
           .select('display_order')
           .order('display_order', { ascending: false })
           .limit(1)
@@ -88,7 +88,7 @@ const ExperienceForm = ({ experience, onSave, onCancel }: ExperienceFormProps) =
         };
 
         const { data, error } = await supabase
-          .from('experience')
+          .from('technical_experience')
           .insert(insert)
           .select()
           .single();
@@ -140,12 +140,12 @@ const ExperienceForm = ({ experience, onSave, onCancel }: ExperienceFormProps) =
           {/* Employment Type */}
           <div className="space-y-2">
             <Label htmlFor="employmentType">Employment Type</Label>
-            <Select value={employmentType} onValueChange={setEmploymentType}>
+            <Select value={employmentType || "none"} onValueChange={(value) => setEmploymentType(value === "none" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select type (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 <SelectItem value="Full-time">Full-time</SelectItem>
                 <SelectItem value="Part-time">Part-time</SelectItem>
                 <SelectItem value="Freelance">Freelance</SelectItem>

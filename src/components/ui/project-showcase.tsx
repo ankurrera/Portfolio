@@ -56,9 +56,9 @@ export function ProjectShowcase({ projects }: ProjectShowcaseProps) {
   return (
     <div className="flex items-center justify-center min-h-[600px] bg-background overflow-hidden py-12">
       <div ref={containerRef} className="relative w-full max-w-5xl px-4 md:px-8" onMouseMove={handleMouseMove}>
-        {/* Oversized index number - positioned behind content as background layer */}
+        {/* Oversized index number - positioned at top edge of content */}
         <motion.div
-          className="absolute -left-8 md:-left-16 top-1/2 -translate-y-1/2 text-[16rem] md:text-[28rem] font-bold text-foreground/[0.03] select-none pointer-events-none leading-none tracking-tighter z-0"
+          className="absolute -left-8 md:-left-16 top-0 pt-12 text-[16rem] md:text-[28rem] font-bold text-foreground/[0.03] select-none pointer-events-none leading-none tracking-tighter z-0"
           style={{ x: numberX, y: numberY }}
         >
           <AnimatePresence mode="wait">
