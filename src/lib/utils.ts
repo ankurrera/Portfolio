@@ -63,7 +63,12 @@ export async function parseApiResponse(response: Response): Promise<Record<strin
   const contentType = response.headers.get('content-type');
   
   // First, get the response as text (which can always be done once)
-  const text = await response.text();
+  let text: string;
+  try {
+    text = await response.text();
+  } catch (error) {
+    return { error: 'Failed to read response body', details: error instanceof Error ? error.message : String(error) };
+  }
   
   // If content-type indicates JSON, try to parse it
   if (contentType && contentType.toLowerCase().includes('application/json')) {
