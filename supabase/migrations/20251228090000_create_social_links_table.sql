@@ -62,7 +62,7 @@ ALTER TABLE public.resume_download_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can insert resume_download_logs"
 ON public.resume_download_logs
 FOR INSERT
-USING (true);
+WITH CHECK (true);
 
 -- Only admins can view download logs
 CREATE POLICY "Admins can view resume_download_logs"
