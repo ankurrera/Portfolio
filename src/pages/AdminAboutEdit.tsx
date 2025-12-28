@@ -586,22 +586,58 @@ const AdminAboutEdit = () => {
     setDraggedIndex(null);
   };
 
+  const handleMoveSocialLinkUp = (index: number) => {
+    if (index === 0) return;
+    
+    const newLinks = [...socialLinks];
+    [newLinks[index - 1], newLinks[index]] = [newLinks[index], newLinks[index - 1]];
+    
+    // Update display_order for all items
+    const updatedLinks = newLinks.map((link, idx) => ({
+      ...link,
+      display_order: idx
+    }));
+    
+    setSocialLinks(updatedLinks);
+  };
+
+  const handleMoveSocialLinkDown = (index: number) => {
+    if (index === socialLinks.length - 1) return;
+    
+    const newLinks = [...socialLinks];
+    [newLinks[index], newLinks[index + 1]] = [newLinks[index + 1], newLinks[index]];
+    
+    // Update display_order for all items
+    const updatedLinks = newLinks.map((link, idx) => ({
+      ...link,
+      display_order: idx
+    }));
+    
+    setSocialLinks(updatedLinks);
+  };
+
   const handleSaveSocialLinks = async () => {
     try {
       setSaving(true);
 
-      // Update all social links
-      for (const link of socialLinks) {
-        const { error } = await supabase
+      // Update all social links in parallel for better performance
+      const updatePromises = socialLinks.map(link =>
+        supabase
           .from('social_links')
           .update({
             url: link.url,
             is_visible: link.is_visible,
             display_order: link.display_order
           })
-          .eq('id', link.id);
+          .eq('id', link.id)
+      );
 
-        if (error) throw error;
+      const results = await Promise.all(updatePromises);
+      
+      // Check for errors
+      const errors = results.filter(result => result.error);
+      if (errors.length > 0) {
+        throw new Error('Failed to update some social links');
       }
 
       toast.success('Social links saved successfully');
@@ -1204,10 +1240,14 @@ const AdminAboutEdit = () => {
                       key={link.id}
                       link={link}
                       index={index}
+                      isFirst={index === 0}
+                      isLast={index === socialLinks.length - 1}
                       onUpdate={handleUpdateSocialLink}
                       onDragStart={handleDragStart}
                       onDragOver={handleDragOver}
                       onDrop={handleDrop}
+                      onMoveUp={handleMoveSocialLinkUp}
+                      onMoveDown={handleMoveSocialLinkDown}
                     />
                   ))}
                 </div>

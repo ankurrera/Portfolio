@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { GripVertical, FileText, Github, Linkedin, Twitter, Send, Upload, X } from 'lucide-react';
+import { GripVertical, FileText, Github, Linkedin, Twitter, Send, Upload, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -14,10 +14,14 @@ interface SocialLinkItemProps {
   onDragStart: (e: React.DragEvent, index: number) => void;
   onDragOver: (e: React.DragEvent, index: number) => void;
   onDrop: (e: React.DragEvent, index: number) => void;
+  onMoveUp: (index: number) => void;
+  onMoveDown: (index: number) => void;
   index: number;
+  isFirst: boolean;
+  isLast: boolean;
 }
 
-const SocialLinkItem = ({ link, onUpdate, onDragStart, onDragOver, onDrop, index }: SocialLinkItemProps) => {
+const SocialLinkItem = ({ link, onUpdate, onDragStart, onDragOver, onDrop, onMoveUp, onMoveDown, index, isFirst, isLast }: SocialLinkItemProps) => {
   const [uploading, setUploading] = useState(false);
 
   const getIcon = (linkType: string) => {
@@ -108,10 +112,34 @@ const SocialLinkItem = ({ link, onUpdate, onDragStart, onDragOver, onDrop, index
       onDrop={(e) => onDrop(e, index)}
       className="flex items-start gap-4 p-4 border border-border rounded-lg bg-card hover:shadow-md transition-shadow cursor-move"
     >
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex flex-col items-center gap-2 flex-shrink-0">
         <GripVertical className="w-5 h-5 text-muted-foreground" />
         <div className="p-2 border border-border rounded-md">
           {getIcon(link.link_type)}
+        </div>
+        <div className="flex flex-col gap-1">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => onMoveUp(index)}
+            disabled={isFirst}
+            title="Move up"
+            aria-label="Move up"
+          >
+            <ChevronUp className="w-3 h-3" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => onMoveDown(index)}
+            disabled={isLast}
+            title="Move down"
+            aria-label="Move down"
+          >
+            <ChevronDown className="w-3 h-3" />
+          </Button>
         </div>
       </div>
 

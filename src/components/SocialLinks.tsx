@@ -38,7 +38,8 @@ const SocialLinks = () => {
       };
 
       // Fire and forget - don't wait for response
-      supabase.from('resume_download_logs').insert(logData).then(({ error }) => {
+      // Using void to explicitly indicate intentional discard
+      void supabase.from('resume_download_logs').insert(logData).then(({ error }) => {
         if (error) {
           console.error('Error tracking resume download:', error);
         }

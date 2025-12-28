@@ -43,9 +43,8 @@ const ResumeAnalytics = ({ refreshTrigger }: ResumeAnalyticsProps) => {
       if (todayError) throw todayError;
       setDownloadsToday(todayCount || 0);
 
-      // Get this week's downloads
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
+      // Get this week's downloads (last 7 days)
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
       const { count: weekCount, error: weekError } = await supabase
         .from('resume_download_logs')
         .select('*', { count: 'exact', head: true })
@@ -54,9 +53,8 @@ const ResumeAnalytics = ({ refreshTrigger }: ResumeAnalyticsProps) => {
       if (weekError) throw weekError;
       setDownloadsThisWeek(weekCount || 0);
 
-      // Get this month's downloads
-      const monthAgo = new Date();
-      monthAgo.setDate(monthAgo.getDate() - 30);
+      // Get this month's downloads (last 30 days)
+      const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       const { count: monthCount, error: monthError } = await supabase
         .from('resume_download_logs')
         .select('*', { count: 'exact', head: true })
