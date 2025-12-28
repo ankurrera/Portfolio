@@ -4,25 +4,122 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Mail, MapPin } from 'lucide-react';
+import { Mail, MapPin, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import TechnicalSocialLinks from '@/components/TechnicalSocialLinks';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  isValidEmail, 
+  VALIDATION_RULES, 
+  VALIDATION_MESSAGES 
+} from '@/lib/validation/contactFormValidation';
 
 const MinimalContact = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    subject: '',
     message: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { toast } = useToast();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = VALIDATION_MESSAGES.name.required;
+    } else if (formData.name.trim().length > VALIDATION_RULES.name.max) {
+      newErrors.name = VALIDATION_MESSAGES.name.tooLong;
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = VALIDATION_MESSAGES.email.required;
+    } else if (!isValidEmail(formData.email)) {
+      newErrors.email = VALIDATION_MESSAGES.email.invalid;
+    }
+
+    if (!formData.message.trim()) {
+      newErrors.message = VALIDATION_MESSAGES.message.required;
+    } else if (formData.message.trim().length < VALIDATION_RULES.message.min) {
+      newErrors.message = VALIDATION_MESSAGES.message.tooShort;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          subject: formData.subject.trim(),
+          message: formData.message.trim(),
+          source: 'technical',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.details || data.error || 'Failed to send message');
+      }
+
+      toast({
+        title: "Message Sent!",
+        description: "Thank you for reaching out. I'll get back to you soon.",
+      });
+
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+      });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const contactMethods = [
@@ -126,7 +223,7 @@ const MinimalContact = () => {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="name" className="text-sm font-medium text-foreground">
-                        Name
+                        Name *
                       </Label>
                       <Input
                         id="name"
@@ -136,12 +233,16 @@ const MinimalContact = () => {
                         placeholder="Your name"
                         className="border-border/50 focus:border-border bg-background/50"
                         required
+                        disabled={isSubmitting}
                       />
+                      {errors.name && (
+                        <p className="text-xs text-red-500">{errors.name}</p>
+                      )}
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="email" className="text-sm font-medium text-foreground">
-                        Email
+                        Email *
                       </Label>
                       <Input
                         id="email"
@@ -152,12 +253,31 @@ const MinimalContact = () => {
                         placeholder="your@email.com"
                         className="border-border/50 focus:border-border bg-background/50"
                         required
+                        disabled={isSubmitting}
+                      />
+                      {errors.email && (
+                        <p className="text-xs text-red-500">{errors.email}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="subject" className="text-sm font-medium text-foreground">
+                        Subject
+                      </Label>
+                      <Input
+                        id="subject"
+                        name="subject"
+                        value={formData.subject}
+                        onChange={handleInputChange}
+                        placeholder="Project subject"
+                        className="border-border/50 focus:border-border bg-background/50"
+                        disabled={isSubmitting}
                       />
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="message" className="text-sm font-medium text-foreground">
-                        Message
+                        Message *
                       </Label>
                       <Textarea
                         id="message"
@@ -168,7 +288,11 @@ const MinimalContact = () => {
                         rows={6}
                         className="border-border/50 focus:border-border bg-background/50 resize-none"
                         required
+                        disabled={isSubmitting}
                       />
+                      {errors.message && (
+                        <p className="text-xs text-red-500">{errors.message}</p>
+                      )}
                     </div>
                   </div>
 
@@ -176,8 +300,16 @@ const MinimalContact = () => {
                     type="submit" 
                     className="w-full"
                     size="lg"
+                    disabled={isSubmitting}
                   >
-                    Send Message
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      'Send Message'
+                    )}
                   </Button>
                 </form>
 
