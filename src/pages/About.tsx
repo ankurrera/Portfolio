@@ -71,7 +71,6 @@ const About = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
         },
         body: JSON.stringify({
           name: data.name.trim(),
@@ -83,27 +82,20 @@ const About = () => {
 
       const result = await parseApiResponse(response);
 
-      // Check for success in response data
-      if (!response.ok || !result.success) {
-        const errorMessage = String(result.details || result.error || 'Failed to send message');
-        throw new Error(errorMessage);
+      if (!response.ok) {
+        throw new Error(String(result.details || result.error || 'Failed to send message'));
       }
 
       toast({
         title: "Message sent",
         description: "Thank you for your inquiry. I'll get back to you soon.",
       });
-      
       form.reset();
     } catch (error) {
       console.error('Error sending message:', error);
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : "Failed to send message. Please try again.";
-      
       toast({
         title: "Error",
-        description: errorMessage,
+        description: error instanceof Error ? error.message : "Failed to send message. Please try again.",
         variant: "destructive",
       });
     } finally {
