@@ -18,6 +18,7 @@ import AdminArtisticEdit from "./pages/AdminArtisticEdit";
 import AdminTechnicalEdit from "./pages/AdminTechnicalEdit";
 import AdminSkillsEdit from "./pages/AdminSkillsEdit";
 import AdminExperienceEdit from "./pages/AdminExperienceEdit";
+import AdminTechnicalAboutEdit from "./pages/AdminTechnicalAboutEdit";
 import AdminAchievementEdit from "./pages/AdminAchievementEdit";
 import AdminHeroEdit from "./pages/AdminHeroEdit";
 import AdminAboutEdit from "./pages/AdminAboutEdit";
@@ -49,6 +50,7 @@ const App = () => (
                 <Route path="/admin/photoshoots/edit" element={<AdminPhotoshootsEdit />} />
                 <Route path="/admin/artistic/edit" element={<AdminArtisticEdit />} />
                 <Route path="/admin/technical/edit" element={<AdminTechnicalEdit />} />
+                <Route path="/admin/technical/about/edit" element={<AdminTechnicalAboutEdit />} />
                 <Route path="/admin/technical/skills/edit" element={<AdminSkillsEdit />} />
                 <Route path="/admin/technical/experience/edit" element={<AdminExperienceEdit />} />
                 <Route path="/admin/achievement/edit" element={<AdminAchievementEdit />} />

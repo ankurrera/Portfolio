@@ -165,6 +165,25 @@ const AdminDashboard = () => {
 
           <Card 
             className="hover:border-foreground/20 transition-all duration-300 cursor-pointer h-fit"
+            onClick={() => navigate('/admin/technical/about/edit')}
+          >
+            <CardHeader className="p-4 pb-3">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wider">
+                About Section
+              </CardTitle>
+              <CardDescription className="text-xs leading-tight">
+                Manage about content, paragraphs, and stats
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <Button variant="outline" size="sm" className="ml-auto">
+                Edit
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="hover:border-foreground/20 transition-all duration-300 cursor-pointer h-fit"
             onClick={() => navigate('/admin/technical/skills/edit')}
           >
             <CardHeader className="p-4 pb-3">
