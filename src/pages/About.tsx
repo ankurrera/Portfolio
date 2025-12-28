@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useHeroText } from "@/hooks/useHeroText";
 import { useAboutPage } from "@/hooks/useAboutPage";
 import { Loader2 } from "lucide-react";
+import SocialLinks from "@/components/SocialLinks";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, { message: "Name is required" }).max(100, { message: "Name must be less than 100 characters" }),
@@ -219,6 +220,9 @@ const About = () => {
                 </picture>
               </div>
             )}
+
+            {/* Social Links */}
+            <SocialLinks />
           </div>
 
           {/* Bio Section */}
