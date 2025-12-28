@@ -10,6 +10,9 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, Loader2, Plus, Trash2, Upload, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { AboutPage, Service, Education, Experience } from '@/types/about';
+import { SocialLink } from '@/types/socialLinks';
+import SocialLinkItem from '@/components/admin/SocialLinkItem';
+import ResumeAnalytics from '@/components/admin/ResumeAnalytics';
 
 const AdminAboutEdit = () => {
   const { user, isAdmin, isLoading, signOut } = useAuth();
@@ -31,6 +34,11 @@ const AdminAboutEdit = () => {
   const [experience, setExperience] = useState<Experience[]>([]);
   const [educationLoading, setEducationLoading] = useState(true);
   const [experienceLoading, setExperienceLoading] = useState(true);
+  
+  // Social Links
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+  const [socialLinksLoading, setSocialLinksLoading] = useState(true);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // Auth redirect effect
   useEffect(() => {
@@ -55,6 +63,7 @@ const AdminAboutEdit = () => {
     loadAboutData();
     loadEducation();
     loadExperience();
+    loadSocialLinks();
   }, [user, isAdmin]);
 
   const loadEducation = async () => {
@@ -520,6 +529,92 @@ const AdminAboutEdit = () => {
     }
   };
 
+  // Social Links functions
+  const loadSocialLinks = async () => {
+    try {
+      setSocialLinksLoading(true);
+      const { data, error } = await supabase
+        .from('social_links')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      setSocialLinks(data || []);
+    } catch (error) {
+      console.error('Error loading social links:', error);
+      toast.error('Failed to load social links');
+    } finally {
+      setSocialLinksLoading(false);
+    }
+  };
+
+  const handleUpdateSocialLink = (id: string, updates: Partial<SocialLink>) => {
+    setSocialLinks(socialLinks.map(link => 
+      link.id === id ? { ...link, ...updates } : link
+    ));
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      return;
+    }
+
+    const newLinks = [...socialLinks];
+    const [draggedLink] = newLinks.splice(draggedIndex, 1);
+    newLinks.splice(dropIndex, 0, draggedLink);
+
+    // Update display_order for all items
+    const updatedLinks = newLinks.map((link, index) => ({
+      ...link,
+      display_order: index
+    }));
+
+    setSocialLinks(updatedLinks);
+    setDraggedIndex(null);
+  };
+
+  const handleSaveSocialLinks = async () => {
+    try {
+      setSaving(true);
+
+      // Update all social links
+      for (const link of socialLinks) {
+        const { error } = await supabase
+          .from('social_links')
+          .update({
+            url: link.url,
+            is_visible: link.is_visible,
+            display_order: link.display_order
+          })
+          .eq('id', link.id);
+
+        if (error) throw error;
+      }
+
+      toast.success('Social links saved successfully');
+      await loadSocialLinks();
+    } catch (error) {
+      console.error('Error saving social links:', error);
+      toast.error('Failed to save social links');
+      throw error;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -574,10 +669,14 @@ const AdminAboutEdit = () => {
         await handleSaveExperience();
       }
 
+      // Save social links
+      await handleSaveSocialLinks();
+
       toast.success('About page updated successfully');
       await loadAboutData();
       await loadEducation();
       await loadExperience();
+      await loadSocialLinks();
     } catch (error) {
       console.error('Error saving about data:', error);
       toast.error('Failed to save About page data');
@@ -1084,6 +1183,40 @@ const AdminAboutEdit = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Social Links Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Social & Professional Links</CardTitle>
+              <CardDescription>
+                Manage social and professional profile links displayed on the About page. Drag to reorder icons.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {socialLinksLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {socialLinks.map((link, index) => (
+                    <SocialLinkItem
+                      key={link.id}
+                      link={link}
+                      index={index}
+                      onUpdate={handleUpdateSocialLink}
+                      onDragStart={handleDragStart}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                    />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Resume Analytics Section */}
+          <ResumeAnalytics />
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-4 pt-4">
