@@ -5,10 +5,12 @@ import { ArrowUpRight, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { TechnicalProject } from '@/types/technical';
 import { ProjectShowcase } from '@/components/ui/project-showcase';
+import { useNavigate } from 'react-router-dom';
 
 const MinimalProjects = () => {
   const [projects, setProjects] = useState<TechnicalProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadProjects();
@@ -83,7 +85,7 @@ const MinimalProjects = () => {
                 Recent Projects
               </h2>
             </div>
-            <Button variant="minimal" size="sm">
+            <Button variant="minimal" size="sm" onClick={() => navigate('/technical/projects')}>
               All Projects
               <ArrowUpRight className="w-4 h-4 ml-1" />
             </Button>

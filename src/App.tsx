@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./hooks/useAuth";
 import About from "./pages/About";
 import Technical from "./pages/Technical";
+import AllTechnicalProjects from "./pages/AllTechnicalProjects";
 import Artistic from "./pages/Artistic";
 import Achievement from "./pages/Achievement";
 import Photoshoots from "./pages/Photoshoots";
@@ -41,6 +42,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<About />} />
                 <Route path="/technical" element={<Technical />} />
+                <Route path="/technical/projects" element={<AllTechnicalProjects />} />
                 <Route path="/artistic" element={<Artistic />} />
                 <Route path="/achievement" element={<Achievement />} />
                 <Route path="/about" element={<About />} />
