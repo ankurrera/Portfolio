@@ -25,7 +25,7 @@ export const TextGenerateEffect = ({
         filter: filter ? "blur(0px)" : "none",
       },
       {
-        duration: duration ?? 1,
+        duration: duration,
         delay: stagger(0.2),
       }
     );
@@ -37,7 +37,7 @@ export const TextGenerateEffect = ({
         {wordsArray.map((word, idx) => {
           return (
             <motion.span
-              key={word + idx}
+              key={`${word}-${idx}`}
               className="opacity-0"
               style={{
                 filter: filter ? "blur(10px)" : "none",
