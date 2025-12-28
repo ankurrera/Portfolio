@@ -1,21 +1,19 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import nodemailer from 'nodemailer';
+import { 
+  EMAIL_REGEX, 
+  VALIDATION_RULES, 
+  sanitizeInput 
+} from '../src/lib/validation/contactFormValidation';
 
-// Email validation regex
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// Rate limiting using in-memory store (for serverless, consider Redis for production)
+// Rate limiting using in-memory store
+// NOTE: In-memory rate limiting has limitations in serverless environments:
+// - Does not persist across function cold starts
+// - Does not work across multiple function instances
+// - For production at scale, consider using Redis, Vercel KV, or similar persistent store
 const requestLog = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
 const MAX_REQUESTS_PER_WINDOW = 5;
-
-// Sanitize input to prevent injection attacks
-function sanitizeInput(input: string): string {
-  return input
-    .replace(/[<>]/g, '') // Remove potential HTML tags
-    .trim()
-    .substring(0, 1000); // Limit length
-}
 
 // Check rate limit
 function checkRateLimit(identifier: string): boolean {
@@ -73,10 +71,17 @@ export default async function handler(
     }
 
     // Validate message length
-    if (message.trim().length < 10) {
+    if (message.trim().length < VALIDATION_RULES.message.min) {
       return res.status(400).json({ 
         error: 'Message too short',
-        details: 'Message must be at least 10 characters long' 
+        details: `Message must be at least ${VALIDATION_RULES.message.min} characters long` 
+      });
+    }
+
+    if (message.trim().length > VALIDATION_RULES.message.max) {
+      return res.status(400).json({ 
+        error: 'Message too long',
+        details: `Message must be less than ${VALIDATION_RULES.message.max} characters` 
       });
     }
 

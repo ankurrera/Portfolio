@@ -25,11 +25,18 @@ import { useHeroText } from "@/hooks/useHeroText";
 import { useAboutPage } from "@/hooks/useAboutPage";
 import { Loader2 } from "lucide-react";
 import SocialLinks from "@/components/SocialLinks";
+import { VALIDATION_RULES, VALIDATION_MESSAGES } from "@/lib/validation/contactFormValidation";
 
 const contactSchema = z.object({
-  name: z.string().trim().min(1, { message: "Name is required" }).max(100, { message: "Name must be less than 100 characters" }),
-  email: z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email must be less than 255 characters" }),
-  message: z.string().trim().min(10, { message: "Message must be at least 10 characters long" }).max(1000, { message: "Message must be less than 1000 characters" }),
+  name: z.string().trim()
+    .min(VALIDATION_RULES.name.min, { message: VALIDATION_MESSAGES.name.required })
+    .max(VALIDATION_RULES.name.max, { message: VALIDATION_MESSAGES.name.tooLong }),
+  email: z.string().trim()
+    .email({ message: VALIDATION_MESSAGES.email.invalid })
+    .max(VALIDATION_RULES.email.max, { message: VALIDATION_MESSAGES.email.tooLong }),
+  message: z.string().trim()
+    .min(VALIDATION_RULES.message.min, { message: VALIDATION_MESSAGES.message.tooShort })
+    .max(VALIDATION_RULES.message.max, { message: VALIDATION_MESSAGES.message.tooLong }),
 });
 
 type ContactFormValues = z.infer<typeof contactSchema>;

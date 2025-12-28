@@ -8,6 +8,11 @@ import { Mail, MapPin, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import TechnicalSocialLinks from '@/components/TechnicalSocialLinks';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  isValidEmail, 
+  VALIDATION_RULES, 
+  VALIDATION_MESSAGES 
+} from '@/lib/validation/contactFormValidation';
 
 const MinimalContact = () => {
   const [formData, setFormData] = useState({
@@ -37,22 +42,21 @@ const MinimalContact = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    } else if (formData.name.trim().length > 100) {
-      newErrors.name = 'Name must be less than 100 characters';
+      newErrors.name = VALIDATION_MESSAGES.name.required;
+    } else if (formData.name.trim().length > VALIDATION_RULES.name.max) {
+      newErrors.name = VALIDATION_MESSAGES.name.tooLong;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Invalid email address';
+      newErrors.email = VALIDATION_MESSAGES.email.required;
+    } else if (!isValidEmail(formData.email)) {
+      newErrors.email = VALIDATION_MESSAGES.email.invalid;
     }
 
     if (!formData.message.trim()) {
-      newErrors.message = 'Message is required';
-    } else if (formData.message.trim().length < 10) {
-      newErrors.message = 'Message must be at least 10 characters long';
+      newErrors.message = VALIDATION_MESSAGES.message.required;
+    } else if (formData.message.trim().length < VALIDATION_RULES.message.min) {
+      newErrors.message = VALIDATION_MESSAGES.message.tooShort;
     }
 
     setErrors(newErrors);
