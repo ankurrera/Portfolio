@@ -104,7 +104,16 @@ const MinimalProjects = () => {
           <p className="text-muted-foreground mb-6">
             Interested in working together?
           </p>
-          <Button variant="default" size="lg">
+          <Button 
+            variant="default" 
+            size="lg"
+            onClick={() => {
+              const element = document.querySelector('#contact');
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+          >
             Start a Project
           </Button>
         </motion.div>
