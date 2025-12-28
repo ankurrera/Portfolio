@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TechnicalProject, TechnicalProjectInsert, TechnicalProjectUpdate } from '@/types/technical';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Plus, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -15,11 +16,20 @@ interface TechnicalProjectFormProps {
   onCancel: () => void;
 }
 
+// Helper function to get initial progress value
+const getInitialProgress = (project?: TechnicalProject | null): number => {
+  if (project?.progress != null) {
+    return project.progress;
+  }
+  return project?.status === 'Live' ? 100 : 0;
+};
+
 const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFormProps) => {
   const [title, setTitle] = useState(project?.title || '');
   const [description, setDescription] = useState(project?.description || '');
   const [devYear, setDevYear] = useState(project?.dev_year || new Date().getFullYear().toString());
   const [status, setStatus] = useState(project?.status || 'Live');
+  const [progress, setProgress] = useState<number>(getInitialProgress(project));
   const [githubLink, setGithubLink] = useState(project?.github_link || '');
   const [liveLink, setLiveLink] = useState(project?.live_link || '');
   const [thumbnailUrl, setThumbnailUrl] = useState(project?.thumbnail_url || '');
@@ -27,6 +37,19 @@ const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFor
   const [newLanguage, setNewLanguage] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Auto-set progress to 100 when status is Live
+  useEffect(() => {
+    if (status === 'Live') {
+      setProgress(100);
+    }
+  }, [status]);
+
+  // Helper function to handle progress input changes
+  const handleProgressChange = (value: string) => {
+    const numValue = parseInt(value, 10) || 0;
+    setProgress(Math.min(100, Math.max(0, numValue)));
+  };
 
   const handleAddLanguage = () => {
     if (newLanguage.trim() && !languages.includes(newLanguage.trim())) {
@@ -96,6 +119,9 @@ const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFor
 
     setIsSaving(true);
     try {
+      // Auto-set progress based on status
+      const finalProgress = status === 'Live' ? 100 : progress;
+
       if (project) {
         // Update existing project
         const updates: TechnicalProjectUpdate = {
@@ -107,6 +133,7 @@ const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFor
           live_link: liveLink.trim() || null,
           thumbnail_url: thumbnailUrl || null,
           languages,
+          progress: finalProgress,
         };
 
         const { data, error } = await supabase
@@ -137,6 +164,7 @@ const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFor
           live_link: liveLink.trim() || null,
           thumbnail_url: thumbnailUrl || null,
           languages,
+          progress: finalProgress,
         };
 
         const { data, error } = await supabase
@@ -209,14 +237,44 @@ const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFor
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Input
-                id="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                placeholder="Live, In Development, etc."
-              />
+              <Label htmlFor="status">Status *</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Live">Live</SelectItem>
+                  <SelectItem value="In Development">In Development</SelectItem>
+                  <SelectItem value="Testing">Testing</SelectItem>
+                  <SelectItem value="Paused">Paused</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          </div>
+
+          {/* Progress Field */}
+          <div className="space-y-2">
+            <Label htmlFor="progress">Project Progress (%)</Label>
+            <Input
+              id="progress"
+              type="number"
+              min="0"
+              max="100"
+              value={progress}
+              onChange={(e) => handleProgressChange(e.target.value)}
+              placeholder="0-100"
+              disabled={status === 'Live'}
+            />
+            {status === 'Live' && (
+              <p className="text-sm text-muted-foreground">
+                Progress is automatically set to 100% for Live projects
+              </p>
+            )}
+            {status === 'Paused' && (
+              <p className="text-sm text-muted-foreground">
+                Progress bar will be displayed in red on the public page
+              </p>
+            )}
           </div>
 
           {/* Links */}

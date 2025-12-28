@@ -10,6 +10,7 @@ export interface TechnicalProject {
   status: string | null;
   languages: string[]; // Array of language/tech names
   display_order: number;
+  progress: number | null; // Project completion progress (0-100)
   created_at: string;
   updated_at: string;
 }
@@ -24,6 +25,7 @@ export interface TechnicalProjectInsert {
   status?: string | null;
   languages?: string[];
   display_order?: number;
+  progress?: number | null;
 }
 
 export interface TechnicalProjectUpdate {
@@ -36,4 +38,5 @@ export interface TechnicalProjectUpdate {
   status?: string | null;
   languages?: string[];
   display_order?: number;
+  progress?: number | null;
 }
