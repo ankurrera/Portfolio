@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useId } from "react"
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion"
 
 interface LocationMapProps {
@@ -19,6 +19,7 @@ export function LocationMap({
   const [isHovered, setIsHovered] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const gridPatternId = useId()
 
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
@@ -51,7 +52,7 @@ export function LocationMap({
   return (
     <motion.div
       ref={containerRef}
-      className={`relative cursor-pointer select-none ${className}`}
+      className={`relative cursor-pointer select-none ${className || ''}`}
       style={{
         perspective: 1000,
       }}
@@ -241,11 +242,11 @@ export function LocationMap({
         >
           <svg width="100%" height="100%" className="absolute inset-0">
             <defs>
-              <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <pattern id={gridPatternId} width="20" height="20" patternUnits="userSpaceOnUse">
                 <path d="M 20 0 L 0 0 0 20" fill="none" className="stroke-foreground" strokeWidth="0.5" />
               </pattern>
             </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
+            <rect width="100%" height="100%" fill={`url(#${gridPatternId})`} />
           </svg>
         </motion.div>
 
