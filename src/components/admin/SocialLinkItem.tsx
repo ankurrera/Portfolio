@@ -77,7 +77,7 @@ const SocialLinkItem = ({ link, onUpdate, onDragStart, onDragOver, onDrop, onMov
     try {
       setUploading(true);
       
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop() || 'pdf';
       const fileName = `resume-${Date.now()}.${fileExt}`;
       const filePath = `resume/${fileName}`;
 

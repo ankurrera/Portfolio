@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { SocialLink } from '@/types/socialLinks';
 import { FileText, Github, Linkedin, Twitter, Send } from 'lucide-react';
-import { toast } from 'sonner';
 
 const SocialLinks = () => {
   const [links, setLinks] = useState<SocialLink[]>([]);
@@ -21,7 +20,9 @@ const SocialLinks = () => {
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      setLinks(data || []);
+      // Filter out links with empty URLs
+      const validLinks = (data || []).filter(link => link.url && link.url.trim() !== '');
+      setLinks(validLinks);
     } catch (error) {
       console.error('Error loading social links:', error);
     } finally {
