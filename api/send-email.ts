@@ -38,9 +38,24 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
+  // Set CORS headers to allow requests
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+
+  // Handle OPTIONS request for CORS preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   // Only allow POST requests
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ 
+      success: false,
+      error: 'Method not allowed',
+      details: 'Only POST requests are allowed'
+    });
   }
 
   try {
@@ -49,6 +64,7 @@ export default async function handler(
     // Validate required fields
     if (!name || !email || !message || !source) {
       return res.status(400).json({ 
+        success: false,
         error: 'Missing required fields',
         details: 'Name, email, message, and source are required' 
       });
@@ -57,6 +73,7 @@ export default async function handler(
     // Validate source
     if (!['technical', 'about'].includes(source)) {
       return res.status(400).json({ 
+        success: false,
         error: 'Invalid source',
         details: 'Source must be either "technical" or "about"' 
       });
@@ -65,6 +82,7 @@ export default async function handler(
     // Validate email format
     if (!EMAIL_REGEX.test(email)) {
       return res.status(400).json({ 
+        success: false,
         error: 'Invalid email format',
         details: 'Please provide a valid email address' 
       });
@@ -73,6 +91,7 @@ export default async function handler(
     // Validate message length
     if (message.trim().length < VALIDATION_RULES.message.min) {
       return res.status(400).json({ 
+        success: false,
         error: 'Message too short',
         details: `Message must be at least ${VALIDATION_RULES.message.min} characters long` 
       });
@@ -80,6 +99,7 @@ export default async function handler(
 
     if (message.trim().length > VALIDATION_RULES.message.max) {
       return res.status(400).json({ 
+        success: false,
         error: 'Message too long',
         details: `Message must be less than ${VALIDATION_RULES.message.max} characters` 
       });
@@ -89,6 +109,7 @@ export default async function handler(
     const identifier = req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || 'unknown';
     if (!checkRateLimit(identifier)) {
       return res.status(429).json({ 
+        success: false,
         error: 'Too many requests',
         details: 'Please wait before sending another message' 
       });
@@ -108,6 +129,7 @@ export default async function handler(
     if (!OFFICIAL_EMAIL || !GMAIL_USER || !GMAIL_PASSWORD) {
       console.error('Missing email configuration');
       return res.status(500).json({ 
+        success: false,
         error: 'Server configuration error',
         details: 'Email service is not properly configured' 
       });
@@ -123,7 +145,23 @@ export default async function handler(
         user: GMAIL_USER,
         pass: GMAIL_PASSWORD,
       },
+      // Add connection timeout and retry options
+      connectionTimeout: 10000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000,
     });
+
+    // Verify transporter connection before sending
+    try {
+      await transporter.verify();
+    } catch (verifyError) {
+      console.error('SMTP connection verification failed:', verifyError);
+      return res.status(500).json({
+        success: false,
+        error: 'Email service unavailable',
+        details: 'Unable to connect to email server. Please try again later.'
+      });
+    }
 
     // Format subject based on source
     const sourceLabel = source === 'technical' ? 'Technical Page' : 'About Page';
@@ -167,8 +205,18 @@ ${sanitizedMessage}
       `,
     };
 
-    // Send email
-    await transporter.sendMail(mailOptions);
+    // Send email with timeout handling
+    let timeoutId: NodeJS.Timeout;
+    const sendMailPromise = transporter.sendMail(mailOptions);
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('Email sending timeout')), 15000);
+    });
+    
+    try {
+      await Promise.race([sendMailPromise, timeoutPromise]);
+    } finally {
+      clearTimeout(timeoutId!);
+    }
 
     // Log success (without sensitive data)
     console.log(`Email sent successfully from ${source} page at ${new Date().toISOString()}`);
@@ -181,8 +229,12 @@ ${sanitizedMessage}
   } catch (error) {
     // Log error without exposing sensitive information
     console.error('Error sending email:', error instanceof Error ? error.message : 'Unknown error');
+    if (error instanceof Error && error.stack) {
+      console.error('Stack trace:', error.stack);
+    }
     
     return res.status(500).json({ 
+      success: false,
       error: 'Failed to send email',
       details: 'An error occurred while processing your request. Please try again later.' 
     });
