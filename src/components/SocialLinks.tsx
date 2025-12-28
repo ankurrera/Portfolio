@@ -105,7 +105,7 @@ const SocialLinks = () => {
           rel="noopener noreferrer"
           aria-label={getLabel(link.link_type)}
           onClick={() => handleLinkClick(link)}
-          className="p-3 border border-foreground/20 rounded-full hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-300 hover:scale-110"
+          className="p-3 border border-border/50 rounded-lg hover:border-border hover:bg-muted/20 transition-all"
           title={getLabel(link.link_type)}
         >
           {getIcon(link.link_type)}
