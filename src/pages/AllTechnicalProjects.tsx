@@ -224,22 +224,50 @@ const AllTechnicalProjects = () => {
                               {/* Background track */}
                               <div className="absolute inset-0 bg-muted/50 dark:bg-muted/20" />
 
-                              {/* Progress fill */}
+                              {/* Animated progress fill */}
                               <div
                                 className={cn(
-                                  "absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out",
+                                  "absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
                                   project.status?.toLowerCase() === 'paused'
                                     ? "bg-gradient-to-r from-destructive/80 to-destructive"
                                     : "bg-gradient-to-r from-accent/80 to-accent",
                                 )}
                                 style={{
-                                  width: `${project.progress || 0}%`,
+                                  width: hoveredIndex === index ? `${project.progress || 0}%` : "0%",
+                                  transitionDelay: hoveredIndex === index ? "100ms" : "0ms",
+                                }}
+                              />
+
+                              {/* Shine effect on hover */}
+                              <div
+                                className={cn(
+                                  "absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent",
+                                  "transition-transform duration-700 ease-out",
+                                  hoveredIndex === index ? "translate-x-full" : "-translate-x-full",
+                                )}
+                                style={{
+                                  transitionDelay: hoveredIndex === index ? "300ms" : "0ms",
                                 }}
                               />
                             </div>
-                            <span className="text-[10px] font-mono text-muted-foreground/60 tabular-nums min-w-[3ch]">
-                              {project.progress || 0}%
-                            </span>
+                            
+                            {/* Animated percentage reveal */}
+                            <div className="relative w-10 overflow-hidden">
+                              <span
+                                className={cn(
+                                  "block text-[10px] font-mono text-right tabular-nums min-w-[3ch]",
+                                  "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                                  hoveredIndex === index
+                                    ? "text-muted-foreground opacity-100 translate-y-0 blur-0"
+                                    : "text-muted-foreground/60 opacity-0 translate-y-2 blur-sm",
+                                )}
+                                style={{
+                                  transitionDelay: hoveredIndex === index ? "200ms" : "0ms",
+                                }}
+                              >
+                                {project.progress || 0}%
+                              </span>
+                            </div>
                           </div>
 
                           {/* Action icons */}
@@ -286,16 +314,7 @@ const AllTechnicalProjects = () => {
               </div>
             )}
 
-            {/* Footer hint */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="flex items-center gap-3 mt-12 pt-8 border-t border-border/30 dark:border-border/20"
-            >
-              <div className="w-1.5 h-1.5 rounded-full bg-accent/60 animate-pulse" />
-              <p className="text-[11px] text-muted-foreground tracking-wide">Hover to explore details</p>
-            </motion.div>
+
           </motion.div>
         </div>
       </main>

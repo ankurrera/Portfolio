@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, { message: "Name is required" }).max(100, { message: "Name must be less than 100 characters" }),
@@ -74,9 +75,12 @@ const Contact = () => {
             <h1 className="font-playfair text-4xl md:text-5xl text-foreground">
               Contact
             </h1>
-            <p className="text-foreground/80 text-sm leading-relaxed max-w-xl mx-auto">
-              For project inquiries and collaborations.
-            </p>
+            <TextGenerateEffect
+              words="For project inquiries and collaborations."
+              className="text-foreground/80 text-sm leading-relaxed max-w-xl mx-auto font-normal"
+              filter={false}
+              duration={0.5}
+            />
           </div>
 
           <div className="max-w-xl mx-auto">

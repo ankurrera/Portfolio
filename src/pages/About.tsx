@@ -25,11 +25,18 @@ import { useHeroText } from "@/hooks/useHeroText";
 import { useAboutPage } from "@/hooks/useAboutPage";
 import { Loader2 } from "lucide-react";
 import SocialLinks from "@/components/SocialLinks";
+import { VALIDATION_RULES, VALIDATION_MESSAGES } from "@/lib/validation/contactFormValidation";
 
 const contactSchema = z.object({
-  name: z.string().trim().min(1, { message: "Name is required" }).max(100, { message: "Name must be less than 100 characters" }),
-  email: z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email must be less than 255 characters" }),
-  message: z.string().trim().min(1, { message: "Message is required" }).max(1000, { message: "Message must be less than 1000 characters" }),
+  name: z.string().trim()
+    .min(VALIDATION_RULES.name.min, { message: VALIDATION_MESSAGES.name.required })
+    .max(VALIDATION_RULES.name.max, { message: VALIDATION_MESSAGES.name.tooLong }),
+  email: z.string().trim()
+    .email({ message: VALIDATION_MESSAGES.email.invalid })
+    .max(VALIDATION_RULES.email.max, { message: VALIDATION_MESSAGES.email.tooLong }),
+  message: z.string().trim()
+    .min(VALIDATION_RULES.message.min, { message: VALIDATION_MESSAGES.message.tooShort })
+    .max(VALIDATION_RULES.message.max, { message: VALIDATION_MESSAGES.message.tooLong }),
 });
 
 type ContactFormValues = z.infer<typeof contactSchema>;
@@ -58,15 +65,41 @@ const About = () => {
   const onSubmit = async (data: ContactFormValues) => {
     setIsSubmitting(true);
 
-    // Simulate form submission
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.name.trim(),
+          email: data.email.trim(),
+          message: data.message.trim(),
+          source: 'about',
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.details || result.error || 'Failed to send message');
+      }
+
       toast({
         title: "Message sent",
         description: "Thank you for your inquiry. I'll get back to you soon.",
       });
       form.reset();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   // Load education data
