@@ -13,6 +13,7 @@ import {
   VALIDATION_RULES, 
   VALIDATION_MESSAGES 
 } from '@/lib/validation/contactFormValidation';
+import { parseApiResponse } from '@/lib/utils';
 
 const MinimalContact = () => {
   const [formData, setFormData] = useState({
@@ -92,10 +93,10 @@ const MinimalContact = () => {
         }),
       });
 
-      const data = await response.json();
+      const data = await parseApiResponse(response);
 
       if (!response.ok) {
-        throw new Error(data.details || data.error || 'Failed to send message');
+        throw new Error(String(data.details || data.error || 'Failed to send message'));
       }
 
       toast({

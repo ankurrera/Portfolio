@@ -26,6 +26,7 @@ import { useAboutPage } from "@/hooks/useAboutPage";
 import { Loader2 } from "lucide-react";
 import SocialLinks from "@/components/SocialLinks";
 import { VALIDATION_RULES, VALIDATION_MESSAGES } from "@/lib/validation/contactFormValidation";
+import { parseApiResponse } from "@/lib/utils";
 
 const contactSchema = z.object({
   name: z.string().trim()
@@ -79,10 +80,10 @@ const About = () => {
         }),
       });
 
-      const result = await response.json();
+      const result = await parseApiResponse(response);
 
       if (!response.ok) {
-        throw new Error(result.details || result.error || 'Failed to send message');
+        throw new Error(String(result.details || result.error || 'Failed to send message'));
       }
 
       toast({
