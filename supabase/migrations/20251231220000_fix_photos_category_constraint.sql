@@ -24,25 +24,26 @@ BEGIN
         RAISE NOTICE 'Category column NOT NULL constraint already dropped or does not exist';
     END;
     
-    -- Set a default value for the category column
+    -- Set a default value for the category column using a valid enum value
+    -- Use 'selected' as it's the most generic category for photoshoots
     BEGIN
       ALTER TABLE public.photos 
-      ALTER COLUMN category SET DEFAULT 'photoshoot'::text::photo_category;
+      ALTER COLUMN category SET DEFAULT 'selected'::photo_category;
       
-      RAISE NOTICE 'Set default value for photos.category to photoshoot';
+      RAISE NOTICE 'Set default value for photos.category to selected';
     EXCEPTION
       WHEN OTHERS THEN
         -- If photo_category enum type doesn't exist or other error, just skip
         RAISE NOTICE 'Could not set default value for category: %', SQLERRM;
     END;
     
-    -- Update any existing NULL values to 'photoshoot'
+    -- Update any existing NULL values to 'selected'
     BEGIN
       UPDATE public.photos 
-      SET category = 'photoshoot'::text::photo_category
+      SET category = 'selected'::photo_category
       WHERE category IS NULL;
       
-      RAISE NOTICE 'Updated NULL category values to photoshoot';
+      RAISE NOTICE 'Updated NULL category values to selected';
     EXCEPTION
       WHEN OTHERS THEN
         RAISE NOTICE 'Could not update NULL categories: %', SQLERRM;

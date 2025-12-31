@@ -18,6 +18,38 @@ interface PendingFile {
   previewUrl: string;
 }
 
+// Interface for photo insert data to ensure type safety
+interface PhotoInsertData {
+  image_url: string;
+  display_order: number;
+  title: string;
+  position_x: number;
+  position_y: number;
+  width: number;
+  height: number;
+  scale: number;
+  rotation: number;
+  z_index: number;
+  is_draft: boolean;
+  caption: string | null;
+  photographer_name: string | null;
+  date_taken: string | null;
+  device_used: string | null;
+  video_thumbnail_url: string | null;
+  original_file_url: string;
+  original_width: number | null;
+  original_height: number | null;
+  original_mime_type: string;
+  original_size_bytes: number;
+  year: number | null;
+  tags: string[] | null;
+  credits: string | null;
+  camera_lens: string | null;
+  project_visibility: string;
+  external_links: any;
+  category?: string; // Optional for backward compatibility
+}
+
 export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -203,8 +235,8 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
       // Prepare external links as JSONB
       const externalLinksJson = metadata.external_links || [];
 
-      // Prepare base insert data
-      const insertData: any = {
+      // Prepare base insert data with proper typing
+      const insertData: PhotoInsertData = {
         image_url: derivativeUrl,
         display_order: nextOrder,
         title: file.name.replace(/\.[^/.]+$/, ''),
@@ -238,7 +270,8 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
 
       // Add category field for backward compatibility if the column still exists in DB
       // This handles cases where the drop category migration hasn't been applied yet
-      insertData.category = 'photoshoot';
+      // Use 'selected' as it's a valid photo_category enum value
+      insertData.category = 'selected';
 
       // Insert into photos table with all metadata and original file info
       const { error: insertError } = await supabase
