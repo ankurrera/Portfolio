@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { X, Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -50,6 +50,15 @@ type UnifiedPhotoFormProps =
 const MAX_CAPTION_LENGTH = 500;
 const MAX_CREDITS_LENGTH = 500;
 
+// Helper functions
+const processTags = (tagsString: string): string[] => {
+  return tagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+};
+
+const filterValidLinks = (links: Array<{ title: string; url: string }>): Array<{ title: string; url: string }> => {
+  return links.filter(link => link.title && link.url);
+};
+
 export default function UnifiedPhotoForm({
   mode,
   initialData = {},
@@ -91,24 +100,30 @@ export default function UnifiedPhotoForm({
     }
   }, [mode, initialData]);
 
-  // Notify parent of changes (for add mode)
+  // Notify parent of changes (for add mode) - debounced via useMemo
+  const formData = useMemo(() => {
+    if (mode !== 'add') return null;
+    
+    const tagArray = processTags(tags);
+    return {
+      caption: caption || undefined,
+      photographer_name: photographerName || undefined,
+      date_taken: dateTaken || undefined,
+      device_used: deviceUsed || undefined,
+      year: year || undefined,
+      tags: tagArray.length > 0 ? tagArray : undefined,
+      credits: credits || undefined,
+      camera_lens: cameraLens || undefined,
+      project_visibility: projectVisibility,
+      external_links: filterValidLinks(externalLinks),
+    };
+  }, [mode, caption, photographerName, dateTaken, deviceUsed, year, tags, credits, cameraLens, projectVisibility, externalLinks]);
+
   useEffect(() => {
-    if (mode === 'add' && onChange) {
-      const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
-      onChange({
-        caption: caption || undefined,
-        photographer_name: photographerName || undefined,
-        date_taken: dateTaken || undefined,
-        device_used: deviceUsed || undefined,
-        year: year || undefined,
-        tags: tagArray.length > 0 ? tagArray : undefined,
-        credits: credits || undefined,
-        camera_lens: cameraLens || undefined,
-        project_visibility: projectVisibility,
-        external_links: externalLinks.filter(link => link.title && link.url), // Require both title and URL
-      });
+    if (formData && onChange) {
+      onChange(formData);
     }
-  }, [mode, onChange, caption, photographerName, dateTaken, deviceUsed, year, tags, credits, cameraLens, projectVisibility, externalLinks]);
+  }, [formData, onChange]);
 
   // Validate fields
   const validate = (): boolean => {
@@ -156,7 +171,7 @@ export default function UnifiedPhotoForm({
     setIsSaving(true);
 
     try {
-      const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+      const tagArray = processTags(tags);
       
       const updates = {
         caption: caption.trim() || null,
@@ -168,7 +183,7 @@ export default function UnifiedPhotoForm({
         credits: credits.trim() || null,
         camera_lens: cameraLens.trim() || null,
         project_visibility: projectVisibility,
-        external_links: externalLinks.filter(link => link.title && link.url), // Require both title and URL
+        external_links: filterValidLinks(externalLinks),
       };
 
       const { error } = await supabase

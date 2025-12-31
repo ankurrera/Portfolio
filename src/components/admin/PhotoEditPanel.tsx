@@ -10,26 +10,24 @@ interface PhotoEditPanelProps {
   onUpdate: (id: string, updates: Partial<PhotoLayoutData>) => void;
 }
 
-export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPanelProps) {
-  // Helper to safely parse external links
-  const parseExternalLinks = (links: any): Array<{ title: string; url: string }> => {
-    if (!links) return [];
-    if (!Array.isArray(links)) return [];
-    
-    return links.filter(
-      (link): link is { title: string; url: string } => 
-        typeof link === 'object' && 
-        link !== null && 
-        'title' in link && 
-        'url' in link &&
-        (typeof link.title === 'string' || link.title === null) &&
-        (typeof link.url === 'string' || link.url === null)
-    ).map(link => ({
+// Helper to safely parse and validate external links
+const parseExternalLinks = (links: unknown): Array<{ title: string; url: string }> => {
+  if (!Array.isArray(links)) return [];
+  
+  return links
+    .filter((link): link is { title: string; url: string } => {
+      if (typeof link !== 'object' || link === null) return false;
+      const hasTitle = 'title' in link && (typeof link.title === 'string' || link.title === null);
+      const hasUrl = 'url' in link && (typeof link.url === 'string' || link.url === null);
+      return hasTitle && hasUrl;
+    })
+    .map(link => ({
       title: link.title || '',
       url: link.url || ''
     }));
-  };
+};
 
+export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPanelProps) {
   // Prepare initial data from photo
   const initialData = {
     caption: photo.caption || undefined,
