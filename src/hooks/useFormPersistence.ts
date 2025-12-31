@@ -93,23 +93,26 @@ export function useFormPersistence<T extends Record<string, any>>({
           onRestore(parsed);
         }
         setDraftRestored(true);
+        // Mark as having unsaved changes since there's a draft in localStorage
+        // This ensures navigation protection works for restored drafts
         setHasUnsavedChanges(true);
         restoredRef.current = true;
       } else {
-        // Store initial data for comparison
-        initialDataRef.current = data;
+        // No stored draft, mark as initialized
+        restoredRef.current = true;
       }
     } catch (error) {
       console.error('Failed to restore draft:', error);
       // Clear corrupted data
       localStorage.removeItem(key);
+      restoredRef.current = true;
     }
   }, [enabled, key, onRestore]);
 
   // Save draft with debouncing
   useEffect(() => {
+    // Skip save on initial mount before restoration check completes
     if (!enabled || !restoredRef.current) {
-      restoredRef.current = true;
       return;
     }
 
@@ -125,6 +128,7 @@ export function useFormPersistence<T extends Record<string, any>>({
     timeoutRef.current = setTimeout(() => {
       try {
         localStorage.setItem(key, JSON.stringify(data));
+        // Mark as having unsaved changes since we have a draft in localStorage
         setHasUnsavedChanges(true);
       } catch (error) {
         console.error('Failed to save draft:', error);
