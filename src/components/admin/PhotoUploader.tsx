@@ -18,6 +18,42 @@ interface PendingFile {
   previewUrl: string;
 }
 
+// Interface for photo insert data to ensure type safety
+// Note: category is optional for backward compatibility with schemas where it may not exist
+interface PhotoInsertData {
+  image_url: string;
+  display_order: number;
+  title: string;
+  position_x: number;
+  position_y: number;
+  width: number;
+  height: number;
+  scale: number;
+  rotation: number;
+  z_index: number;
+  is_draft: boolean;
+  caption: string | null;
+  photographer_name: string | null;
+  date_taken: string | null;
+  device_used: string | null;
+  video_thumbnail_url: string | null;
+  original_file_url: string;
+  original_width: number | null;
+  original_height: number | null;
+  original_mime_type: string;
+  original_size_bytes: number;
+  year: number | null;
+  tags: string[] | null;
+  credits: string | null;
+  camera_lens: string | null;
+  project_visibility: string;
+  external_links: Record<string, unknown>[] | null;
+  // Category is optional to support both:
+  // 1. Old schema where category column exists with photo_category enum ('selected' | 'commissioned' | 'editorial' | 'personal' | 'artistic')
+  // 2. New schema where category column has been dropped
+  category?: 'selected' | 'commissioned' | 'editorial' | 'personal' | 'artistic';
+}
+
 export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -40,6 +76,26 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
     setMetadata({});
     toast.success('Draft discarded');
   }, [clearDraft]);
+
+  // Helper function to extract storage path from Supabase public URL
+  const extractStoragePath = (url: string): string | null => {
+    try {
+      const urlObj = new URL(url);
+      // Extract path after /storage/v1/object/public/photos/
+      const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/photos\/(.+)$/);
+      if (pathMatch && pathMatch[1]) {
+        return pathMatch[1];
+      }
+      // Fallback: try simple split if URL format is different
+      const parts = url.split('/photos/');
+      return parts.length > 1 ? parts[parts.length - 1] : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // PostgreSQL constraint error codes to detect
+  const CONSTRAINT_ERROR_CODES = ['23502', '23503', '23505'] as const;
 
   // Generate web-optimized derivative with aspect ratio preservation
   const generateDerivative = useCallback(async (file: File, originalWidth: number, originalHeight: number): Promise<Blob> => {
@@ -203,47 +259,101 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
       // Prepare external links as JSONB
       const externalLinksJson = metadata.external_links || [];
 
+      // Prepare base insert data with proper typing
+      const insertData: PhotoInsertData = {
+        image_url: derivativeUrl,
+        display_order: nextOrder,
+        title: file.name.replace(/\.[^/.]+$/, ''),
+        position_x: initialX,
+        position_y: initialY,
+        width: initialWidth,
+        height: initialHeight,
+        scale: 1.0,
+        rotation: 0,
+        z_index: nextZIndex,
+        is_draft: false,
+        caption: metadata.caption || null,
+        photographer_name: metadata.photographer_name || null,
+        date_taken: metadata.date_taken || null,
+        device_used: metadata.device_used || null,
+        video_thumbnail_url: thumbnailUrl,
+        // Original file tracking
+        original_file_url: originalUrl,
+        original_width: originalWidth,
+        original_height: originalHeight,
+        original_mime_type: file.type,
+        original_size_bytes: file.size,
+        // Extended metadata
+        year: metadata.year || null,
+        tags: metadata.tags || null,
+        credits: metadata.credits || null,
+        camera_lens: metadata.camera_lens || null,
+        project_visibility: metadata.project_visibility || 'public',
+        external_links: externalLinksJson,
+      };
+
+      // Add category field for backward compatibility if the column still exists in DB
+      // This handles cases where the drop category migration hasn't been applied yet
+      // Use 'selected' as it's a valid photo_category enum value
+      insertData.category = 'selected';
+
       // Insert into photos table with all metadata and original file info
       const { error: insertError } = await supabase
         .from('photos')
-        .insert({
-          image_url: derivativeUrl,
-          display_order: nextOrder,
-          title: file.name.replace(/\.[^/.]+$/, ''),
-          position_x: initialX,
-          position_y: initialY,
-          width: initialWidth,
-          height: initialHeight,
-          scale: 1.0,
-          rotation: 0,
-          z_index: nextZIndex,
-          is_draft: false,
-          caption: metadata.caption || null,
-          photographer_name: metadata.photographer_name || null,
-          date_taken: metadata.date_taken || null,
-          device_used: metadata.device_used || null,
-          video_thumbnail_url: thumbnailUrl,
-          // Original file tracking
-          original_file_url: originalUrl,
-          original_width: originalWidth,
-          original_height: originalHeight,
-          original_mime_type: file.type,
-          original_size_bytes: file.size,
-          // Extended metadata
-          year: metadata.year || null,
-          tags: metadata.tags || null,
-          credits: metadata.credits || null,
-          camera_lens: metadata.camera_lens || null,
-          project_visibility: metadata.project_visibility || 'public',
-          external_links: externalLinksJson,
-        });
+        .insert(insertData);
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        // If database insert fails, try to clean up uploaded files to prevent orphaned storage
+        console.error('Database insert failed, attempting to clean up uploaded files:', insertError);
+        
+        try {
+          // Delete uploaded files from storage
+          const filesToDelete: string[] = [];
+          
+          if (isVideo) {
+            // Extract video file path from URL
+            const videoPath = extractStoragePath(originalUrl);
+            if (videoPath) filesToDelete.push(videoPath);
+          } else {
+            // Extract original and derivative paths
+            const origPath = extractStoragePath(originalUrl);
+            const derivPath = extractStoragePath(derivativeUrl);
+            if (origPath) filesToDelete.push(origPath);
+            if (derivPath) filesToDelete.push(derivPath);
+          }
+          
+          if (filesToDelete.length > 0) {
+            await supabase.storage.from('photos').remove(filesToDelete);
+            console.log('Cleaned up uploaded files after database error');
+          }
+        } catch (cleanupError) {
+          console.error('Failed to clean up uploaded files:', cleanupError);
+          // Don't throw cleanup error, throw original insert error
+        }
+        
+        throw insertError;
+      }
 
       return file.name;
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
       console.error('Upload error:', errorMessage);
+      
+      // Check if error is a database constraint violation
+      // Type guard for checking if error has a code property of expected type
+      const isErrorWithCode = (err: unknown): err is { code: string } => {
+        return err !== null && typeof err === 'object' && 'code' in err && typeof (err as any).code === 'string';
+      };
+      
+      const isConstraintError = 
+        (isErrorWithCode(error) && CONSTRAINT_ERROR_CODES.includes(error.code as typeof CONSTRAINT_ERROR_CODES[number])) ||
+        CONSTRAINT_ERROR_CODES.some(code => errorMessage.includes(code));
+      
+      // Provide more specific error message for database constraint errors
+      if (isConstraintError) {
+        throw new Error(`Database constraint error: ${errorMessage}. Photo uploaded to storage but metadata save failed. Please contact administrator.`);
+      }
+      
       throw new Error(errorMessage);
     }
   }, [generateDerivative, getImageDimensions, metadata]);
@@ -278,6 +388,9 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
 
     setUploading(true);
     setUploadProgress([]);
+    
+    let successCount = 0;
+    let failCount = 0;
 
     for (const { file } of pendingFiles) {
       try {
@@ -286,29 +399,41 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
         setUploadProgress(prev => 
           prev.map(p => p === `Uploading ${file.name}...` ? `✓ ${file.name}` : p)
         );
+        successCount++;
       } catch (error) {
         const errorMessage = formatSupabaseError(error);
         setUploadProgress(prev => 
           prev.map(p => p === `Uploading ${file.name}...` ? `✗ ${file.name}: ${errorMessage}` : p)
         );
         toast.error(`Failed to upload ${file.name}: ${errorMessage}`);
+        failCount++;
       }
     }
 
     setUploading(false);
-    toast.success(`Uploaded ${pendingFiles.length} file(s)`);
+    
+    // Show appropriate success/failure message
+    if (successCount > 0 && failCount === 0) {
+      toast.success(`Successfully uploaded ${successCount} file(s)`);
+    } else if (successCount > 0 && failCount > 0) {
+      toast.warning(`Uploaded ${successCount} file(s), ${failCount} failed. Check details above.`);
+    } else {
+      toast.error(`All uploads failed. Please check the errors and try again.`);
+    }
     
     // Clean up preview URLs
     pendingFiles.forEach(({ previewUrl }) => URL.revokeObjectURL(previewUrl));
     
     // Clear draft after successful upload
-    clearDraft();
-    
-    // Reset everything after successful upload
-    setPendingFiles([]);
-    setMetadata({});
-    
-    onUploadComplete();
+    if (successCount > 0) {
+      clearDraft();
+      
+      // Reset everything after successful upload
+      setPendingFiles([]);
+      setMetadata({});
+      
+      onUploadComplete();
+    }
   }, [pendingFiles, uploadFile, clearDraft, onUploadComplete]);
 
   const handleRemovePendingFile = useCallback((index: number) => {
