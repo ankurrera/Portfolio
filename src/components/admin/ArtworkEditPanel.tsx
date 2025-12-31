@@ -1,13 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
-import { X, Loader2, ImagePlus } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { formatSupabaseError } from '@/lib/utils';
-import { ArtworkData, ArtworkMetadata } from '@/types/artwork';
-import ArtworkMetadataForm from './ArtworkMetadataForm';
+import { ArtworkData } from '@/types/artwork';
+import ArtworkMetadataForm, { ArtworkMetadata } from './ArtworkMetadataForm';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 
 interface ArtworkEditPanelProps {
   artwork: ArtworkData;
@@ -16,6 +16,10 @@ interface ArtworkEditPanelProps {
 }
 
 export default function ArtworkEditPanel({ artwork, onClose, onUpdate }: ArtworkEditPanelProps) {
+  const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Track form changes internally using the same fields as UnifiedArtworkForm
   const [metadata, setMetadata] = useState<ArtworkMetadata>({
     title: artwork.title,
     creation_date: artwork.creation_date || undefined,
@@ -33,8 +37,6 @@ export default function ArtworkEditPanel({ artwork, onClose, onUpdate }: Artwork
     external_link: artwork.external_link || undefined,
   });
   const [isPublished, setIsPublished] = useState(artwork.is_published);
-  const [isSaving, setIsSaving] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Validate fields
   const validate = (): boolean => {
@@ -134,7 +136,7 @@ export default function ArtworkEditPanel({ artwork, onClose, onUpdate }: Artwork
   return (
     <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-background border-l shadow-lg z-50 overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 bg-background border-b p-4 flex items-center justify-between">
+      <div className="sticky top-0 bg-background border-b p-4 flex items-center justify-between z-10">
         <h2 className="text-lg font-semibold">Edit Artwork</h2>
         <Button
           size="icon"
@@ -153,10 +155,14 @@ export default function ArtworkEditPanel({ artwork, onClose, onUpdate }: Artwork
           alt={artwork.title || 'Artwork'}
           className="w-full h-48 object-contain rounded"
         />
+        <p className="text-xs text-muted-foreground mt-2 text-center">
+          Current image (cannot be changed in edit mode)
+        </p>
       </div>
 
-      {/* Form */}
-      <div className="p-4 space-y-6 max-h-[calc(100vh-20rem)] overflow-y-auto">
+      {/* Form - Using same component and field order as Add mode */}
+      <div className="p-4 space-y-6">
+        {/* Note: NO DRAFT PERSISTENCE IN EDIT MODE - loads from database only */}
         <ArtworkMetadataForm 
           metadata={metadata} 
           onChange={setMetadata}
@@ -164,7 +170,7 @@ export default function ArtworkEditPanel({ artwork, onClose, onUpdate }: Artwork
         />
 
         {/* Published Toggle */}
-        <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+        <div className="flex items-center justify-between p-4 border rounded-lg">
           <div>
             <Label htmlFor="is-published-edit" className="text-sm font-medium">
               Published
@@ -201,6 +207,9 @@ export default function ArtworkEditPanel({ artwork, onClose, onUpdate }: Artwork
                 +{artwork.process_images.length - 4} more
               </p>
             )}
+            <p className="text-xs text-muted-foreground">
+              Process images are read-only in edit mode
+            </p>
           </div>
         )}
 
@@ -251,3 +260,4 @@ export default function ArtworkEditPanel({ artwork, onClose, onUpdate }: Artwork
     </div>
   );
 }
+
