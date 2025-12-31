@@ -23,16 +23,28 @@ export interface PhotoFormData {
   external_links?: Array<{ title: string; url: string }>;
 }
 
-interface UnifiedPhotoFormProps {
-  mode: 'add' | 'edit';
-  initialData?: PhotoFormData;
-  photo?: PhotoLayoutData; // Required for edit mode
-  onClose?: () => void;
-  onUpdate?: (id: string, updates: Partial<PhotoLayoutData>) => void;
-  onChange?: (data: PhotoFormData) => void;
-  showActions?: boolean; // Show save/cancel buttons (for edit mode)
-  disabled?: boolean;
-}
+// Discriminated union for mode-specific props
+type UnifiedPhotoFormProps = 
+  | {
+      mode: 'add';
+      initialData?: PhotoFormData;
+      photo?: never;
+      onClose?: never;
+      onUpdate?: never;
+      onChange?: (data: PhotoFormData) => void;
+      showActions?: false;
+      disabled?: boolean;
+    }
+  | {
+      mode: 'edit';
+      initialData?: PhotoFormData;
+      photo: PhotoLayoutData; // Required for edit mode
+      onClose: () => void;
+      onUpdate: (id: string, updates: Partial<PhotoLayoutData>) => void;
+      onChange?: never;
+      showActions?: boolean;
+      disabled?: boolean;
+    };
 
 // Validation constants
 const MAX_CAPTION_LENGTH = 500;
@@ -93,7 +105,7 @@ export default function UnifiedPhotoForm({
         credits: credits || undefined,
         camera_lens: cameraLens || undefined,
         project_visibility: projectVisibility,
-        external_links: externalLinks.filter(link => link.title || link.url),
+        external_links: externalLinks.filter(link => link.title && link.url), // Require both title and URL
       });
     }
   }, [mode, onChange, caption, photographerName, dateTaken, deviceUsed, year, tags, credits, cameraLens, projectVisibility, externalLinks]);
@@ -136,7 +148,8 @@ export default function UnifiedPhotoForm({
       return;
     }
 
-    if (mode !== 'edit' || !photo || !onUpdate) {
+    if (mode !== 'edit') {
+      console.error('handleSave called in non-edit mode');
       return;
     }
 
@@ -155,7 +168,7 @@ export default function UnifiedPhotoForm({
         credits: credits.trim() || null,
         camera_lens: cameraLens.trim() || null,
         project_visibility: projectVisibility,
-        external_links: externalLinks.filter(link => link.title || link.url),
+        external_links: externalLinks.filter(link => link.title && link.url), // Require both title and URL
       };
 
       const { error } = await supabase
@@ -169,7 +182,7 @@ export default function UnifiedPhotoForm({
       onUpdate(photo.id, updates);
 
       toast.success('Changes saved successfully');
-      if (onClose) onClose();
+      onClose();
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
       console.error('Save error:', errorMessage);
@@ -180,8 +193,10 @@ export default function UnifiedPhotoForm({
   };
 
   const handleCancel = useCallback(() => {
-    if (onClose) onClose();
-  }, [onClose]);
+    if (mode === 'edit') {
+      onClose();
+    }
+  }, [mode, onClose]);
 
   // Handle Escape key
   useEffect(() => {

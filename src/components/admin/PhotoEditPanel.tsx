@@ -11,6 +11,25 @@ interface PhotoEditPanelProps {
 }
 
 export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPanelProps) {
+  // Helper to safely parse external links
+  const parseExternalLinks = (links: any): Array<{ title: string; url: string }> => {
+    if (!links) return [];
+    if (!Array.isArray(links)) return [];
+    
+    return links.filter(
+      (link): link is { title: string; url: string } => 
+        typeof link === 'object' && 
+        link !== null && 
+        'title' in link && 
+        'url' in link &&
+        (typeof link.title === 'string' || link.title === null) &&
+        (typeof link.url === 'string' || link.url === null)
+    ).map(link => ({
+      title: link.title || '',
+      url: link.url || ''
+    }));
+  };
+
   // Prepare initial data from photo
   const initialData = {
     caption: photo.caption || undefined,
@@ -22,9 +41,7 @@ export default function PhotoEditPanel({ photo, onClose, onUpdate }: PhotoEditPa
     credits: photo.credits || undefined,
     camera_lens: photo.camera_lens || undefined,
     project_visibility: photo.project_visibility || 'public',
-    external_links: Array.isArray(photo.external_links) 
-      ? photo.external_links as Array<{ title: string; url: string }> 
-      : [],
+    external_links: parseExternalLinks(photo.external_links),
   };
 
   return (
