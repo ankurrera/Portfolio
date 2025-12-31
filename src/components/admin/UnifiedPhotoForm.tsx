@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { X, Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -56,7 +56,7 @@ const processTags = (tagsString: string): string[] => {
 };
 
 const filterValidLinks = (links: Array<{ title: string; url: string }>): Array<{ title: string; url: string }> => {
-  return links.filter(link => link.title && link.url);
+  return links.filter(link => link.title.trim() && link.url.trim());
 };
 
 export default function UnifiedPhotoForm({
@@ -85,18 +85,29 @@ export default function UnifiedPhotoForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Sync local state with initialData when it changes (for edit mode)
+  // Use individual field dependencies to avoid unnecessary re-renders
+  const prevInitialDataRef = useRef<PhotoFormData | null>(null);
+  
   useEffect(() => {
     if (mode === 'edit' && initialData) {
-      setCaption(initialData.caption || '');
-      setPhotographerName(initialData.photographer_name || '');
-      setDateTaken(initialData.date_taken || '');
-      setDeviceUsed(initialData.device_used || '');
-      setYear(initialData.year || '');
-      setTags(initialData.tags?.join(', ') || '');
-      setCredits(initialData.credits || '');
-      setCameraLens(initialData.camera_lens || '');
-      setProjectVisibility(initialData.project_visibility || 'public');
-      setExternalLinks(initialData.external_links || []);
+      // Only update if initialData has actually changed
+      const hasChanged = !prevInitialDataRef.current || 
+        JSON.stringify(prevInitialDataRef.current) !== JSON.stringify(initialData);
+      
+      if (hasChanged) {
+        setCaption(initialData.caption || '');
+        setPhotographerName(initialData.photographer_name || '');
+        setDateTaken(initialData.date_taken || '');
+        setDeviceUsed(initialData.device_used || '');
+        setYear(initialData.year || '');
+        setTags(initialData.tags?.join(', ') || '');
+        setCredits(initialData.credits || '');
+        setCameraLens(initialData.camera_lens || '');
+        setProjectVisibility(initialData.project_visibility || 'public');
+        setExternalLinks(initialData.external_links || []);
+        
+        prevInitialDataRef.current = initialData;
+      }
     }
   }, [mode, initialData]);
 

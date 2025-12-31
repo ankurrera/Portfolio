@@ -17,13 +17,14 @@ const parseExternalLinks = (links: unknown): Array<{ title: string; url: string 
   return links
     .filter((link): link is { title: string; url: string } => {
       if (typeof link !== 'object' || link === null) return false;
-      const hasTitle = 'title' in link && (typeof link.title === 'string' || link.title === null);
-      const hasUrl = 'url' in link && (typeof link.url === 'string' || link.url === null);
+      // Only accept links where both title and url are strings (not null)
+      const hasTitle = 'title' in link && typeof link.title === 'string';
+      const hasUrl = 'url' in link && typeof link.url === 'string';
       return hasTitle && hasUrl;
     })
     .map(link => ({
-      title: link.title || '',
-      url: link.url || ''
+      title: link.title,
+      url: link.url
     }));
 };
 
