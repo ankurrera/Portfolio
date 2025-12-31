@@ -10,8 +10,6 @@ import DraggablePhoto from './DraggablePhoto';
 import EditorToolbar from './EditorToolbar';
 import PhotoUploader from './PhotoUploader';
 import PhotoEditPanel from './PhotoEditPanel';
-import { useFormPersistence } from '@/hooks/useFormPersistence';
-import { DraftIndicator } from '@/components/admin/DraftIndicator';
 import {
   Dialog,
   DialogContent,
@@ -30,7 +28,6 @@ const DESKTOP_CANVAS_WIDTH = 1600;
 export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
   const [photos, setPhotos] = useState<PhotoLayoutData[]>([]);
   const [mode, setMode] = useState<EditorMode>('edit');
-  const [devicePreview, setDevicePreview] = useState<DevicePreview>('desktop');
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -50,57 +47,7 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Create form data object for draft persistence
-  // Only persist layout data (positions, sizes, rotations), not full photo data
-  const draftData = useMemo(() => ({
-    photos: photos.map(p => ({
-      id: p.id,
-      position_x: p.position_x,
-      position_y: p.position_y,
-      width: p.width,
-      height: p.height,
-      scale: p.scale,
-      rotation: p.rotation,
-      z_index: p.z_index,
-    }))
-  }), [photos]);
-
-  // Use form persistence hook - only enable after initial load
-  const { draftRestored, isSaving: isDraftSaving, clearDraft } = useFormPersistence({
-    key: 'admin:draft:photoshoots',
-    data: draftData,
-    onRestore: (restored) => {
-      // Merge restored layout data with fetched photo data
-      if (restored.photos && Array.isArray(restored.photos) && restored.photos.length > 0) {
-        setPhotos(prevPhotos => {
-          return prevPhotos.map(photo => {
-            const restoredPhoto = restored.photos.find((p: any) => p.id === photo.id);
-            if (restoredPhoto) {
-              return {
-                ...photo,
-                position_x: restoredPhoto.position_x,
-                position_y: restoredPhoto.position_y,
-                width: restoredPhoto.width,
-                height: restoredPhoto.height,
-                scale: restoredPhoto.scale,
-                rotation: restoredPhoto.rotation,
-                z_index: restoredPhoto.z_index,
-              };
-            }
-            return photo;
-          });
-        });
-      }
-    },
-    enabled: !loading && photos.length > 0, // Only enable after photos are loaded
-  });
-
-  const handleDiscardDraft = () => {
-    clearDraft();
-    // Reload photos from database
-    fetchPhotos(true);
-    toast.success('Draft discarded');
-  };
+  // Draft persistence DISABLED for admin pages - no local storage saving
 
   const fetchPhotos = useCallback(async (isRefresh = false) => {
     // Cancel any in-flight requests
@@ -198,27 +145,6 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
       }
     };
   }, [fetchPhotos]);
-
-  // Handle device preview changes to ensure layout recalculation
-  useEffect(() => {
-    // Force a re-render of draggable components when device preview changes
-    // This ensures motion library recalculates positions and placeholders
-    let frame: number | null = null;
-    
-    if (devicePreview !== 'desktop') {
-      // Use requestAnimationFrame for better performance
-      frame = requestAnimationFrame(() => {
-        // Trigger layout recalculation by dispatching resize event
-        window.dispatchEvent(new Event('resize'));
-      });
-    }
-    
-    return () => {
-      if (frame !== null) {
-        cancelAnimationFrame(frame);
-      }
-    };
-  }, [devicePreview]);
 
   // Add to history - must be declared before handlers that use it
   const addToHistory = useCallback((newPhotos: PhotoLayoutData[], description?: string) => {
@@ -386,8 +312,6 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
       }
 
       setHasUnsavedChanges(false);
-      // Clear draft after successful save
-      clearDraft();
       toast.success('Layout saved successfully');
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
@@ -421,8 +345,6 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
       }
 
       setHasUnsavedChanges(false);
-      // Clear draft after successful publish
-      clearDraft();
       toast.success('Layout published successfully! All photos are now visible to the public.');
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
@@ -443,32 +365,6 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
     fetchPhotos();
   };
 
-  // Get device-specific width
-  const getDeviceWidth = () => {
-    switch (devicePreview) {
-      case 'mobile':
-        return '420px';
-      case 'tablet':
-        return '900px';
-      case 'desktop':
-      default:
-        return '100%';
-    }
-  };
-
-  // Get device max-width for the frame
-  const getDeviceMaxWidth = () => {
-    switch (devicePreview) {
-      case 'mobile':
-        return 420;
-      case 'tablet':
-        return 900;
-      case 'desktop':
-      default:
-        return null;
-    }
-  };
-
   // Calculate canvas height dynamically based on photo positions
   const calculateCanvasHeight = useCallback(() => {
     if (photos.length === 0) return 600;
@@ -483,24 +379,8 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
     return Math.max(600, maxExtent + 300);
   }, [photos]);
 
-  // Calculate scale factor for device preview
-  // Desktop baseline is DESKTOP_CANVAS_WIDTH, we scale down for smaller devices
-  const getDeviceScaleFactor = useCallback(() => {
-    switch (devicePreview) {
-      case 'mobile':
-        // 420px / 1600px = 0.2625
-        return 420 / DESKTOP_CANVAS_WIDTH;
-      case 'tablet':
-        // 900px / 1600px = 0.5625
-        return 900 / DESKTOP_CANVAS_WIDTH;
-      case 'desktop':
-      default:
-        return 1; // No scaling
-    }
-  }, [devicePreview]);
-
   const canvasHeight = calculateCanvasHeight();
-  const scaleFactor = getDeviceScaleFactor();
+  const scaleFactor = 1; // Desktop only, no scaling
   
   // Find the photo being edited for the edit panel
   const editingPhoto = editingPhotoId ? photos.find(p => p.id === editingPhotoId) : null;
@@ -509,14 +389,12 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
     <>
       <EditorToolbar
         mode={mode}
-        devicePreview={devicePreview}
         snapToGrid={snapToGrid}
         canUndo={historyIndex > 0}
         canRedo={historyIndex < history.length - 1}
         hasChanges={hasUnsavedChanges}
         isRefreshing={isRefreshing}
         onModeChange={setMode}
-        onDevicePreviewChange={setDevicePreview}
         onSnapToGridChange={setSnapToGrid}
         onUndo={handleUndo}
         onRedo={handleRedo}
@@ -528,40 +406,17 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
         onSignOut={onSignOut}
       />
 
-      {/* Draft indicator - positioned below toolbar */}
-      <div className="fixed top-20 right-4 z-50">
-        <DraftIndicator 
-          draftRestored={draftRestored}
-          isSaving={isDraftSaving}
-          onDiscard={handleDiscardDraft}
-        />
-      </div>
-
       <div className="flex flex-col min-h-screen pt-24 bg-background overflow-y-auto overflow-x-hidden">
         {/* Outer container for centering */}
         <div className="flex-1 w-full flex justify-center px-4">
-          {/* Device Frame - with visible dashed border for tablet/mobile */}
+          {/* Device Frame - Desktop only */}
           <div 
             className="flex-1 transition-all duration-300 flex flex-col relative"
             style={{ 
-              width: getDeviceWidth(),
-              maxWidth: devicePreview === 'desktop' ? `${DESKTOP_CANVAS_WIDTH}px` : getDeviceWidth(),
+              width: '100%',
+              maxWidth: `${DESKTOP_CANVAS_WIDTH}px`,
             }}
           >
-            {/* Dashed device outline for tablet/mobile previews */}
-            {devicePreview !== 'desktop' && (
-              <>
-                <div 
-                  className="absolute inset-0 pointer-events-none z-10 border-2 border-dashed border-muted-foreground/50 rounded"
-                  aria-label={`${devicePreview} preview frame`}
-                />
-                {/* Device preview label */}
-                <div className="absolute top-2 right-2 z-20 px-3 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-sm pointer-events-none">
-                  {devicePreview === 'tablet' ? 'Tablet Preview (900px)' : 'Mobile Preview (420px)'}
-                </div>
-              </>
-            )}
-
             {/* Device Inner - constrained content area */}
             <div className="device-inner flex-1 flex flex-col relative">
               {/* Exact replica of public view */}
@@ -574,8 +429,8 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
                 <div 
                   className="gallery-wrapper-outer relative mx-auto"
                   style={{
-                    width: devicePreview === 'desktop' ? '100%' : getDeviceWidth(),
-                    maxWidth: devicePreview === 'desktop' ? `${DESKTOP_CANVAS_WIDTH}px` : 'none',
+                    width: '100%',
+                    maxWidth: `${DESKTOP_CANVAS_WIDTH}px`,
                   }}
                 >
                   <div 
