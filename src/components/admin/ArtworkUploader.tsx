@@ -1,29 +1,76 @@
-import { useState, useCallback } from 'react';
-import { Upload, X, Loader2, ImagePlus } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { Upload, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { formatSupabaseError } from '@/lib/utils';
 import { toast } from 'sonner';
-import ArtworkMetadataForm, { ArtworkMetadata } from './ArtworkMetadataForm';
+import UnifiedArtworkForm, { UnifiedArtworkFormData } from './UnifiedArtworkForm';
+import { useFormDraft } from '@/hooks/useFormDraft';
+import { DraftIndicator } from './DraftIndicator';
 
 interface ArtworkUploaderProps {
   onUploadComplete: () => void;
+  onCancel?: () => void;
 }
 
-export default function ArtworkUploader({ onUploadComplete }: ArtworkUploaderProps) {
-  const [isDragging, setIsDragging] = useState(false);
+export default function ArtworkUploader({ onUploadComplete, onCancel }: ArtworkUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string[]>([]);
-  const [metadata, setMetadata] = useState<ArtworkMetadata>({
-    copyright: '© Ankur Bag.',
-    dimension_unit: 'cm',
+  const [formData, setFormData] = useState<UnifiedArtworkFormData>({
+    metadata: {
+      copyright: '© Ankur Bag.',
+      dimension_unit: 'cm',
+    },
+    primaryImage: null,
+    processImages: [],
+    isPublished: false,
   });
-  const [primaryImage, setPrimaryImage] = useState<File | null>(null);
-  const [processImages, setProcessImages] = useState<File[]>([]);
-  const [isPublished, setIsPublished] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Form draft persistence - only save form data, not files
+  const draftData = {
+    metadata: formData.metadata,
+    isPublished: formData.isPublished,
+    // Note: We don't persist files, only metadata
+  };
+
+  const { draftRestored, isSaving: isDraftSaving, clearDraft } = useFormDraft({
+    key: 'artwork_add_form_draft',
+    data: draftData,
+    onRestore: (restored) => {
+      setFormData(prev => ({
+        ...prev,
+        metadata: restored.metadata || prev.metadata,
+        isPublished: restored.isPublished || prev.isPublished,
+      }));
+    },
+    enabled: !uploading, // Disable during upload
+  });
+
+  const handleFormChange = useCallback((data: UnifiedArtworkFormData) => {
+    setFormData(data);
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    if (onCancel) {
+      onCancel();
+    }
+  }, [onCancel]);
+
+  const handleDiscardDraft = useCallback(() => {
+    clearDraft();
+    setFormData({
+      metadata: {
+        copyright: '© Ankur Bag.',
+        dimension_unit: 'cm',
+      },
+      primaryImage: null,
+      processImages: [],
+      isPublished: false,
+    });
+    setErrors({});
+    toast.success('Draft discarded');
+  }, [clearDraft]);
 
   // Generate web-optimized derivative with aspect ratio preservation
   const generateDerivative = useCallback(async (file: File, originalWidth: number, originalHeight: number): Promise<Blob> => {
@@ -73,6 +120,7 @@ export default function ArtworkUploader({ onUploadComplete }: ArtworkUploaderPro
   const uploadArtwork = useCallback(async () => {
     // Validate form inline
     const newErrors: Record<string, string> = {};
+    const { metadata, primaryImage, processImages, isPublished } = formData;
 
     if (!metadata.title?.trim()) {
       newErrors.title = 'Artwork title is required';
@@ -280,14 +328,19 @@ export default function ArtworkUploader({ onUploadComplete }: ArtworkUploaderPro
       setUploadProgress(prev => [...prev, '✓ Artwork saved successfully']);
       toast.success('Artwork uploaded successfully');
       
+      // Clear draft after successful upload
+      clearDraft();
+      
       // Reset form
-      setMetadata({
-        copyright: '© Ankur Bag.',
-        dimension_unit: 'cm',
+      setFormData({
+        metadata: {
+          copyright: '© Ankur Bag.',
+          dimension_unit: 'cm',
+        },
+        primaryImage: null,
+        processImages: [],
+        isPublished: false,
       });
-      setPrimaryImage(null);
-      setProcessImages([]);
-      setIsPublished(false);
       setErrors({});
       
       onUploadComplete();
@@ -299,185 +352,58 @@ export default function ArtworkUploader({ onUploadComplete }: ArtworkUploaderPro
     } finally {
       setUploading(false);
     }
-  }, [metadata, primaryImage, processImages, isPublished, generateDerivative, getImageDimensions, onUploadComplete]);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      if (file.type.startsWith('image/')) {
-        setPrimaryImage(file);
-        toast.success(`Primary image selected: ${file.name}`);
-      } else {
-        toast.error('Please select an image file');
-      }
-    }
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  }, []);
-
-  const handleProcessImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
-      setProcessImages(files);
-      toast.success(`${files.length} process image(s) selected`);
-    }
-  };
+  }, [formData, generateDerivative, getImageDimensions, clearDraft, onUploadComplete]);
 
   return (
     <div className="space-y-6">
-      {/* Metadata Form */}
-      <ArtworkMetadataForm 
-        metadata={metadata} 
-        onChange={setMetadata}
+      {/* Draft Indicator */}
+      <DraftIndicator
+        draftRestored={draftRestored}
+        isSaving={isDraftSaving}
+        onDiscard={handleDiscardDraft}
+      />
+
+      {/* Unified Artwork Form */}
+      <UnifiedArtworkForm
+        mode="add"
+        initialData={formData}
+        onChange={handleFormChange}
+        disabled={uploading}
         errors={errors}
       />
 
-      {/* Primary Image Upload */}
-      <div>
-        <Label className="text-sm font-medium">
-          Primary Artwork Image <span className="text-destructive">*</span>
-        </Label>
-        <div
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          className={`
-            mt-2 border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer
-            ${isDragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}
-            ${uploading ? 'pointer-events-none opacity-50' : ''}
-          `}
-          onClick={() => document.getElementById('primary-image-input')?.click()}
-        >
-          <input
-            id="primary-image-input"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                setPrimaryImage(file);
-                toast.success(`Primary image selected: ${file.name}`);
-              }
-            }}
-          />
-          
-          {primaryImage ? (
-            <div className="flex flex-col items-center gap-2">
-              <ImagePlus className="h-6 w-6 text-primary" />
-              <p className="text-sm font-medium">{primaryImage.name}</p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPrimaryImage(null);
-                }}
-                disabled={uploading}
-              >
-                <X className="h-4 w-4 mr-1" />
-                Remove
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2">
-              <Upload className="h-6 w-6 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                Drag and drop primary image here, or click to select
-              </p>
-            </div>
-          )}
-        </div>
-        {errors.primaryImage && (
-          <p className="text-xs text-destructive mt-1">{errors.primaryImage}</p>
-        )}
-      </div>
-
-      {/* Process Images Upload */}
-      <div>
-        <Label htmlFor="process-images" className="text-sm font-medium">
-          Additional Images / Process Shots (Optional)
-        </Label>
-        <div className="mt-2 flex items-center gap-2">
-          <input
-            id="process-images"
-            type="file"
-            multiple
-            accept="image/*"
-            className="hidden"
-            onChange={handleProcessImagesChange}
-          />
-          <Button
+      {/* Upload Button */}
+      <div className="flex gap-2">
+        {onCancel && (
+          <Button 
             type="button"
             variant="outline"
-            onClick={() => document.getElementById('process-images')?.click()}
+            onClick={handleCancel}
             disabled={uploading}
+            className="flex-1"
           >
-            <ImagePlus className="h-4 w-4 mr-2" />
-            {processImages.length > 0 ? `${processImages.length} image(s) selected` : 'Select Process Images'}
+            Cancel
           </Button>
-          {processImages.length > 0 && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setProcessImages([])}
-              disabled={uploading}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Published Toggle */}
-      <div className="flex items-center justify-between p-4 border rounded-lg">
-        <div>
-          <Label htmlFor="is-published" className="text-sm font-medium">
-            Published
-          </Label>
-          <p className="text-xs text-muted-foreground mt-1">
-            Make this artwork visible to the public
-          </p>
-        </div>
-        <Switch
-          id="is-published"
-          checked={isPublished}
-          onCheckedChange={setIsPublished}
-          disabled={uploading}
-        />
-      </div>
-
-      {/* Upload Button */}
-      <Button 
-        onClick={uploadArtwork} 
-        disabled={uploading || !primaryImage}
-        className="w-full"
-        size="lg"
-      >
-        {uploading ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Uploading...
-          </>
-        ) : (
-          <>
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Artwork
-          </>
         )}
-      </Button>
+        <Button 
+          onClick={uploadArtwork} 
+          disabled={uploading || !formData.primaryImage}
+          className="flex-1"
+          size="lg"
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Uploading...
+            </>
+          ) : (
+            <>
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Artwork
+            </>
+          )}
+        </Button>
+      </div>
 
       {/* Upload Progress */}
       {uploadProgress.length > 0 && (
