@@ -83,6 +83,7 @@ const MinimalContact = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           name: formData.name.trim(),
@@ -95,8 +96,14 @@ const MinimalContact = () => {
 
       const data = await parseApiResponse(response);
 
-      if (!response.ok) {
-        throw new Error(String(data.details || data.error || 'Failed to send message'));
+      // Check for success in response data
+      if (!response.ok || !data.success) {
+        // Properly serialize error details
+        const errorDetail = data.details || data.error || 'Failed to send message';
+        const errorMessage = typeof errorDetail === 'string' 
+          ? errorDetail 
+          : JSON.stringify(errorDetail);
+        throw new Error(errorMessage);
       }
 
       toast({
@@ -111,11 +118,18 @@ const MinimalContact = () => {
         subject: '',
         message: ''
       });
+      
+      // Clear any lingering errors
+      setErrors({});
     } catch (error) {
       console.error('Error sending message:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Failed to send message. Please try again.";
+      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send message. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

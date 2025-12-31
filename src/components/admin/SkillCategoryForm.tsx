@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Trash2, GripVertical, Plus, X } from 'lucide-react';
 import { TechnicalSkill } from '@/types/technicalSkills';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
+import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+import { DraftIndicator } from '@/components/admin/DraftIndicator';
+import { toast } from 'sonner';
 
 interface SkillCategoryFormProps {
   skill: TechnicalSkill | null;
@@ -18,6 +22,41 @@ export const SkillCategoryForm = ({ skill, onSave, onCancel }: SkillCategoryForm
   const [skills, setSkills] = useState<string[]>(skill?.skills || []);
   const [newSkill, setNewSkill] = useState('');
   const [isVisible, setIsVisible] = useState(skill?.is_visible ?? true);
+
+  // Create form data object for persistence
+  const formData = useMemo(() => ({
+    category,
+    skills,
+    isVisible,
+  }), [category, skills, isVisible]);
+
+  // Generate unique key for draft storage
+  const draftKey = skill 
+    ? `admin:skill_category:draft:${skill.id}` 
+    : 'admin:skill_category:draft:new';
+
+  // Use form persistence hook
+  const { draftRestored, isSaving: isDraftSaving, clearDraft, hasUnsavedChanges } = useFormPersistence({
+    key: draftKey,
+    data: formData,
+    onRestore: (restored) => {
+      setCategory(restored.category);
+      setSkills(restored.skills);
+      setIsVisible(restored.isVisible);
+    },
+  });
+
+  // Warn before leaving page with unsaved changes
+  useBeforeUnload(hasUnsavedChanges);
+
+  const handleDiscardDraft = () => {
+    clearDraft();
+    // Reset form to initial state
+    setCategory(skill?.category || '');
+    setSkills(skill?.skills || []);
+    setIsVisible(skill?.is_visible ?? true);
+    toast.success('Draft discarded');
+  };
 
   const handleAddSkill = () => {
     if (newSkill.trim()) {
@@ -52,15 +91,24 @@ export const SkillCategoryForm = ({ skill, onSave, onCancel }: SkillCategoryForm
       ...(skill?.created_at ? { created_at: skill.created_at } : {})
     };
 
+    // Clear draft on successful save
+    clearDraft();
     onSave(data as TechnicalSkill);
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg uppercase tracking-wider">
-          {skill ? 'Edit Skill Category' : 'Add Skill Category'}
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg uppercase tracking-wider">
+            {skill ? 'Edit Skill Category' : 'Add Skill Category'}
+          </CardTitle>
+          <DraftIndicator 
+            draftRestored={draftRestored}
+            isSaving={isDraftSaving}
+            onDiscard={handleDiscardDraft}
+          />
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
