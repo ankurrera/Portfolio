@@ -73,6 +73,26 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
     toast.success('Draft discarded');
   }, [clearDraft]);
 
+  // Helper function to extract storage path from Supabase public URL
+  const extractStoragePath = (url: string): string | null => {
+    try {
+      const urlObj = new URL(url);
+      // Extract path after /storage/v1/object/public/photos/
+      const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/photos\/(.+)$/);
+      if (pathMatch && pathMatch[1]) {
+        return pathMatch[1];
+      }
+      // Fallback: try simple split if URL format is different
+      const parts = url.split('/photos/');
+      return parts.length > 1 ? parts[parts.length - 1] : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // PostgreSQL constraint error codes to detect
+  const CONSTRAINT_ERROR_CODES = ['23502', '23503', '23505'] as const;
+
   // Generate web-optimized derivative with aspect ratio preservation
   const generateDerivative = useCallback(async (file: File, originalWidth: number, originalHeight: number): Promise<Blob> => {
     return new Promise((resolve) => {
@@ -286,23 +306,6 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
           // Delete uploaded files from storage
           const filesToDelete: string[] = [];
           
-          // Helper function to extract storage path from public URL
-          const extractStoragePath = (url: string): string | null => {
-            try {
-              const urlObj = new URL(url);
-              // Extract path after /storage/v1/object/public/photos/
-              const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/photos\/(.+)$/);
-              if (pathMatch && pathMatch[1]) {
-                return pathMatch[1];
-              }
-              // Fallback: try simple split if URL format is different
-              const parts = url.split('/photos/');
-              return parts.length > 1 ? parts[parts.length - 1] : null;
-            } catch {
-              return null;
-            }
-          };
-          
           if (isVideo) {
             // Extract video file path from URL
             const videoPath = extractStoragePath(originalUrl);
@@ -332,14 +335,11 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
       const errorMessage = formatSupabaseError(error);
       console.error('Upload error:', errorMessage);
       
-      // Check if error is a Supabase error object with code property
+      // Check if error is a database constraint violation
+      const hasErrorCode = error && typeof error === 'object' && 'code' in error;
       const isConstraintError = 
-        (error && typeof error === 'object' && 'code' in error && error.code === '23502') ||
-        (error && typeof error === 'object' && 'code' in error && error.code === '23503') ||
-        (error && typeof error === 'object' && 'code' in error && error.code === '23505') ||
-        errorMessage.includes('23502') || // NOT NULL constraint violation
-        errorMessage.includes('23503') || // Foreign key constraint violation
-        errorMessage.includes('23505');   // Unique constraint violation
+        (hasErrorCode && CONSTRAINT_ERROR_CODES.includes(error.code as any)) ||
+        CONSTRAINT_ERROR_CODES.some(code => errorMessage.includes(code));
       
       // Provide more specific error message for database constraint errors
       if (isConstraintError) {
