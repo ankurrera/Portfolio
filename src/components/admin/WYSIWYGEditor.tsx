@@ -613,16 +613,18 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
 
       {/* Photo Uploader Dialog */}
       <Dialog open={showUploader} onOpenChange={setShowUploader}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Add Photos</DialogTitle>
             <DialogDescription>
               Upload photos to your photoshoot gallery
             </DialogDescription>
           </DialogHeader>
-          <PhotoUploader 
-            onUploadComplete={handleUploadComplete}
-          />
+          <div className="overflow-y-auto flex-1 pr-2">
+            <PhotoUploader 
+              onUploadComplete={handleUploadComplete}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
