@@ -19,6 +19,7 @@ interface PendingFile {
 }
 
 // Interface for photo insert data to ensure type safety
+// Note: category is optional for backward compatibility with schemas where it may not exist
 interface PhotoInsertData {
   image_url: string;
   display_order: number;
@@ -47,7 +48,10 @@ interface PhotoInsertData {
   camera_lens: string | null;
   project_visibility: string;
   external_links: Record<string, unknown>[] | null;
-  category?: string; // Optional for backward compatibility
+  // Category is optional to support both:
+  // 1. Old schema where category column exists with photo_category enum ('selected' | 'commissioned' | 'editorial' | 'personal' | 'artistic')
+  // 2. New schema where category column has been dropped
+  category?: 'selected' | 'commissioned' | 'editorial' | 'personal' | 'artistic';
 }
 
 export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploaderProps) {
@@ -336,9 +340,13 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
       console.error('Upload error:', errorMessage);
       
       // Check if error is a database constraint violation
-      const hasErrorCode = error && typeof error === 'object' && 'code' in error;
+      // Type guard for checking if error has a code property of expected type
+      const isErrorWithCode = (err: unknown): err is { code: string } => {
+        return err !== null && typeof err === 'object' && 'code' in err && typeof (err as any).code === 'string';
+      };
+      
       const isConstraintError = 
-        (hasErrorCode && CONSTRAINT_ERROR_CODES.includes(error.code as any)) ||
+        (isErrorWithCode(error) && CONSTRAINT_ERROR_CODES.includes(error.code as typeof CONSTRAINT_ERROR_CODES[number])) ||
         CONSTRAINT_ERROR_CODES.some(code => errorMessage.includes(code));
       
       // Provide more specific error message for database constraint errors
