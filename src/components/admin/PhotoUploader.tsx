@@ -46,7 +46,7 @@ interface PhotoInsertData {
   credits: string | null;
   camera_lens: string | null;
   project_visibility: string;
-  external_links: any;
+  external_links: Record<string, unknown>[] | null;
   category?: string; // Optional for backward compatibility
 }
 
@@ -286,14 +286,31 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
           // Delete uploaded files from storage
           const filesToDelete: string[] = [];
           
+          // Helper function to extract storage path from public URL
+          const extractStoragePath = (url: string): string | null => {
+            try {
+              const urlObj = new URL(url);
+              // Extract path after /storage/v1/object/public/photos/
+              const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/photos\/(.+)$/);
+              if (pathMatch && pathMatch[1]) {
+                return pathMatch[1];
+              }
+              // Fallback: try simple split if URL format is different
+              const parts = url.split('/photos/');
+              return parts.length > 1 ? parts[parts.length - 1] : null;
+            } catch {
+              return null;
+            }
+          };
+          
           if (isVideo) {
             // Extract video file path from URL
-            const videoPath = originalUrl.split('/photos/').pop();
+            const videoPath = extractStoragePath(originalUrl);
             if (videoPath) filesToDelete.push(videoPath);
           } else {
             // Extract original and derivative paths
-            const origPath = originalUrl.split('/photos/').pop();
-            const derivPath = derivativeUrl.split('/photos/').pop();
+            const origPath = extractStoragePath(originalUrl);
+            const derivPath = extractStoragePath(derivativeUrl);
             if (origPath) filesToDelete.push(origPath);
             if (derivPath) filesToDelete.push(derivPath);
           }
@@ -315,9 +332,18 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
       const errorMessage = formatSupabaseError(error);
       console.error('Upload error:', errorMessage);
       
+      // Check if error is a Supabase error object with code property
+      const isConstraintError = 
+        (error && typeof error === 'object' && 'code' in error && error.code === '23502') ||
+        (error && typeof error === 'object' && 'code' in error && error.code === '23503') ||
+        (error && typeof error === 'object' && 'code' in error && error.code === '23505') ||
+        errorMessage.includes('23502') || // NOT NULL constraint violation
+        errorMessage.includes('23503') || // Foreign key constraint violation
+        errorMessage.includes('23505');   // Unique constraint violation
+      
       // Provide more specific error message for database constraint errors
-      if (errorMessage.includes('23502') || errorMessage.includes('not-null') || errorMessage.includes('violates')) {
-        throw new Error(`Database error: ${errorMessage}. Photo uploaded to storage but metadata save failed. Please contact administrator.`);
+      if (isConstraintError) {
+        throw new Error(`Database constraint error: ${errorMessage}. Photo uploaded to storage but metadata save failed. Please contact administrator.`);
       }
       
       throw new Error(errorMessage);
