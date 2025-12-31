@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +28,9 @@ import {
 import { ArrowLeft, Loader2, Plus, Pencil, Trash2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { HeroText } from '@/hooks/useHeroText';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
+import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+import { DraftIndicator } from '@/components/admin/DraftIndicator';
 
 // Page slug validation pattern
 const PAGE_SLUG_PATTERN = /^[a-z0-9-]+$/;
@@ -73,6 +76,54 @@ const AdminHeroEdit = () => {
     background_media_url: '',
   });
   const [formErrors, setFormErrors] = useState<Partial<HeroFormData>>({});
+
+  // Generate unique key for draft storage
+  const draftKey = useMemo(() => {
+    if (selectedHero) {
+      return `admin:hero_edit:draft:${selectedHero.page_slug}`;
+    }
+    return isCreating ? 'admin:hero_edit:draft:new' : '';
+  }, [selectedHero, isCreating]);
+
+  // Use form persistence hook (only when dialog is open)
+  const { draftRestored, isSaving: isDraftSaving, clearDraft, hasUnsavedChanges } = useFormPersistence({
+    key: draftKey,
+    data: formData,
+    onRestore: (restored) => {
+      setFormData(restored);
+    },
+    enabled: editDialogOpen && draftKey !== '',
+  });
+
+  // Warn before leaving page with unsaved changes
+  useBeforeUnload(hasUnsavedChanges && editDialogOpen);
+
+  const handleDiscardDraft = () => {
+    clearDraft();
+    // Reset form to initial state
+    if (selectedHero) {
+      setFormData({
+        page_slug: selectedHero.page_slug,
+        hero_title: selectedHero.hero_title || '',
+        hero_subtitle: selectedHero.hero_subtitle || '',
+        hero_description: selectedHero.hero_description || '',
+        cta_text: selectedHero.cta_text || '',
+        cta_link: selectedHero.cta_link || '',
+        background_media_url: selectedHero.background_media_url || '',
+      });
+    } else {
+      setFormData({
+        page_slug: '',
+        hero_title: '',
+        hero_subtitle: '',
+        hero_description: '',
+        cta_text: '',
+        cta_link: '',
+        background_media_url: '',
+      });
+    }
+    toast.success('Draft discarded');
+  };
 
   useEffect(() => {
     if (isLoading) return;
@@ -223,6 +274,8 @@ const AdminHeroEdit = () => {
         toast.success('Hero section updated successfully');
       }
 
+      // Clear draft on successful save
+      clearDraft();
       setEditDialogOpen(false);
       loadHeroes();
     } catch (err: unknown) {
@@ -356,14 +409,23 @@ const AdminHeroEdit = () => {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {isCreating ? 'Create Hero Section' : 'Edit Hero Section'}
-            </DialogTitle>
-            <DialogDescription>
-              {isCreating
-                ? 'Add a new hero section for a page'
-                : 'Update the hero section content'}
-            </DialogDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle>
+                  {isCreating ? 'Create Hero Section' : 'Edit Hero Section'}
+                </DialogTitle>
+                <DialogDescription>
+                  {isCreating
+                    ? 'Add a new hero section for a page'
+                    : 'Update the hero section content'}
+                </DialogDescription>
+              </div>
+              <DraftIndicator 
+                draftRestored={draftRestored}
+                isSaving={isDraftSaving}
+                onDiscard={handleDiscardDraft}
+              />
+            </div>
           </DialogHeader>
 
           <div className="space-y-4 py-4">

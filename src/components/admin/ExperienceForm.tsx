@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Experience } from '@/types/experience';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
+import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+import { DraftIndicator } from '@/components/admin/DraftIndicator';
 
 interface ExperienceFormProps {
   experience?: Experience | null;
@@ -23,6 +26,50 @@ const ExperienceForm = ({ experience, onSave, onCancel }: ExperienceFormProps) =
   const [endDate, setEndDate] = useState(experience?.end_date || '');
   const [isCurrent, setIsCurrent] = useState(experience?.is_current || false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Create form data object for persistence
+  const formData = useMemo(() => ({
+    roleTitle,
+    companyName,
+    employmentType,
+    startDate,
+    endDate,
+    isCurrent,
+  }), [roleTitle, companyName, employmentType, startDate, endDate, isCurrent]);
+
+  // Generate unique key for draft storage
+  const draftKey = experience 
+    ? `admin:experience:draft:${experience.id}` 
+    : 'admin:experience:draft:new';
+
+  // Use form persistence hook
+  const { draftRestored, isSaving: isDraftSaving, clearDraft, hasUnsavedChanges } = useFormPersistence({
+    key: draftKey,
+    data: formData,
+    onRestore: (restored) => {
+      setRoleTitle(restored.roleTitle);
+      setCompanyName(restored.companyName);
+      setEmploymentType(restored.employmentType);
+      setStartDate(restored.startDate);
+      setEndDate(restored.endDate);
+      setIsCurrent(restored.isCurrent);
+    },
+  });
+
+  // Warn before leaving page with unsaved changes
+  useBeforeUnload(hasUnsavedChanges);
+
+  const handleDiscardDraft = () => {
+    clearDraft();
+    // Reset form to initial state
+    setRoleTitle(experience?.role_title || '');
+    setCompanyName(experience?.company_name || '');
+    setEmploymentType(experience?.employment_type || '');
+    setStartDate(experience?.start_date || '');
+    setEndDate(experience?.end_date || '');
+    setIsCurrent(experience?.is_current || false);
+    toast.success('Draft discarded');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +111,8 @@ const ExperienceForm = ({ experience, onSave, onCancel }: ExperienceFormProps) =
 
         if (error) throw error;
         
+        // Clear draft on successful save
+        clearDraft();
         onSave(data as Experience);
         toast.success('Experience updated successfully');
       } else {
@@ -95,6 +144,8 @@ const ExperienceForm = ({ experience, onSave, onCancel }: ExperienceFormProps) =
 
         if (error) throw error;
         
+        // Clear draft on successful save
+        clearDraft();
         onSave(data as Experience);
         toast.success('Experience created successfully');
       }
@@ -109,7 +160,14 @@ const ExperienceForm = ({ experience, onSave, onCancel }: ExperienceFormProps) =
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{experience ? 'Edit Experience' : 'New Experience'}</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>{experience ? 'Edit Experience' : 'Add Experience'}</CardTitle>
+          <DraftIndicator 
+            draftRestored={draftRestored}
+            isSaving={isDraftSaving}
+            onDiscard={handleDiscardDraft}
+          />
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">

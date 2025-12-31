@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +13,9 @@ import { AboutPage, Service, Education, Experience } from '@/types/about';
 import { SocialLink } from '@/types/socialLinks';
 import SocialLinkItem from '@/components/admin/SocialLinkItem';
 import ResumeAnalytics from '@/components/admin/ResumeAnalytics';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
+import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+import { DraftIndicator } from '@/components/admin/DraftIndicator';
 
 const AdminAboutEdit = () => {
   const { user, isAdmin, isLoading, signOut } = useAuth();
@@ -39,6 +42,45 @@ const AdminAboutEdit = () => {
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [socialLinksLoading, setSocialLinksLoading] = useState(true);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  // Create form data object for persistence
+  const formData = useMemo(() => ({
+    profileImageUrl,
+    bioText,
+    services,
+    heroTitle,
+    heroSubtitle,
+    education,
+    experience,
+  }), [profileImageUrl, bioText, services, heroTitle, heroSubtitle, education, experience]);
+
+  // Use form persistence hook
+  const { draftRestored, isSaving: isDraftSaving, clearDraft, hasUnsavedChanges } = useFormPersistence({
+    key: 'admin:about_page:draft',
+    data: formData,
+    onRestore: (restored) => {
+      setProfileImageUrl(restored.profileImageUrl);
+      setBioText(restored.bioText);
+      setServices(restored.services);
+      setHeroTitle(restored.heroTitle);
+      setHeroSubtitle(restored.heroSubtitle);
+      setEducation(restored.education);
+      setExperience(restored.experience);
+    },
+    enabled: !loading, // Only enable after initial load
+  });
+
+  // Warn before leaving page with unsaved changes
+  useBeforeUnload(hasUnsavedChanges);
+
+  const handleDiscardDraft = () => {
+    clearDraft();
+    // Reload data from database
+    loadAboutData();
+    loadEducation();
+    loadExperience();
+    toast.success('Draft discarded');
+  };
 
   // Auth redirect effect
   useEffect(() => {
@@ -709,6 +751,9 @@ const AdminAboutEdit = () => {
       // Save social links
       await handleSaveSocialLinks();
 
+      // Clear draft on successful save
+      clearDraft();
+
       toast.success('About page updated successfully');
       await loadAboutData();
       await loadEducation();
@@ -748,11 +793,18 @@ const AdminAboutEdit = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
-          <div>
-            <h1 className="text-2xl font-semibold uppercase tracking-wider">About Page Management</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage profile image, bio, and services for the About page
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold uppercase tracking-wider">About Page Management</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manage profile image, bio, and services for the About page
+              </p>
+            </div>
+            <DraftIndicator 
+              draftRestored={draftRestored}
+              isSaving={isDraftSaving}
+              onDiscard={handleDiscardDraft}
+            />
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +8,9 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { AchievementData, AchievementCategory } from '@/types/achievement';
 import { Loader2, Upload, X } from 'lucide-react';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
+import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+import { DraftIndicator } from '@/components/admin/DraftIndicator';
 
 interface AchievementFormProps {
   achievement?: AchievementData | null;
@@ -37,6 +40,54 @@ const AchievementForm = ({ achievement, onSave, onCancel }: AchievementFormProps
 
   // Calculate max year once
   const maxYear = new Date().getFullYear() + 1;
+
+  // Create form data object for persistence (exclude file since it can't be serialized)
+  const formData = useMemo(() => ({
+    title,
+    year,
+    category,
+    externalLink,
+    displayOrder,
+    isPublished,
+    imagePreview, // Store the preview URL instead of the file
+  }), [title, year, category, externalLink, displayOrder, isPublished, imagePreview]);
+
+  // Generate unique key for draft storage
+  const draftKey = achievement 
+    ? `admin:achievement:draft:${achievement.id}` 
+    : 'admin:achievement:draft:new';
+
+  // Use form persistence hook
+  const { draftRestored, isSaving: isDraftSaving, clearDraft, hasUnsavedChanges } = useFormPersistence({
+    key: draftKey,
+    data: formData,
+    onRestore: (restored) => {
+      setTitle(restored.title);
+      setYear(restored.year);
+      setCategory(restored.category);
+      setExternalLink(restored.externalLink);
+      setDisplayOrder(restored.displayOrder);
+      setIsPublished(restored.isPublished);
+      setImagePreview(restored.imagePreview);
+    },
+  });
+
+  // Warn before leaving page with unsaved changes
+  useBeforeUnload(hasUnsavedChanges);
+
+  const handleDiscardDraft = () => {
+    clearDraft();
+    // Reset form to initial state
+    setTitle(achievement?.title || '');
+    setYear(achievement?.year || null);
+    setCategory(achievement?.category || 'School');
+    setExternalLink(achievement?.external_link || '');
+    setDisplayOrder(achievement?.display_order || 0);
+    setIsPublished(achievement?.is_published || false);
+    setImagePreview(achievement?.image_url || null);
+    setImageFile(null);
+    toast.success('Draft discarded');
+  };
 
   useEffect(() => {
     if (achievement) {
@@ -181,6 +232,8 @@ const AchievementForm = ({ achievement, onSave, onCancel }: AchievementFormProps
 
         if (error) throw error;
         
+        // Clear draft on successful save
+        clearDraft();
         toast.success('Achievement updated successfully');
         onSave(data as AchievementData);
       } else {
@@ -193,6 +246,8 @@ const AchievementForm = ({ achievement, onSave, onCancel }: AchievementFormProps
 
         if (error) throw error;
         
+        // Clear draft on successful save
+        clearDraft();
         toast.success('Achievement created successfully');
         onSave(data as AchievementData);
       }
@@ -205,7 +260,13 @@ const AchievementForm = ({ achievement, onSave, onCancel }: AchievementFormProps
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-4">
+      <DraftIndicator 
+        draftRestored={draftRestored}
+        isSaving={isDraftSaving}
+        onDiscard={handleDiscardDraft}
+      />
+      <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="title">Title *</Label>
@@ -346,6 +407,7 @@ const AchievementForm = ({ achievement, onSave, onCancel }: AchievementFormProps
         </Button>
       </div>
     </form>
+    </div>
   );
 };
 

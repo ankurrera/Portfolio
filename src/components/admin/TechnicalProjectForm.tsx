@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { TechnicalProject, TechnicalProjectInsert, TechnicalProjectUpdate } from '@/types/technical';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { X, Plus, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
+import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+import { DraftIndicator } from '@/components/admin/DraftIndicator';
 
 interface TechnicalProjectFormProps {
   project?: TechnicalProject | null;
@@ -37,6 +40,59 @@ const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFor
   const [newLanguage, setNewLanguage] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Create form data object for persistence
+  const formData = useMemo(() => ({
+    title,
+    description,
+    devYear,
+    status,
+    progress,
+    githubLink,
+    liveLink,
+    thumbnailUrl,
+    languages,
+  }), [title, description, devYear, status, progress, githubLink, liveLink, thumbnailUrl, languages]);
+
+  // Generate unique key for draft storage
+  const draftKey = project 
+    ? `admin:technical_project:draft:${project.id}` 
+    : 'admin:technical_project:draft:new';
+
+  // Use form persistence hook
+  const { draftRestored, isSaving: isDraftSaving, clearDraft, hasUnsavedChanges } = useFormPersistence({
+    key: draftKey,
+    data: formData,
+    onRestore: (restored) => {
+      setTitle(restored.title);
+      setDescription(restored.description);
+      setDevYear(restored.devYear);
+      setStatus(restored.status);
+      setProgress(restored.progress);
+      setGithubLink(restored.githubLink);
+      setLiveLink(restored.liveLink);
+      setThumbnailUrl(restored.thumbnailUrl);
+      setLanguages(restored.languages);
+    },
+  });
+
+  // Warn before leaving page with unsaved changes
+  useBeforeUnload(hasUnsavedChanges);
+
+  const handleDiscardDraft = () => {
+    clearDraft();
+    // Reset form to initial state
+    setTitle(project?.title || '');
+    setDescription(project?.description || '');
+    setDevYear(project?.dev_year || new Date().getFullYear().toString());
+    setStatus(project?.status || 'Live');
+    setProgress(getInitialProgress(project));
+    setGithubLink(project?.github_link || '');
+    setLiveLink(project?.live_link || '');
+    setThumbnailUrl(project?.thumbnail_url || '');
+    setLanguages(project?.languages || []);
+    toast.success('Draft discarded');
+  };
 
   // Auto-set progress to 100 when status is Live
   useEffect(() => {
@@ -151,6 +207,8 @@ const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFor
           languages: Array.isArray(data.languages) ? data.languages : JSON.parse(data.languages as string)
         };
         
+        // Clear draft on successful save
+        clearDraft();
         onSave(updatedProject as TechnicalProject);
         toast.success('Project updated successfully');
       } else {
@@ -181,6 +239,8 @@ const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFor
           languages: Array.isArray(data.languages) ? data.languages : JSON.parse(data.languages as string)
         };
         
+        // Clear draft on successful save
+        clearDraft();
         onSave(newProject as TechnicalProject);
         toast.success('Project created successfully');
       }
@@ -195,7 +255,14 @@ const TechnicalProjectForm = ({ project, onSave, onCancel }: TechnicalProjectFor
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{project ? 'Edit Project' : 'New Project'}</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>{project ? 'Edit Project' : 'New Project'}</CardTitle>
+          <DraftIndicator 
+            draftRestored={draftRestored}
+            isSaving={isDraftSaving}
+            onDiscard={handleDiscardDraft}
+          />
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
