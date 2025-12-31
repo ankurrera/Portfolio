@@ -85,31 +85,64 @@ export default function UnifiedPhotoForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Sync local state with initialData when it changes (for edit mode)
-  // Use individual field dependencies to avoid unnecessary re-renders
-  const prevInitialDataRef = useRef<PhotoFormData | null>(null);
+  // Use ref to track previous values and prevent unnecessary re-renders
+  const prevCaptionRef = useRef<string>();
+  const prevPhotographerRef = useRef<string>();
+  const prevDateRef = useRef<string>();
+  const prevDeviceRef = useRef<string>();
+  const prevYearRef = useRef<number>();
+  const prevCreditsRef = useRef<string>();
+  const prevCameraRef = useRef<string>();
+  const prevVisibilityRef = useRef<string>();
   
   useEffect(() => {
     if (mode === 'edit' && initialData) {
-      // Only update if initialData has actually changed
-      const hasChanged = !prevInitialDataRef.current || 
-        JSON.stringify(prevInitialDataRef.current) !== JSON.stringify(initialData);
-      
-      if (hasChanged) {
+      // Only update if specific fields have changed
+      if (initialData.caption !== prevCaptionRef.current) {
         setCaption(initialData.caption || '');
+        prevCaptionRef.current = initialData.caption;
+      }
+      if (initialData.photographer_name !== prevPhotographerRef.current) {
         setPhotographerName(initialData.photographer_name || '');
+        prevPhotographerRef.current = initialData.photographer_name;
+      }
+      if (initialData.date_taken !== prevDateRef.current) {
         setDateTaken(initialData.date_taken || '');
+        prevDateRef.current = initialData.date_taken;
+      }
+      if (initialData.device_used !== prevDeviceRef.current) {
         setDeviceUsed(initialData.device_used || '');
+        prevDeviceRef.current = initialData.device_used;
+      }
+      if (initialData.year !== prevYearRef.current) {
         setYear(initialData.year || '');
-        setTags(initialData.tags?.join(', ') || '');
+        prevYearRef.current = initialData.year;
+      }
+      if (initialData.credits !== prevCreditsRef.current) {
         setCredits(initialData.credits || '');
+        prevCreditsRef.current = initialData.credits;
+      }
+      if (initialData.camera_lens !== prevCameraRef.current) {
         setCameraLens(initialData.camera_lens || '');
+        prevCameraRef.current = initialData.camera_lens;
+      }
+      if (initialData.project_visibility !== prevVisibilityRef.current) {
         setProjectVisibility(initialData.project_visibility || 'public');
+        prevVisibilityRef.current = initialData.project_visibility;
+      }
+      
+      // For arrays, do a length check first for efficiency
+      const newTags = initialData.tags?.join(', ') || '';
+      if (newTags !== tags) {
+        setTags(newTags);
+      }
+      
+      // For external links, compare length first
+      if (initialData.external_links?.length !== externalLinks.length) {
         setExternalLinks(initialData.external_links || []);
-        
-        prevInitialDataRef.current = initialData;
       }
     }
-  }, [mode, initialData]);
+  }, [mode, initialData, tags, externalLinks]);
 
   // Notify parent of changes (for add mode) - debounced via useMemo
   const formData = useMemo(() => {
@@ -146,6 +179,14 @@ export default function UnifiedPhotoForm({
 
     if (credits.length > MAX_CREDITS_LENGTH) {
       newErrors.credits = `Credits must be ${MAX_CREDITS_LENGTH} characters or less`;
+    }
+
+    // Check for incomplete external links
+    const incompleteLinks = externalLinks.filter(link => 
+      (link.title.trim() && !link.url.trim()) || (!link.title.trim() && link.url.trim())
+    );
+    if (incompleteLinks.length > 0) {
+      newErrors.external_links = `${incompleteLinks.length} incomplete external link(s) will be removed. Both title and URL are required.`;
     }
 
     setErrors(newErrors);
@@ -437,6 +478,9 @@ export default function UnifiedPhotoForm({
               </div>
             ))}
           </div>
+        )}
+        {errors.external_links && (
+          <p className="text-xs text-amber-600">{errors.external_links}</p>
         )}
       </div>
 
