@@ -20,7 +20,6 @@ export default function PhotoUploader({ onUploadComplete }: PhotoUploaderProps) 
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string[]>([]);
   const [metadata, setMetadata] = useState<PhotoMetadata>({});
-  const [videoThumbnail, setVideoThumbnail] = useState<File | null>(null);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
 
   // Generate web-optimized derivative with aspect ratio preservation
@@ -101,27 +100,6 @@ export default function PhotoUploader({ onUploadComplete }: PhotoUploaderProps) 
         
         derivativeUrl = videoUrl;
         originalUrl = videoUrl; // For videos, original and derivative are the same
-
-        // Upload video thumbnail if provided
-        if (videoThumbnail) {
-          const thumbDimensions = await getImageDimensions(videoThumbnail);
-          const compressedThumbnail = await generateDerivative(videoThumbnail, thumbDimensions.width, thumbDimensions.height);
-          const thumbnailFileName = `photoshoots/${Date.now()}-${sanitizedName || 'video'}-thumbnail.webp`;
-          
-          const { error: thumbError } = await supabase.storage
-            .from('photos')
-            .upload(thumbnailFileName, compressedThumbnail, {
-              contentType: 'image/webp',
-              cacheControl: '31536000'
-            });
-
-          if (!thumbError) {
-            const { data: { publicUrl: thumbUrl } } = supabase.storage
-              .from('photos')
-              .getPublicUrl(thumbnailFileName);
-            thumbnailUrl = thumbUrl;
-          }
-        }
       } else {
         // Get original dimensions
         const dimensions = await getImageDimensions(file);
@@ -249,7 +227,7 @@ export default function PhotoUploader({ onUploadComplete }: PhotoUploaderProps) 
       console.error('Upload error:', errorMessage);
       throw new Error(errorMessage);
     }
-  }, [generateDerivative, getImageDimensions, metadata, videoThumbnail]);
+  }, [generateDerivative, getImageDimensions, metadata]);
 
   // Handle file selection (preview only, no upload yet)
   const handleFiles = useCallback((files: FileList) => {
@@ -307,7 +285,6 @@ export default function PhotoUploader({ onUploadComplete }: PhotoUploaderProps) 
     // Reset everything after successful upload
     setPendingFiles([]);
     setMetadata({});
-    setVideoThumbnail(null);
     
     onUploadComplete();
   }, [pendingFiles, uploadFile, onUploadComplete]);
@@ -342,64 +319,12 @@ export default function PhotoUploader({ onUploadComplete }: PhotoUploaderProps) 
   }, []);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 flex flex-col min-h-0">
       {/* Metadata Form */}
       <PhotoMetadataForm 
         metadata={metadata} 
         onMetadataChange={setMetadata} 
       />
-
-      {/* Video Thumbnail Upload */}
-      <div className="p-4 border rounded-lg bg-secondary/20">
-        <h3 className="text-sm font-semibold mb-3">Video Thumbnail (Optional)</h3>
-        <p className="text-xs text-muted-foreground mb-2">
-          Upload a separate image to use as a thumbnail for videos
-        </p>
-        <div className="flex items-center gap-2">
-          <input
-            id="thumbnail-input"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                setVideoThumbnail(file);
-                toast.success(`Thumbnail selected: ${file.name}`);
-              }
-            }}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => document.getElementById('thumbnail-input')?.click()}
-            disabled={uploading}
-          >
-            <Video className="h-4 w-4 mr-2" />
-            {videoThumbnail ? 'Change Thumbnail' : 'Select Thumbnail'}
-          </Button>
-          {videoThumbnail && (
-            <>
-              <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-                {videoThumbnail.name}
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setVideoThumbnail(null);
-                  toast.info('Thumbnail removed');
-                }}
-                disabled={uploading}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
 
       {/* Main Upload Area */}
       <div
@@ -496,28 +421,6 @@ export default function PhotoUploader({ onUploadComplete }: PhotoUploaderProps) 
               </div>
             ))}
           </div>
-          
-          {/* Upload & Publish Button */}
-          <div className="flex justify-end pt-2">
-            <Button
-              onClick={handleUploadAndPublish}
-              disabled={uploading || pendingFiles.length === 0}
-              size="lg"
-              className="font-semibold"
-            >
-              {uploading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload & Publish {pendingFiles.length > 0 && `(${pendingFiles.length})`}
-                </>
-              )}
-            </Button>
-          </div>
         </div>
       )}
 
@@ -528,6 +431,33 @@ export default function PhotoUploader({ onUploadComplete }: PhotoUploaderProps) 
               {msg}
             </p>
           ))}
+        </div>
+      )}
+
+      {/* Sticky Action Bar - Always visible at bottom */}
+      {pendingFiles.length > 0 && (
+        <div className="sticky bottom-0 -mx-2 -mb-2 mt-4 p-4 bg-background border-t shadow-lg flex justify-between items-center">
+          <div className="text-sm text-muted-foreground">
+            {pendingFiles.length} file(s) ready to upload
+          </div>
+          <Button
+            onClick={handleUploadAndPublish}
+            disabled={uploading || pendingFiles.length === 0}
+            size="lg"
+            className="font-semibold"
+          >
+            {uploading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload & Publish ({pendingFiles.length})
+              </>
+            )}
+          </Button>
         </div>
       )}
     </div>

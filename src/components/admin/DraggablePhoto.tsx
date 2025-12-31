@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { GripVertical, Maximize2, ZoomIn, MoveUp, MoveDown, Trash2, Pencil } from 'lucide-react';
+import { GripVertical, Maximize2, ZoomIn, Trash2, Pencil } from 'lucide-react';
 import { PhotoLayoutData } from '@/types/wysiwyg';
 import { Button } from '@/components/ui/button';
 
@@ -12,8 +12,6 @@ interface DraggablePhotoProps {
   isSelected?: boolean;
   onUpdate: (id: string, updates: Partial<PhotoLayoutData>) => void;
   onDelete: (id: string) => void;
-  onBringForward: (id: string) => void;
-  onSendBackward: (id: string) => void;
   onEdit?: (id: string) => void;
   onSelect?: (id: string) => void;
 }
@@ -26,8 +24,6 @@ export default function DraggablePhoto({
   isSelected = false,
   onUpdate,
   onDelete,
-  onBringForward,
-  onSendBackward,
   onEdit,
   onSelect,
 }: DraggablePhotoProps) {
@@ -235,7 +231,7 @@ export default function DraggablePhoto({
 
   return (
     <motion.div
-      className="absolute select-none"
+      className="absolute select-none pointer-events-auto"
       style={{
         left: photo.position_x,
         top: photo.position_y,
@@ -282,12 +278,12 @@ export default function DraggablePhoto({
 
       {/* Controls */}
       {isEditMode && isHovered && (
-        <div className="absolute -top-10 -right-2 flex gap-1 pointer-events-auto">
+        <div className="absolute -top-10 -right-2 flex gap-1 z-[10000]">
           {onEdit && (
             <Button
               size="icon"
               variant="secondary"
-              className="h-8 w-8 shadow-md"
+              className="h-8 w-8 shadow-md pointer-events-auto cursor-pointer"
               onClick={() => onEdit(photo.id)}
               title="Edit metadata"
             >
@@ -296,26 +292,8 @@ export default function DraggablePhoto({
           )}
           <Button
             size="icon"
-            variant="secondary"
-            className="h-8 w-8 shadow-md"
-            onClick={() => onBringForward(photo.id)}
-            title="Bring forward"
-          >
-            <MoveUp className="h-3 w-3" />
-          </Button>
-          <Button
-            size="icon"
-            variant="secondary"
-            className="h-8 w-8 shadow-md"
-            onClick={() => onSendBackward(photo.id)}
-            title="Send backward"
-          >
-            <MoveDown className="h-3 w-3" />
-          </Button>
-          <Button
-            size="icon"
             variant="destructive"
-            className="h-8 w-8 shadow-md"
+            className="h-8 w-8 shadow-md pointer-events-auto cursor-pointer"
             onClick={() => onDelete(photo.id)}
             title="Delete photo"
           >
@@ -327,7 +305,7 @@ export default function DraggablePhoto({
       {/* Resize Handle */}
       {isEditMode && isHovered && (
         <div
-          className="absolute -bottom-2 -right-2 w-6 h-6 bg-primary rounded-full cursor-nwse-resize shadow-md flex items-center justify-center pointer-events-auto"
+          className="absolute -bottom-2 -right-2 w-6 h-6 bg-primary rounded-full cursor-nwse-resize shadow-md flex items-center justify-center z-[10000] pointer-events-auto"
           onMouseDown={handleResizeStart}
           title="Resize (maintains aspect ratio)"
         >
@@ -338,7 +316,7 @@ export default function DraggablePhoto({
       {/* Scale Handle (Hold to scale) */}
       {isEditMode && isHovered && (
         <div
-          className="absolute -top-2 -right-2 w-6 h-6 bg-secondary rounded-full cursor-pointer shadow-md flex items-center justify-center pointer-events-auto"
+          className="absolute -top-2 -right-2 w-6 h-6 bg-secondary rounded-full cursor-pointer shadow-md flex items-center justify-center z-[10000] pointer-events-auto"
           onMouseDown={handleScaleStart}
           onMouseUp={handleScaleEnd}
           onMouseLeave={handleScaleEnd}
@@ -351,7 +329,7 @@ export default function DraggablePhoto({
       {/* Drag Handle */}
       {isEditMode && isHovered && (
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-primary/80 rounded-full cursor-grab shadow-md flex items-center justify-center pointer-events-auto"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-primary/80 rounded-full cursor-grab shadow-md flex items-center justify-center z-[10000] pointer-events-auto"
           onMouseDown={handleMouseDown}
           title="Drag to move"
         >
