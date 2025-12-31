@@ -1,5 +1,59 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
+/**
+ * Validates if a draft object contains meaningful data
+ * Returns true if at least one field has a non-empty value
+ */
+function hasMeaningfulData(obj: any): boolean {
+  if (!obj || typeof obj !== 'object') {
+    return false;
+  }
+
+  // Check each property for meaningful values
+  for (const key in obj) {
+    if (!Object.prototype.hasOwnProperty.call(obj, key)) {
+      continue;
+    }
+
+    const value = obj[key];
+
+    // Check for non-empty strings
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return true;
+    }
+
+    // Check for non-empty arrays
+    if (Array.isArray(value) && value.length > 0) {
+      // Check if array contains meaningful items
+      const hasValidItems = value.some(item => {
+        if (typeof item === 'string' && item.trim().length > 0) return true;
+        if (typeof item === 'object' && item !== null && hasMeaningfulData(item)) return true;
+        return false;
+      });
+      if (hasValidItems) return true;
+    }
+
+    // Check for boolean true (false is considered default/empty)
+    if (typeof value === 'boolean' && value === true) {
+      return true;
+    }
+
+    // Check for numbers (non-zero)
+    if (typeof value === 'number' && value !== 0) {
+      return true;
+    }
+
+    // Recursively check nested objects
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      if (hasMeaningfulData(value)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 interface UseFormPersistenceOptions<T> {
   /**
    * Unique key to identify the draft in localStorage
@@ -89,13 +143,32 @@ export function useFormPersistence<T extends Record<string, any>>({
       const stored = localStorage.getItem(key);
       if (stored) {
         const parsed = JSON.parse(stored) as T;
-        if (onRestore) {
-          onRestore(parsed);
+        
+        // Validate that the draft contains meaningful data
+        const isValid = hasMeaningfulData(parsed);
+        
+        if (isValid) {
+          // Only restore if draft contains meaningful data
+          if (onRestore) {
+            onRestore(parsed);
+          }
+          setDraftRestored(true);
+          // Mark as having unsaved changes since there's a draft in localStorage
+          // This ensures navigation protection works for restored drafts
+          setHasUnsavedChanges(true);
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[Draft] Restored valid draft for key: ${key}`);
+          }
+        } else {
+          // Draft exists but is empty/invalid - clear it
+          localStorage.removeItem(key);
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[Draft] Ignored empty/invalid draft for key: ${key}`);
+          }
         }
-        setDraftRestored(true);
-        // Mark as having unsaved changes since there's a draft in localStorage
-        // This ensures navigation protection works for restored drafts
-        setHasUnsavedChanges(true);
+        
         restoredRef.current = true;
       } else {
         // No stored draft, mark as initialized

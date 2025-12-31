@@ -10,6 +10,8 @@ import DraggablePhoto from './DraggablePhoto';
 import EditorToolbar from './EditorToolbar';
 import PhotoUploader from './PhotoUploader';
 import PhotoEditPanel from './PhotoEditPanel';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
+import { DraftIndicator } from '@/components/admin/DraftIndicator';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +49,58 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Create form data object for draft persistence
+  // Only persist layout data (positions, sizes, rotations), not full photo data
+  const draftData = useMemo(() => ({
+    photos: photos.map(p => ({
+      id: p.id,
+      position_x: p.position_x,
+      position_y: p.position_y,
+      width: p.width,
+      height: p.height,
+      scale: p.scale,
+      rotation: p.rotation,
+      z_index: p.z_index,
+    }))
+  }), [photos]);
+
+  // Use form persistence hook - only enable after initial load
+  const { draftRestored, isSaving: isDraftSaving, clearDraft } = useFormPersistence({
+    key: 'admin:draft:photoshoots',
+    data: draftData,
+    onRestore: (restored) => {
+      // Merge restored layout data with fetched photo data
+      if (restored.photos && Array.isArray(restored.photos) && restored.photos.length > 0) {
+        setPhotos(prevPhotos => {
+          return prevPhotos.map(photo => {
+            const restoredPhoto = restored.photos.find((p: any) => p.id === photo.id);
+            if (restoredPhoto) {
+              return {
+                ...photo,
+                position_x: restoredPhoto.position_x,
+                position_y: restoredPhoto.position_y,
+                width: restoredPhoto.width,
+                height: restoredPhoto.height,
+                scale: restoredPhoto.scale,
+                rotation: restoredPhoto.rotation,
+                z_index: restoredPhoto.z_index,
+              };
+            }
+            return photo;
+          });
+        });
+      }
+    },
+    enabled: !loading && photos.length > 0, // Only enable after photos are loaded
+  });
+
+  const handleDiscardDraft = () => {
+    clearDraft();
+    // Reload photos from database
+    fetchPhotos(true);
+    toast.success('Draft discarded');
+  };
 
   const fetchPhotos = useCallback(async (isRefresh = false) => {
     // Cancel any in-flight requests
@@ -363,6 +417,8 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
       }
 
       setHasUnsavedChanges(false);
+      // Clear draft after successful save
+      clearDraft();
       toast.success('Layout saved successfully');
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
@@ -396,6 +452,8 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
       }
 
       setHasUnsavedChanges(false);
+      // Clear draft after successful publish
+      clearDraft();
       toast.success('Layout published successfully! All photos are now visible to the public.');
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
@@ -500,6 +558,15 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
         onRefresh={handleRefresh}
         onSignOut={onSignOut}
       />
+
+      {/* Draft indicator - positioned below toolbar */}
+      <div className="fixed top-20 right-4 z-50">
+        <DraftIndicator 
+          draftRestored={draftRestored}
+          isSaving={isDraftSaving}
+          onDiscard={handleDiscardDraft}
+        />
+      </div>
 
       <div className="flex flex-col min-h-screen pt-24 bg-background overflow-y-auto overflow-x-hidden">
         {/* Outer container for centering */}

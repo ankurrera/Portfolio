@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Plus, X, GripVertical } from 'lucide-react';
 import { TechnicalAbout, TechnicalAboutStat } from '@/types/technicalAbout';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
+import { DraftIndicator } from '@/components/admin/DraftIndicator';
+import { toast } from 'sonner';
 
 interface TechnicalAboutFormProps {
   aboutData: TechnicalAbout | null;
@@ -20,6 +23,45 @@ export const TechnicalAboutForm = ({ aboutData, onSave, onCancel }: TechnicalAbo
   const [stats, setStats] = useState<TechnicalAboutStat[]>(
     aboutData?.stats || [{ value: '', label: '' }]
   );
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+
+  // Mark initial load as complete after aboutData is set
+  useEffect(() => {
+    if (aboutData !== null) {
+      setInitialLoadComplete(true);
+    }
+  }, [aboutData]);
+
+  // Create form data object for persistence
+  const formData = useMemo(() => ({
+    sectionLabel,
+    heading,
+    contentBlocks,
+    stats,
+  }), [sectionLabel, heading, contentBlocks, stats]);
+
+  // Use form persistence hook
+  const { draftRestored, isSaving: isDraftSaving, clearDraft, hasUnsavedChanges } = useFormPersistence({
+    key: 'admin:draft:technical_about',
+    data: formData,
+    onRestore: (restored) => {
+      setSectionLabel(restored.sectionLabel || 'About');
+      setHeading(restored.heading || 'Who Am I?');
+      setContentBlocks(restored.contentBlocks || ['']);
+      setStats(restored.stats || [{ value: '', label: '' }]);
+    },
+    enabled: initialLoadComplete, // Only enable after initial data load
+  });
+
+  const handleDiscardDraft = () => {
+    clearDraft();
+    // Reset to original data
+    setSectionLabel(aboutData?.section_label || 'About');
+    setHeading(aboutData?.heading || 'Who Am I?');
+    setContentBlocks(aboutData?.content_blocks || ['']);
+    setStats(aboutData?.stats || [{ value: '', label: '' }]);
+    toast.success('Draft discarded');
+  };
 
   const handleAddContentBlock = () => {
     setContentBlocks([...contentBlocks, '']);
@@ -84,17 +126,28 @@ export const TechnicalAboutForm = ({ aboutData, onSave, onCancel }: TechnicalAbo
     }
 
     onSave(data);
+    // Clear draft after successful save
+    clearDraft();
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg uppercase tracking-wider">
-          Technical About Section
-        </CardTitle>
-        <CardDescription>
-          Manage the About section content for the Technical Portfolio page
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-lg uppercase tracking-wider">
+              Technical About Section
+            </CardTitle>
+            <CardDescription>
+              Manage the About section content for the Technical Portfolio page
+            </CardDescription>
+          </div>
+          <DraftIndicator 
+            draftRestored={draftRestored}
+            isSaving={isDraftSaving}
+            onDiscard={handleDiscardDraft}
+          />
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">

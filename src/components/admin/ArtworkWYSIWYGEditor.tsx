@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ArtworkData } from '@/types/artwork';
@@ -8,6 +8,8 @@ import DraggableArtwork from './DraggableArtwork';
 import EditorToolbar from './EditorToolbar';
 import ArtworkUploader from './ArtworkUploader';
 import ArtworkEditPanel from './ArtworkEditPanel';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
+import { DraftIndicator } from '@/components/admin/DraftIndicator';
 import {
   Dialog,
   DialogContent,
@@ -39,6 +41,58 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Create form data object for draft persistence
+  // Only persist layout data (positions, sizes, rotations), not full artwork data
+  const draftData = useMemo(() => ({
+    artworks: artworks.map(a => ({
+      id: a.id,
+      position_x: a.position_x,
+      position_y: a.position_y,
+      width: a.width,
+      height: a.height,
+      scale: a.scale,
+      rotation: a.rotation,
+      z_index: a.z_index,
+    }))
+  }), [artworks]);
+
+  // Use form persistence hook - only enable after initial load
+  const { draftRestored, isSaving: isDraftSaving, clearDraft } = useFormPersistence({
+    key: 'admin:draft:artistic',
+    data: draftData,
+    onRestore: (restored) => {
+      // Merge restored layout data with fetched artwork data
+      if (restored.artworks && Array.isArray(restored.artworks) && restored.artworks.length > 0) {
+        setArtworks(prevArtworks => {
+          return prevArtworks.map(artwork => {
+            const restoredArtwork = restored.artworks.find((a: any) => a.id === artwork.id);
+            if (restoredArtwork) {
+              return {
+                ...artwork,
+                position_x: restoredArtwork.position_x,
+                position_y: restoredArtwork.position_y,
+                width: restoredArtwork.width,
+                height: restoredArtwork.height,
+                scale: restoredArtwork.scale,
+                rotation: restoredArtwork.rotation,
+                z_index: restoredArtwork.z_index,
+              };
+            }
+            return artwork;
+          });
+        });
+      }
+    },
+    enabled: !loading && artworks.length > 0, // Only enable after artworks are loaded
+  });
+
+  const handleDiscardDraft = () => {
+    clearDraft();
+    // Reload artworks from database
+    fetchArtworks(true);
+    toast.success('Draft discarded');
+  };
 
   const fetchArtworks = async (isRefresh = false) => {
     // Cancel any in-flight requests
@@ -266,6 +320,8 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
       }
 
       setHasUnsavedChanges(false);
+      // Clear draft after successful save
+      clearDraft();
       toast.success('All changes saved');
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
@@ -301,6 +357,8 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
       }
 
       setHasUnsavedChanges(false);
+      // Clear draft after successful publish
+      clearDraft();
       toast.success('All artworks published successfully!');
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
@@ -396,6 +454,15 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
         onCategoryChange={() => {}} // No category switching for artistic
         onSignOut={onSignOut}
       />
+
+      {/* Draft indicator - positioned below toolbar */}
+      <div className="fixed top-20 right-4 z-50">
+        <DraftIndicator 
+          draftRestored={draftRestored}
+          isSaving={isDraftSaving}
+          onDiscard={handleDiscardDraft}
+        />
+      </div>
 
       {/* Canvas */}
       <div className="flex-1 overflow-auto bg-muted/30">
