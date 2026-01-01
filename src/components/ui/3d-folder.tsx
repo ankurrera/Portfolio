@@ -194,7 +194,7 @@ export function AnimatedFolder({ title, projects, className }: AnimatedFolderPro
       </div>
 
       <ImageLightbox
-        projects={projects.slice(0, 3)}
+        projects={projects}
         currentIndex={selectedIndex ?? 0}
         isOpen={selectedIndex !== null}
         onClose={handleCloseLightbox}

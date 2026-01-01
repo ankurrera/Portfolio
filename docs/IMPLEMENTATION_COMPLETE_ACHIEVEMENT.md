@@ -11,10 +11,11 @@ Successfully implemented a comprehensive Achievement section with 3D animated fo
 2. ✅ **College** - Created folder with sample certificates
 3. ✅ **National** - Created folder with sample certificates
 4. ✅ **Online Courses** - Created folder with sample certificates
-5. ✅ **Extra Curricular** - Created folder with sample certificates
+5. ✅ **Extracurricular** - Created folder with sample certificates
+6. ✅ **Internships** - New folder for internship certificates
 
 ### ✅ Core Features
-- ✅ **5 Separate Folders** inside public achievement page
+- ✅ **6 Separate Folders** inside public achievement page
 - ✅ **Achievement Section Page** to upload certificates (Admin page at `/admin/achievement/edit`)
 - ✅ **Photo Upload** with UI ready for draggable rank implementation
 - ✅ **Hover Preview** - Shows top 3 certificates when hovering folder
@@ -81,7 +82,8 @@ achievement/
 ├── College/README.md
 ├── National/README.md
 ├── Online Courses/README.md
-└── Extra Curricular/README.md
+├── Extracurricular/README.md
+└── Internships/README.md
 ```
 
 ## 🎯 Animation Details
@@ -278,8 +280,9 @@ See `ACHIEVEMENT_IMPLEMENTATION_GUIDE.md` for complete database integration step
 4. `public/achievement/College/README.md`
 5. `public/achievement/National/README.md`
 6. `public/achievement/Online Courses/README.md`
-7. `public/achievement/Extra Curricular/README.md`
-8. `ACHIEVEMENT_IMPLEMENTATION_GUIDE.md`
+7. `public/achievement/Extracurricular/README.md`
+8. `public/achievement/Internships/README.md`
+9. `ACHIEVEMENT_IMPLEMENTATION_GUIDE.md`
 
 ### Modified (4 files)
 1. `src/pages/Achievement.tsx` - Added folders
@@ -299,8 +302,8 @@ See `ACHIEVEMENT_IMPLEMENTATION_GUIDE.md` for complete database integration step
 - **Components:** 3 (AnimatedFolder, ImageLightbox, ProjectCard)
 - **Pages:** 2 (Achievement, AdminAchievementEdit)
 - **Routes:** 2 (/achievement, /admin/achievement/edit)
-- **Folders:** 5 (School, College, National, Online Courses, Extra Curricular)
-- **Certificates:** 15 sample items (3 per category)
+- **Folders:** 6 (School, College, National, Online Courses, Extracurricular, Internships)
+- **Certificates:** Sample items (per category)
 - **Build Time:** ~5.5 seconds
 - **Build Size:** 877KB (main chunk)
 - **Animation Performance:** 60fps

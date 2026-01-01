@@ -8,11 +8,11 @@ This guide documents the implementation of the Achievement section with 3D anima
 ### 1. Public Achievement Page (`/achievement`)
 - **Location**: `src/pages/Achievement.tsx`
 - **Features**:
-  - 5 Category folders: School, College, National, Online Courses, Extra Curricular
+  - 6 Category folders: School, College, National, Online Courses, Extracurricular, Internships
   - 3D animated folder component with hover effects
   - Preview of top 3 certificates on hover
   - Full lightbox view when clicking certificates
-  - Responsive grid layout (1 column mobile, 2-3 columns tablet, 5 columns desktop)
+  - Responsive grid layout (1 column mobile, 2-3 columns tablet, 4+ columns desktop)
   - Sample certificate images from Unsplash
 
 ### 2. 3D Animated Folder Component
@@ -61,7 +61,9 @@ public/achievement/
 │   └── README.md
 ├── Online Courses/
 │   └── README.md
-└── Extra Curricular/
+├── Extracurricular/
+│   └── README.md
+└── Internships/
     └── README.md
 ```
 

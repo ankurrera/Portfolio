@@ -8,8 +8,6 @@ import DraggableArtwork from './DraggableArtwork';
 import EditorToolbar from './EditorToolbar';
 import ArtworkUploader from './ArtworkUploader';
 import ArtworkEditPanel from './ArtworkEditPanel';
-import { useFormPersistence } from '@/hooks/useFormPersistence';
-import { DraftIndicator } from '@/components/admin/DraftIndicator';
 import {
   Dialog,
   DialogContent,
@@ -28,7 +26,6 @@ const DESKTOP_CANVAS_WIDTH = 1600;
 export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditorProps) {
   const [artworks, setArtworks] = useState<ArtworkData[]>([]);
   const [mode, setMode] = useState<EditorMode>('edit');
-  const [devicePreview, setDevicePreview] = useState<DevicePreview>('desktop');
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -42,57 +39,7 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Create form data object for draft persistence
-  // Only persist layout data (positions, sizes, rotations), not full artwork data
-  const draftData = useMemo(() => ({
-    artworks: artworks.map(a => ({
-      id: a.id,
-      position_x: a.position_x,
-      position_y: a.position_y,
-      width: a.width,
-      height: a.height,
-      scale: a.scale,
-      rotation: a.rotation,
-      z_index: a.z_index,
-    }))
-  }), [artworks]);
-
-  // Use form persistence hook - only enable after initial load
-  const { draftRestored, isSaving: isDraftSaving, clearDraft } = useFormPersistence({
-    key: 'admin:draft:artistic',
-    data: draftData,
-    onRestore: (restored) => {
-      // Merge restored layout data with fetched artwork data
-      if (restored.artworks && Array.isArray(restored.artworks) && restored.artworks.length > 0) {
-        setArtworks(prevArtworks => {
-          return prevArtworks.map(artwork => {
-            const restoredArtwork = restored.artworks.find((a: any) => a.id === artwork.id);
-            if (restoredArtwork) {
-              return {
-                ...artwork,
-                position_x: restoredArtwork.position_x,
-                position_y: restoredArtwork.position_y,
-                width: restoredArtwork.width,
-                height: restoredArtwork.height,
-                scale: restoredArtwork.scale,
-                rotation: restoredArtwork.rotation,
-                z_index: restoredArtwork.z_index,
-              };
-            }
-            return artwork;
-          });
-        });
-      }
-    },
-    enabled: !loading && artworks.length > 0, // Only enable after artworks are loaded
-  });
-
-  const handleDiscardDraft = () => {
-    clearDraft();
-    // Reload artworks from database
-    fetchArtworks(true);
-    toast.success('Draft discarded');
-  };
+  // Draft persistence DISABLED for admin pages - no local storage saving
 
   const fetchArtworks = async (isRefresh = false) => {
     // Cancel any in-flight requests
@@ -320,8 +267,6 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
       }
 
       setHasUnsavedChanges(false);
-      // Clear draft after successful save
-      clearDraft();
       toast.success('All changes saved');
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
@@ -357,8 +302,6 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
       }
 
       setHasUnsavedChanges(false);
-      // Clear draft after successful publish
-      clearDraft();
       toast.success('All artworks published successfully!');
     } catch (error) {
       const errorMessage = formatSupabaseError(error);
@@ -399,18 +342,6 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedArtworkId, editingArtworkId, handleArtworkDelete]);
 
-  // Calculate scale factor for device preview
-  const getScaleFactor = () => {
-    switch (devicePreview) {
-      case 'tablet':
-        return 0.75;
-      case 'mobile':
-        return 0.5;
-      default:
-        return 1;
-    }
-  };
-
   // Calculate canvas height dynamically based on artwork positions
   const calculateCanvasHeight = useCallback(() => {
     if (artworks.length === 0) return 800;
@@ -425,7 +356,7 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
     return Math.max(800, maxExtent + 300);
   }, [artworks]);
 
-  const scaleFactor = getScaleFactor();
+  const scaleFactor = 1; // Desktop only, no scaling
   const canvasWidth = DESKTOP_CANVAS_WIDTH * scaleFactor;
   const canvasHeight = calculateCanvasHeight();
 
@@ -434,15 +365,12 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
       {/* Toolbar */}
       <EditorToolbar
         mode={mode}
-        devicePreview={devicePreview}
         snapToGrid={snapToGrid}
         canUndo={false} // TODO: Implement undo/redo history for artwork editor (similar to WYSIWYGEditor)
         canRedo={false} // TODO: Implement undo/redo history for artwork editor (similar to WYSIWYGEditor)
         hasChanges={hasUnsavedChanges}
-        category={'artistic' as 'selected' | 'commissioned' | 'editorial' | 'personal' | 'artistic'}
         isRefreshing={isRefreshing}
         onModeChange={setMode}
-        onDevicePreviewChange={setDevicePreview}
         onSnapToGridChange={setSnapToGrid}
         onUndo={handleUndo}
         onRedo={handleRedo}
@@ -451,18 +379,8 @@ export default function ArtworkWYSIWYGEditor({ onSignOut }: ArtworkWYSIWYGEditor
         onShowHistory={handleShowHistory}
         onAddPhoto={() => setShowUploader(true)}
         onRefresh={() => fetchArtworks(true)}
-        onCategoryChange={() => {}} // No category switching for artistic
         onSignOut={onSignOut}
       />
-
-      {/* Draft indicator - positioned below toolbar */}
-      <div className="fixed top-20 right-4 z-50">
-        <DraftIndicator 
-          draftRestored={draftRestored}
-          isSaving={isDraftSaving}
-          onDiscard={handleDiscardDraft}
-        />
-      </div>
 
       {/* Canvas */}
       <div className="flex-1 overflow-auto bg-muted/30">

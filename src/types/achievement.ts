@@ -8,7 +8,8 @@ export type AchievementCategory =
   | 'College'
   | 'National'
   | 'Online Courses'
-  | 'Extra Curricular';
+  | 'Extracurricular'
+  | 'Internships';
 
 /**
  * Complete achievement data structure matching the Supabase achievements table schema.
@@ -98,7 +99,8 @@ export function groupAchievementsByCategory(
     'College',
     'National',
     'Online Courses',
-    'Extra Curricular',
+    'Extracurricular',
+    'Internships',
   ];
 
   return categories.map(category => {

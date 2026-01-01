@@ -3,8 +3,6 @@ import {
   Eye, 
   Edit3, 
   Monitor, 
-  Tablet, 
-  Smartphone,
   Grid3x3,
   Save,
   Upload,
@@ -35,14 +33,12 @@ import { EditorMode, DevicePreview } from '@/types/wysiwyg';
 
 interface EditorToolbarProps {
   mode: EditorMode;
-  devicePreview: DevicePreview;
   snapToGrid: boolean;
   canUndo: boolean;
   canRedo: boolean;
   hasChanges: boolean;
   isRefreshing?: boolean;
   onModeChange: (mode: EditorMode) => void;
-  onDevicePreviewChange: (device: DevicePreview) => void;
   onSnapToGridChange: (enabled: boolean) => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -56,14 +52,12 @@ interface EditorToolbarProps {
 
 export default function EditorToolbar({
   mode,
-  devicePreview,
   snapToGrid,
   canUndo,
   canRedo,
   hasChanges,
   isRefreshing = false,
   onModeChange,
-  onDevicePreviewChange,
   onSnapToGridChange,
   onUndo,
   onRedo,
@@ -103,44 +97,17 @@ export default function EditorToolbar({
         <div className="flex items-center gap-2">
           <Separator orientation="vertical" className="h-6" />
           
-          {/* Device Preview */}
+          {/* Desktop View Only */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={devicePreview === 'desktop' ? 'default' : 'ghost'}
+                variant="default"
                 size="sm"
-                onClick={() => onDevicePreviewChange('desktop')}
               >
                 <Monitor className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Desktop View</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={devicePreview === 'tablet' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => onDevicePreviewChange('tablet')}
-              >
-                <Tablet className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Tablet View</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={devicePreview === 'mobile' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => onDevicePreviewChange('mobile')}
-              >
-                <Smartphone className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Mobile View</TooltipContent>
           </Tooltip>
 
           <Separator orientation="vertical" className="h-6" />
