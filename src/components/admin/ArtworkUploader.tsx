@@ -1,12 +1,10 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Upload, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { formatSupabaseError } from '@/lib/utils';
 import { toast } from 'sonner';
 import UnifiedArtworkForm, { UnifiedArtworkFormData } from './UnifiedArtworkForm';
-import { useFormDraft } from '@/hooks/useFormDraft';
-import { DraftIndicator } from './DraftIndicator';
 
 interface ArtworkUploaderProps {
   onUploadComplete: () => void;
@@ -27,26 +25,6 @@ export default function ArtworkUploader({ onUploadComplete, onCancel }: ArtworkU
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Form draft persistence - only save form data, not files
-  const draftData = {
-    metadata: formData.metadata,
-    isPublished: formData.isPublished,
-    // Note: We don't persist files, only metadata
-  };
-
-  const { draftRestored, isSaving: isDraftSaving, clearDraft } = useFormDraft({
-    key: 'artwork_add_form_draft',
-    data: draftData,
-    onRestore: (restored) => {
-      setFormData(prev => ({
-        ...prev,
-        metadata: restored.metadata || prev.metadata,
-        isPublished: restored.isPublished || prev.isPublished,
-      }));
-    },
-    enabled: !uploading, // Disable during upload
-  });
-
   const handleFormChange = useCallback((data: UnifiedArtworkFormData) => {
     setFormData(data);
   }, []);
@@ -56,21 +34,6 @@ export default function ArtworkUploader({ onUploadComplete, onCancel }: ArtworkU
       onCancel();
     }
   }, [onCancel]);
-
-  const handleDiscardDraft = useCallback(() => {
-    clearDraft();
-    setFormData({
-      metadata: {
-        copyright: '© Ankur Bag.',
-        dimension_unit: 'cm',
-      },
-      primaryImage: null,
-      processImages: [],
-      isPublished: false,
-    });
-    setErrors({});
-    toast.success('Draft discarded');
-  }, [clearDraft]);
 
   // Generate web-optimized derivative with aspect ratio preservation
   const generateDerivative = useCallback(async (file: File, originalWidth: number, originalHeight: number): Promise<Blob> => {
@@ -328,9 +291,6 @@ export default function ArtworkUploader({ onUploadComplete, onCancel }: ArtworkU
       setUploadProgress(prev => [...prev, '✓ Artwork saved successfully']);
       toast.success('Artwork uploaded successfully');
       
-      // Clear draft after successful upload
-      clearDraft();
-      
       // Reset form
       setFormData({
         metadata: {
@@ -352,17 +312,10 @@ export default function ArtworkUploader({ onUploadComplete, onCancel }: ArtworkU
     } finally {
       setUploading(false);
     }
-  }, [formData, generateDerivative, getImageDimensions, clearDraft, onUploadComplete]);
+  }, [formData, generateDerivative, getImageDimensions, onUploadComplete]);
 
   return (
     <div className="space-y-6">
-      {/* Draft Indicator */}
-      <DraftIndicator
-        draftRestored={draftRestored}
-        isSaving={isDraftSaving}
-        onDiscard={handleDiscardDraft}
-      />
-
       {/* Unified Artwork Form */}
       <UnifiedArtworkForm
         mode="add"

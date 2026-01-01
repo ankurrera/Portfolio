@@ -84,65 +84,29 @@ export default function UnifiedPhotoForm({
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Sync local state with initialData when it changes (for edit mode)
-  // Use ref to track previous values and prevent unnecessary re-renders
-  const prevCaptionRef = useRef<string>();
-  const prevPhotographerRef = useRef<string>();
-  const prevDateRef = useRef<string>();
-  const prevDeviceRef = useRef<string>();
-  const prevYearRef = useRef<number>();
-  const prevCreditsRef = useRef<string>();
-  const prevCameraRef = useRef<string>();
-  const prevVisibilityRef = useRef<string>();
+  // Track if initial data has been loaded (for edit mode only)
+  const initializedRef = useRef(false);
   
+  // Sync local state with initialData only once on mount (for edit mode)
+  // This ensures the form is populated from DB data initially,
+  // but user edits are not overwritten by the initialData prop
   useEffect(() => {
-    if (mode === 'edit' && initialData) {
-      // Only update if specific fields have changed
-      if (initialData.caption !== prevCaptionRef.current) {
-        setCaption(initialData.caption || '');
-        prevCaptionRef.current = initialData.caption;
-      }
-      if (initialData.photographer_name !== prevPhotographerRef.current) {
-        setPhotographerName(initialData.photographer_name || '');
-        prevPhotographerRef.current = initialData.photographer_name;
-      }
-      if (initialData.date_taken !== prevDateRef.current) {
-        setDateTaken(initialData.date_taken || '');
-        prevDateRef.current = initialData.date_taken;
-      }
-      if (initialData.device_used !== prevDeviceRef.current) {
-        setDeviceUsed(initialData.device_used || '');
-        prevDeviceRef.current = initialData.device_used;
-      }
-      if (initialData.year !== prevYearRef.current) {
-        setYear(initialData.year || '');
-        prevYearRef.current = initialData.year;
-      }
-      if (initialData.credits !== prevCreditsRef.current) {
-        setCredits(initialData.credits || '');
-        prevCreditsRef.current = initialData.credits;
-      }
-      if (initialData.camera_lens !== prevCameraRef.current) {
-        setCameraLens(initialData.camera_lens || '');
-        prevCameraRef.current = initialData.camera_lens;
-      }
-      if (initialData.project_visibility !== prevVisibilityRef.current) {
-        setProjectVisibility(initialData.project_visibility || 'public');
-        prevVisibilityRef.current = initialData.project_visibility;
-      }
+    if (mode === 'edit' && initialData && !initializedRef.current) {
+      // Initialize all fields from initialData on first mount
+      setCaption(initialData.caption || '');
+      setPhotographerName(initialData.photographer_name || '');
+      setDateTaken(initialData.date_taken || '');
+      setDeviceUsed(initialData.device_used || '');
+      setYear(initialData.year || '');
+      setCredits(initialData.credits || '');
+      setCameraLens(initialData.camera_lens || '');
+      setProjectVisibility(initialData.project_visibility || 'public');
+      setTags(initialData.tags?.join(', ') || '');
+      setExternalLinks(initialData.external_links || []);
       
-      // For arrays, do a length check first for efficiency
-      const newTags = initialData.tags?.join(', ') || '';
-      if (newTags !== tags) {
-        setTags(newTags);
-      }
-      
-      // For external links, compare length first
-      if (initialData.external_links?.length !== externalLinks.length) {
-        setExternalLinks(initialData.external_links || []);
-      }
+      initializedRef.current = true;
     }
-  }, [mode, initialData, tags, externalLinks]);
+  }, [mode, initialData]);
 
   // Notify parent of changes (for add mode) - debounced via useMemo
   const formData = useMemo(() => {
