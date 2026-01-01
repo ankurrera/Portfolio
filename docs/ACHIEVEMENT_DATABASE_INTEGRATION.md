@@ -10,7 +10,7 @@ Successfully integrated the Achievement page with Supabase database, providing b
 
 Created the `achievements` table with:
 - **Fields**: id, title, description, category, image_url, image_original_url, image_width, image_height, display_order, is_published, external_link, created_at, updated_at
-- **Categories**: School, College, National, Online Courses, Extra Curricular
+- **Categories**: School, College, National, Online Courses, Extracurricular, Internships
 - **Indexes**: Optimized for category, is_published, display_order queries
 - **RLS Policies**: 
   - Public can SELECT published achievements only

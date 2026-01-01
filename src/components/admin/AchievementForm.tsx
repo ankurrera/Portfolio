@@ -23,7 +23,8 @@ const categories: AchievementCategory[] = [
   'College',
   'National',
   'Online Courses',
-  'Extra Curricular',
+  'Extracurricular',
+  'Internships',
 ];
 
 const AchievementForm = ({ achievement, onSave, onCancel }: AchievementFormProps) => {

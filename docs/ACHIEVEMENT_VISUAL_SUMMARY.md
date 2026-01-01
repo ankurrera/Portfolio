@@ -102,13 +102,13 @@ Upload images, set titles, and drag to reorder.
 │ 3 items          │  │ 3 items          │  │ 3 items          │
 └──────────────────┘  └──────────────────┘  └──────────────────┘
 
-┌──────────────────┐  ┌──────────────────┐
-│ Online Courses   │  │ Extra Curricular │
-│ Online certs...  │  │ Sports, arts...  │
-│                  │  │                  │
-│ [Manage Certs ⚙️] │  │ [Manage Certs ⚙️] │
-│ 3 items          │  │ 3 items          │
-└──────────────────┘  └──────────────────┘
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│ Online Courses   │  │ Extracurricular  │  │ Internships      │
+│ Online certs...  │  │ Sports, arts...  │  │ Work experience  │
+│                  │  │                  │  │                  │
+│ [Manage Certs ⚙️] │  │ [Manage Certs ⚙️] │  │ [Manage Certs ⚙️] │
+│ 3 items          │  │ 3 items          │  │ 3 items          │
+└──────────────────┘  └──────────────────┘  └──────────────────┘
 
 ┌─ Getting Started ────────────────────────────────────────┐
 │ • Click on any category to manage its certificates       │
@@ -158,7 +158,9 @@ public/
     │   └── README.md
     ├── Online Courses/
     │   └── README.md
-    └── Extra Curricular/
+    ├── Extracurricular/
+    │   └── README.md
+    └── Internships/
         └── README.md
 ```
 
@@ -247,7 +249,7 @@ In Lightbox:
 
 ## ✅ Requirements Checklist
 
-- [x] 5 Separate folders (School, College, National, Online Courses, Extra Curricular)
+- [x] 6 Separate folders (School, College, National, Online Courses, Extracurricular, Internships)
 - [x] Achievement section page for uploading certificates
 - [x] Photo upload capability (admin UI ready)
 - [x] Draggable rank system (UI prepared for implementation)
