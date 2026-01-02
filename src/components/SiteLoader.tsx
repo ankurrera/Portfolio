@@ -38,6 +38,14 @@ const hideInitialLoader = () => {
 };
 
 /**
+ * Check if this is the initial page load (not internal navigation)
+ */
+const getIsInitialLoad = (): boolean => {
+  if (typeof window === "undefined") return true;
+  return !sessionStorage.getItem(INITIAL_LOAD_KEY);
+};
+
+/**
  * Full-screen website loading animation that appears on initial site load.
  * Remains visible until ALL images from ALL pages are fully loaded and rendered.
  * 
@@ -55,10 +63,9 @@ const SiteLoader = ({
   fallbackTimeout = 10000,
   minDisplayTime = 500,
 }: SiteLoaderProps) => {
-  // Check if this is the initial load
-  const isInitialLoad = typeof window !== "undefined" 
-    ? !sessionStorage.getItem(INITIAL_LOAD_KEY)
-    : true;
+  // Compute isInitialLoad once on mount and store in ref to avoid re-computation
+  const isInitialLoadRef = useRef<boolean>(getIsInitialLoad());
+  const isInitialLoad = isInitialLoadRef.current;
 
   const [isVisible, setIsVisible] = useState(isInitialLoad);
   const [isContentVisible, setIsContentVisible] = useState(!isInitialLoad);
@@ -80,6 +87,8 @@ const SiteLoader = ({
     if (hasCompletedRef.current) return;
     hasCompletedRef.current = true;
 
+    console.info(`[SiteLoader] Finishing loading, hiding initial loader`);
+
     // Hide the initial loader from index.html with fade-out
     hideInitialLoader();
     
@@ -94,11 +103,13 @@ const SiteLoader = ({
 
   // Listen for preloader completion
   useEffect(() => {
+    // For internal navigation, ensure loader is hidden immediately
     if (!isInitialLoad) {
-      // For internal navigation, ensure loader is hidden
       hideInitialLoader();
       return;
     }
+
+    console.info(`[SiteLoader] Effect running: isPreloading=${isPreloading}, hasCompleted=${hasCompletedRef.current}`);
 
     // When preloading is complete, finish loading
     if (!isPreloading && !hasCompletedRef.current) {
