@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useGlobalImagePreloader } from "@/hooks/useGlobalImagePreloader";
 
 interface SiteLoaderProps {
   children: React.ReactNode;
@@ -37,8 +38,22 @@ const hideInitialLoader = () => {
 };
 
 /**
+ * Check if this is the initial page load (not internal navigation)
+ */
+const getIsInitialLoad = (): boolean => {
+  if (typeof window === "undefined") return true;
+  return !sessionStorage.getItem(INITIAL_LOAD_KEY);
+};
+
+/**
  * Full-screen website loading animation that appears on initial site load.
- * Remains visible until all critical assets (images, fonts, above-the-fold content) are loaded.
+ * Remains visible until ALL images from ALL pages are fully loaded and rendered.
+ * 
+ * This includes images from:
+ * - About page (profile picture, education logos, experience logos)
+ * - Photoshoot page (all photos)
+ * - Artistic page (all artworks and process images)
+ * - Achievement page (all certificates and previews)
  * 
  * The initial loader is rendered inline in index.html to prevent any flash of content.
  * This component manages the loading state and triggers the fade-out when ready.
@@ -48,155 +63,75 @@ const SiteLoader = ({
   fallbackTimeout = 10000,
   minDisplayTime = 500,
 }: SiteLoaderProps) => {
-  const [isLoading, setIsLoading] = useState(() => {
-    // Check if this is the initial load or a navigation
-    if (typeof window !== "undefined") {
-      return !sessionStorage.getItem(INITIAL_LOAD_KEY);
-    }
-    return true;
-  });
-  const [isVisible, setIsVisible] = useState(() => {
-    if (typeof window !== "undefined") {
-      return !sessionStorage.getItem(INITIAL_LOAD_KEY);
-    }
-    return true;
-  });
+  // Compute isInitialLoad once on mount and store in ref to avoid re-computation
+  const isInitialLoadRef = useRef<boolean>(getIsInitialLoad());
+  const isInitialLoad = isInitialLoadRef.current;
+
+  const [isVisible, setIsVisible] = useState(isInitialLoad);
+  const [isContentVisible, setIsContentVisible] = useState(!isInitialLoad);
   
-  const startTimeRef = useRef<number>(Date.now());
-  const hasLoadedRef = useRef<boolean>(false);
-  const cleanupRef = useRef<(() => void) | null>(null);
+  const hasCompletedRef = useRef<boolean>(!isInitialLoad);
+
+  // Memoize preloader options - only fallbackTimeout and minDisplayTime can change
+  // isInitialLoad is from a ref and won't change
+  const preloaderOptions = useMemo(() => ({
+    fallbackTimeout,
+    minDisplayTime,
+    skip: !isInitialLoad,
+  }), [fallbackTimeout, minDisplayTime]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Use the global image preloader hook
+  const { isLoading: isPreloading, progress, totalImages, loadedImages } = useGlobalImagePreloader(preloaderOptions);
 
   const finishLoading = useCallback(() => {
     // Prevent multiple calls
-    if (hasLoadedRef.current) return;
-    hasLoadedRef.current = true;
+    if (hasCompletedRef.current) return;
+    hasCompletedRef.current = true;
 
-    const elapsed = Date.now() - startTimeRef.current;
-    const remainingMinTime = Math.max(0, minDisplayTime - elapsed);
+    console.info(`[SiteLoader] Finishing loading, hiding initial loader`);
 
-    // Wait for minimum display time before starting fade-out
+    // Hide the initial loader from index.html with fade-out
+    hideInitialLoader();
+    
+    // Make content visible
+    setIsContentVisible(true);
+    
+    // After fade-out animation completes, update visibility state
     setTimeout(() => {
-      setIsLoading(false);
-      // Mark initial load as complete
-      sessionStorage.setItem(INITIAL_LOAD_KEY, "true");
-      // Hide the initial loader from index.html
-      hideInitialLoader();
-      
-      // After fade-out animation completes, update visibility state
-      setTimeout(() => {
-        setIsVisible(false);
-      }, TRANSITION_DURATION_MS);
-    }, remainingMinTime);
-  }, [minDisplayTime]);
+      setIsVisible(false);
+    }, TRANSITION_DURATION_MS);
+  }, []);
 
+  // Listen for preloader completion
   useEffect(() => {
-    // Skip if not initial load
-    if (!isVisible) {
-      // Ensure initial loader is hidden for internal navigation
+    // For internal navigation, ensure loader is hidden immediately
+    if (!isInitialLoad) {
       hideInitialLoader();
       return;
     }
 
-    let fallbackTimer: ReturnType<typeof setTimeout>;
-    let isMounted = true;
+    console.info(`[SiteLoader] Effect running: isPreloading=${isPreloading}, hasCompleted=${hasCompletedRef.current}`);
 
-    const checkAllAssetsLoaded = () => {
-      // Prevent execution if already finished or unmounted
-      if (hasLoadedRef.current || !isMounted) return;
-      
-      // Check if document is ready
-      if (document.readyState === "complete") {
-        // Wait for all images to be loaded
-        const images = Array.from(document.images);
-        const imagePromises = images.map((img) => {
-          if (img.complete) return Promise.resolve();
-          return new Promise<void>((resolve) => {
-            const handleLoad = () => {
-              img.removeEventListener("load", handleLoad);
-              img.removeEventListener("error", handleError);
-              resolve();
-            };
-            const handleError = () => {
-              img.removeEventListener("load", handleLoad);
-              img.removeEventListener("error", handleError);
-              resolve(); // Don't block on failed images
-            };
-            img.addEventListener("load", handleLoad);
-            img.addEventListener("error", handleError);
-          });
-        });
-
-        // Check for fonts loaded
-        const fontsPromise = document.fonts?.ready || Promise.resolve();
-
-        // Wait for all assets
-        Promise.all([...imagePromises, fontsPromise])
-          .then(() => {
-            if (isMounted) {
-              finishLoading();
-            }
-          })
-          .catch(() => {
-            // Fallback: finish loading even if some checks fail
-            if (isMounted) {
-              finishLoading();
-            }
-          });
-      }
-    };
-
-    const handleDOMContentLoaded = () => {
-      // Re-check after DOM is ready
-      if (document.readyState === "complete") {
-        checkAllAssetsLoaded();
-      }
-    };
-
-    // Set up fallback timeout
-    fallbackTimer = setTimeout(() => {
-      console.warn("SiteLoader: Fallback timeout reached, finishing load");
+    // When preloading is complete, finish loading
+    if (!isPreloading && !hasCompletedRef.current) {
+      console.info(`[SiteLoader] Preloading complete: ${loadedImages}/${totalImages} images (${progress}%)`);
       finishLoading();
-    }, fallbackTimeout);
-
-    // Check if already loaded
-    if (document.readyState === "complete") {
-      checkAllAssetsLoaded();
-    } else {
-      // Listen for load event
-      window.addEventListener("load", checkAllAssetsLoaded);
     }
-
-    // Also listen for DOMContentLoaded as an early signal
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", handleDOMContentLoaded);
-    }
-
-    // Store cleanup function
-    cleanupRef.current = () => {
-      isMounted = false;
-      clearTimeout(fallbackTimer);
-      window.removeEventListener("load", checkAllAssetsLoaded);
-      document.removeEventListener("DOMContentLoaded", handleDOMContentLoaded);
-    };
-
-    return () => {
-      cleanupRef.current?.();
-    };
-  }, [fallbackTimeout, finishLoading, isVisible]);
+  }, [isPreloading, isInitialLoad, finishLoading, loadedImages, totalImages, progress]);
 
   // Don't render wrapper if not needed (internal navigation)
   if (!isVisible) {
     return <>{children}</>;
   }
 
-  // During initial load, render content but keep it hidden
+  // During initial load, render content but keep it hidden until all images are preloaded
   // The initial loader from index.html is already visible
   return (
     <div
       className={`transition-opacity duration-500 ease-out ${
-        isLoading ? "opacity-0" : "opacity-100"
+        isContentVisible ? "opacity-100" : "opacity-0"
       }`}
-      style={{ visibility: isLoading ? "hidden" : "visible" }}
+      style={{ visibility: isContentVisible ? "visible" : "hidden" }}
     >
       {children}
     </div>
