@@ -5,8 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatSupabaseError } from '@/lib/utils';
 import { toast } from 'sonner';
 import PhotoMetadataForm, { PhotoMetadata } from './PhotoMetadataForm';
-import { useFormDraft } from '@/hooks/useFormDraft';
-import { DraftIndicator } from './DraftIndicator';
 
 interface PhotoUploaderProps {
   onUploadComplete: () => void;
@@ -60,22 +58,6 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
   const [uploadProgress, setUploadProgress] = useState<string[]>([]);
   const [metadata, setMetadata] = useState<PhotoMetadata>({});
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
-
-  // Form draft persistence - only save metadata, not files
-  const { draftRestored, isSaving: isDraftSaving, clearDraft } = useFormDraft({
-    key: 'photoshoot_add_form_draft',
-    data: metadata,
-    onRestore: (restored) => {
-      setMetadata(restored);
-    },
-    enabled: !uploading, // Disable during upload
-  });
-
-  const handleDiscardDraft = useCallback(() => {
-    clearDraft();
-    setMetadata({});
-    toast.success('Draft discarded');
-  }, [clearDraft]);
 
   // Helper function to extract storage path from Supabase public URL
   const extractStoragePath = (url: string): string | null => {
@@ -424,17 +406,15 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
     // Clean up preview URLs
     pendingFiles.forEach(({ previewUrl }) => URL.revokeObjectURL(previewUrl));
     
-    // Clear draft after successful upload
+    // Reset form after successful upload
     if (successCount > 0) {
-      clearDraft();
-      
       // Reset everything after successful upload
       setPendingFiles([]);
       setMetadata({});
       
       onUploadComplete();
     }
-  }, [pendingFiles, uploadFile, clearDraft, onUploadComplete]);
+  }, [pendingFiles, uploadFile, onUploadComplete]);
 
   const handleRemovePendingFile = useCallback((index: number) => {
     setPendingFiles(prev => {
@@ -467,13 +447,6 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
 
   return (
     <div className="space-y-4 flex flex-col min-h-0">
-      {/* Draft Indicator */}
-      <DraftIndicator
-        draftRestored={draftRestored}
-        isSaving={isDraftSaving}
-        onDiscard={handleDiscardDraft}
-      />
-
       {/* Metadata Form */}
       <PhotoMetadataForm 
         metadata={metadata} 
