@@ -10,10 +10,12 @@ const PortfolioFooter = () => {
         </a>
         <span className="mx-2">/</span>
         <a
-          href="tel:+919002278769"
+          href="https://x.com/ankurcine"
+          target="_blank"
+          rel="noopener noreferrer"
           className="hover:text-foreground transition-colors"
         >
-          M: +91 90022 78769
+          X: @ankurcine
         </a>
         <span className="mx-2">/</span>
         <a
