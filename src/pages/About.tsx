@@ -27,6 +27,7 @@ import { Loader2 } from "lucide-react";
 import SocialLinks from "@/components/SocialLinks";
 import { VALIDATION_RULES, VALIDATION_MESSAGES } from "@/lib/validation/contactFormValidation";
 import { parseApiResponse } from "@/lib/utils";
+import { AnimatedBlobImage } from "@/components/ui/frame";
 
 const contactSchema = z.object({
   name: z.string().trim()
@@ -236,34 +237,14 @@ const About = () => {
               </div>
             )}
 
-            {/* Portrait */}
+            {/* Portrait with animated blob effect */}
             {!loading && portrait && (
-              <div className="max-w-xs mx-auto border border-foreground/10 overflow-hidden">
-                <picture className="relative block">
-                  {portrait.width && portrait.height && (
-                    <svg
-                      width={portrait.width}
-                      height={portrait.height}
-                      viewBox={`0 0 ${portrait.width} ${portrait.height}`}
-                      className="w-full h-auto"
-                    >
-                      <rect
-                        width={portrait.width}
-                        height={portrait.height}
-                        fill="white"
-                      />
-                    </svg>
-                  )}
-                  <img
-                    src={portrait.src}
-                    alt={portrait.alt}
-                    className="absolute top-0 left-0 w-full h-auto grayscale"
-                    style={{
-                      opacity: loading ? 0 : 1,
-                      transition: 'opacity 0.5s ease-out'
-                    }}
-                  />
-                </picture>
+              <div className="max-w-xs mx-auto">
+                <AnimatedBlobImage
+                  src={portrait.src}
+                  alt={portrait.alt}
+                  className="w-full max-w-xs grayscale"
+                />
               </div>
             )}
 
