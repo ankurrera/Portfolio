@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { GooeyLoader } from "@/components/ui/loader-10";
 
 interface SiteLoaderProps {
   children: React.ReactNode;
@@ -12,9 +11,37 @@ interface SiteLoaderProps {
 // Session storage key to track if initial load has completed
 const INITIAL_LOAD_KEY = "site-initial-load-complete";
 
+// Transition duration in ms - must match CSS transition duration in index.html
+const TRANSITION_DURATION_MS = 500;
+
+/**
+ * Hides the initial inline loader from index.html and reveals the content.
+ * The loader is displayed immediately via index.html before React loads.
+ * This component handles the transition when all assets are ready.
+ */
+const hideInitialLoader = () => {
+  const initialLoader = document.getElementById("initial-loader");
+  const root = document.getElementById("root");
+  
+  if (initialLoader) {
+    initialLoader.classList.add("hidden");
+    // Remove from DOM after transition completes
+    setTimeout(() => {
+      initialLoader.remove();
+    }, TRANSITION_DURATION_MS);
+  }
+  
+  if (root) {
+    root.classList.remove("loading-hidden");
+  }
+};
+
 /**
  * Full-screen website loading animation that appears on initial site load.
  * Remains visible until all critical assets (images, fonts, above-the-fold content) are loaded.
+ * 
+ * The initial loader is rendered inline in index.html to prevent any flash of content.
+ * This component manages the loading state and triggers the fade-out when ready.
  */
 const SiteLoader = ({
   children,
@@ -52,17 +79,23 @@ const SiteLoader = ({
       setIsLoading(false);
       // Mark initial load as complete
       sessionStorage.setItem(INITIAL_LOAD_KEY, "true");
+      // Hide the initial loader from index.html
+      hideInitialLoader();
       
-      // After fade-out animation completes, hide loader completely
+      // After fade-out animation completes, update visibility state
       setTimeout(() => {
         setIsVisible(false);
-      }, 500); // Match the CSS transition duration
+      }, TRANSITION_DURATION_MS);
     }, remainingMinTime);
   }, [minDisplayTime]);
 
   useEffect(() => {
     // Skip if not initial load
-    if (!isVisible) return;
+    if (!isVisible) {
+      // Ensure initial loader is hidden for internal navigation
+      hideInitialLoader();
+      return;
+    }
 
     let fallbackTimer: ReturnType<typeof setTimeout>;
     let isMounted = true;
@@ -151,35 +184,22 @@ const SiteLoader = ({
     };
   }, [fallbackTimeout, finishLoading, isVisible]);
 
-  // Don't render loader at all if not needed (internal navigation)
+  // Don't render wrapper if not needed (internal navigation)
   if (!isVisible) {
     return <>{children}</>;
   }
 
+  // During initial load, render content but keep it hidden
+  // The initial loader from index.html is already visible
   return (
-    <>
-      {/* Loader overlay */}
-      <div
-        className={`fixed inset-0 z-[9999] flex items-center justify-center bg-background transition-all duration-500 ease-out ${
-          isLoading
-            ? "opacity-100 scale-100"
-            : "opacity-0 scale-105 pointer-events-none"
-        }`}
-        aria-hidden={!isLoading}
-      >
-        <GooeyLoader />
-      </div>
-
-      {/* Main content - hidden until loader fades out */}
-      <div
-        className={`transition-opacity duration-500 ease-out ${
-          isLoading ? "opacity-0" : "opacity-100"
-        }`}
-        style={{ visibility: isLoading ? "hidden" : "visible" }}
-      >
-        {children}
-      </div>
-    </>
+    <div
+      className={`transition-opacity duration-500 ease-out ${
+        isLoading ? "opacity-0" : "opacity-100"
+      }`}
+      style={{ visibility: isLoading ? "hidden" : "visible" }}
+    >
+      {children}
+    </div>
   );
 };
 
