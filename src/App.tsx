@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./hooks/useAuth";
-import SiteLoader from "./components/SiteLoader";
 import About from "./pages/About";
 import Technical from "./pages/Technical";
 import AllTechnicalProjects from "./pages/AllTechnicalProjects";
@@ -36,39 +35,37 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <TooltipProvider>
         <AuthProvider>
-          <SiteLoader>
-            <BrowserRouter>
-              <ErrorBoundary>
-                <Toaster />
-                <Sonner />
-                <Routes>
-                  <Route path="/" element={<About />} />
-                  <Route path="/technical" element={<Technical />} />
-                  <Route path="/technical/projects" element={<AllTechnicalProjects />} />
-                  <Route path="/artistic" element={<Artistic />} />
-                  <Route path="/achievement" element={<Achievement />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/photoshoots" element={<Photoshoots />} />
-                  <Route path="/demo/project-showcase" element={<ProjectShowcaseDemo />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                  <Route path="/admin/photoshoots/edit" element={<AdminPhotoshootsEdit />} />
-                  <Route path="/admin/artistic/edit" element={<AdminArtisticEdit />} />
-                  <Route path="/admin/technical/edit" element={<AdminTechnicalEdit />} />
-                  <Route path="/admin/technical/about/edit" element={<AdminTechnicalAboutEdit />} />
-                  <Route path="/admin/technical/skills/edit" element={<AdminSkillsEdit />} />
-                  <Route path="/admin/technical/experience/edit" element={<AdminExperienceEdit />} />
-                  <Route path="/admin/technical/social-links/edit" element={<AdminTechnicalSocialLinksEdit />} />
-                  <Route path="/admin/achievement/edit" element={<AdminAchievementEdit />} />
-                  <Route path="/admin/hero/edit" element={<AdminHeroEdit />} />
-                  <Route path="/admin/about/edit" element={<AdminAboutEdit />} />
-                  <Route path="/admin/login" element={<AdminLogin />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </ErrorBoundary>
-            </BrowserRouter>
-          </SiteLoader>
+          <BrowserRouter>
+            <ErrorBoundary>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route path="/" element={<About />} />
+                <Route path="/technical" element={<Technical />} />
+                <Route path="/technical/projects" element={<AllTechnicalProjects />} />
+                <Route path="/artistic" element={<Artistic />} />
+                <Route path="/achievement" element={<Achievement />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/photoshoots" element={<Photoshoots />} />
+                <Route path="/demo/project-showcase" element={<ProjectShowcaseDemo />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/photoshoots/edit" element={<AdminPhotoshootsEdit />} />
+                <Route path="/admin/artistic/edit" element={<AdminArtisticEdit />} />
+                <Route path="/admin/technical/edit" element={<AdminTechnicalEdit />} />
+                <Route path="/admin/technical/about/edit" element={<AdminTechnicalAboutEdit />} />
+                <Route path="/admin/technical/skills/edit" element={<AdminSkillsEdit />} />
+                <Route path="/admin/technical/experience/edit" element={<AdminExperienceEdit />} />
+                <Route path="/admin/technical/social-links/edit" element={<AdminTechnicalSocialLinksEdit />} />
+                <Route path="/admin/achievement/edit" element={<AdminAchievementEdit />} />
+                <Route path="/admin/hero/edit" element={<AdminHeroEdit />} />
+                <Route path="/admin/about/edit" element={<AdminAboutEdit />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </ErrorBoundary>
+          </BrowserRouter>
         </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
