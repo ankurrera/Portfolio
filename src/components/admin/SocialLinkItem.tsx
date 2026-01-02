@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { GripVertical, FileText, Github, Linkedin, Twitter, Send, Upload, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { GripVertical, FileText, Github, Linkedin, X as XIcon, Send, Upload, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -33,7 +33,7 @@ const SocialLinkItem = ({ link, onUpdate, onDragStart, onDragOver, onDrop, onMov
       case 'linkedin':
         return <Linkedin className="w-5 h-5" />;
       case 'twitter':
-        return <Twitter className="w-5 h-5" />;
+        return <XIcon className="w-5 h-5" />;
       case 'telegram':
         return <Send className="w-5 h-5" />;
       default:

@@ -83,7 +83,6 @@ const AnimatedBlobImage = React.forwardRef<
     <div
       className={cn(
         "relative w-full max-w-sm aspect-square", // Responsive container with a square aspect ratio
-        "animate-blob-spin-component", // Apply the animation from injected styles
         className
       )}
     >

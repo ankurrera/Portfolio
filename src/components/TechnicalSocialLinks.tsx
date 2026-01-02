@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { SocialLink } from '@/types/socialLinks';
-import { Github, Linkedin, Twitter } from 'lucide-react';
+import { Github, Linkedin, X } from 'lucide-react';
 
 const TechnicalSocialLinks = () => {
   const [links, setLinks] = useState<SocialLink[]>([]);
@@ -38,7 +38,7 @@ const TechnicalSocialLinks = () => {
       case 'linkedin':
         return <Linkedin className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />;
       case 'twitter':
-        return <Twitter className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />;
+        return <X className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />;
       default:
         return null;
     }
