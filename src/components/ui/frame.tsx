@@ -1,56 +1,16 @@
 import * as React from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-// Track if styles have been injected to prevent duplicates
-let stylesInjected = false;
-
-// CSS for animations - injected once globally
-const animationStyles = `
-  @keyframes blob-path-animation {
-    0% {
-      d: path("M0.81,0.56 C0.84,0.73 0.69,0.88 0.52,0.92 C0.35,0.96 0.17,0.85 0.09,0.68 C0.01,0.51 0.07,0.3 0.23,0.19 C0.39,0.08 0.61,0.11 0.72,0.26 C0.8,0.37 0.78,0.47 0.81,0.56 Z");
-    }
-    25% {
-      d: path("M0.88,0.56 C0.93,0.69 0.8,0.86 0.63,0.9 C0.46,0.94 0.25,0.88 0.16,0.74 C0.07,0.6 0.11,0.41 0.25,0.3 C0.39,0.19 0.61,0.21 0.73,0.33 C0.82,0.42 0.85,0.48 0.88,0.56 Z");
-    }
-    50% {
-      d: path("M0.84,0.62 C0.88,0.73 0.75,0.88 0.58,0.91 C0.41,0.94 0.24,0.86 0.15,0.72 C0.06,0.58 0.12,0.38 0.27,0.27 C0.42,0.16 0.62,0.2 0.73,0.33 C0.81,0.43 0.81,0.53 0.84,0.62 Z");
-    }
-    75% {
-      d: path("M0.8,0.66 C0.84,0.78 0.7,0.91 0.54,0.92 C0.38,0.93 0.21,0.84 0.13,0.7 C0.05,0.56 0.13,0.37 0.28,0.26 C0.43,0.15 0.62,0.2 0.71,0.33 C0.78,0.43 0.77,0.57 0.8,0.66 Z");
-    }
-    100% {
-      d: path("M0.81,0.56 C0.84,0.73 0.69,0.88 0.52,0.92 C0.35,0.96 0.17,0.85 0.09,0.68 C0.01,0.51 0.07,0.3 0.23,0.19 C0.39,0.08 0.61,0.11 0.72,0.26 C0.8,0.37 0.78,0.47 0.81,0.56 Z");
-    }
-  }
-
-  @keyframes blob-spin-animation {
-    0% { transform: rotate(0deg); }
-    50% { transform: rotate(5deg); }
-    100% { transform: rotate(0deg); }
-  }
-
-  .animate-blob-path-component {
-    animation: blob-path-animation 15s ease-in-out infinite;
-  }
-
-  .animate-blob-spin-component {
-    animation: blob-spin-animation 20s ease-in-out infinite;
-  }
-`;
-
-/**
- * Injects animation styles into the document head once
- */
-function injectStyles() {
-  if (stylesInjected || typeof document === "undefined") return;
-  
-  const styleElement = document.createElement("style");
-  styleElement.setAttribute("data-animated-blob-image", "true");
-  styleElement.textContent = animationStyles;
-  document.head.appendChild(styleElement);
-  stylesInjected = true;
-}
+// Blob path keyframes for animation - these will be interpolated by Framer Motion
+// Using JavaScript-based animation ensures cross-browser compatibility including mobile
+const blobPaths = [
+  "M0.81,0.56 C0.84,0.73 0.69,0.88 0.52,0.92 C0.35,0.96 0.17,0.85 0.09,0.68 C0.01,0.51 0.07,0.3 0.23,0.19 C0.39,0.08 0.61,0.11 0.72,0.26 C0.8,0.37 0.78,0.47 0.81,0.56 Z",
+  "M0.88,0.56 C0.93,0.69 0.8,0.86 0.63,0.9 C0.46,0.94 0.25,0.88 0.16,0.74 C0.07,0.6 0.11,0.41 0.25,0.3 C0.39,0.19 0.61,0.21 0.73,0.33 C0.82,0.42 0.85,0.48 0.88,0.56 Z",
+  "M0.84,0.62 C0.88,0.73 0.75,0.88 0.58,0.91 C0.41,0.94 0.24,0.86 0.15,0.72 C0.06,0.58 0.12,0.38 0.27,0.27 C0.42,0.16 0.62,0.2 0.73,0.33 C0.81,0.43 0.81,0.53 0.84,0.62 Z",
+  "M0.8,0.66 C0.84,0.78 0.7,0.91 0.54,0.92 C0.38,0.93 0.21,0.84 0.13,0.7 C0.05,0.56 0.13,0.37 0.28,0.26 C0.43,0.15 0.62,0.2 0.71,0.33 C0.78,0.43 0.77,0.57 0.8,0.66 Z",
+  "M0.81,0.56 C0.84,0.73 0.69,0.88 0.52,0.92 C0.35,0.96 0.17,0.85 0.09,0.68 C0.01,0.51 0.07,0.3 0.23,0.19 C0.39,0.08 0.61,0.11 0.72,0.26 C0.8,0.37 0.78,0.47 0.81,0.56 Z",
+];
 
 // Define the props for the component
 interface AnimatedBlobImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
@@ -64,7 +24,8 @@ interface AnimatedBlobImageProps extends React.ImgHTMLAttributes<HTMLImageElemen
 
 /**
  * A component that displays an image within a subtly animating blob shape.
- * It uses CSS clip-path and embedded animations for a self-contained effect.
+ * Uses Framer Motion for path animation to ensure cross-browser compatibility,
+ * including mobile browsers that don't support CSS `d` property animation.
  */
 const AnimatedBlobImage = React.forwardRef<
   HTMLImageElement,
@@ -73,11 +34,6 @@ const AnimatedBlobImage = React.forwardRef<
   // Generate unique ID for this instance to support multiple components
   const uniqueId = React.useId();
   const clipPathId = `blob-shape-${uniqueId}`;
-  
-  // Inject styles once on first render
-  React.useEffect(() => {
-    injectStyles();
-  }, []);
 
   return (
     <div
@@ -97,13 +53,23 @@ const AnimatedBlobImage = React.forwardRef<
         }}
         {...props}
       />
-      {/* Define the SVG clip-path. It's hidden but used by the `clipPath` style above. */}
+      {/* Define the SVG clip-path with Framer Motion animated path */}
       <svg className="absolute w-0 h-0" aria-hidden="true">
         <defs>
           <clipPath id={clipPathId} clipPathUnits="objectBoundingBox">
-            <path
-              d="M0.81,0.56 C0.84,0.73 0.69,0.88 0.52,0.92 C0.35,0.96 0.17,0.85 0.09,0.68 C0.01,0.51 0.07,0.3 0.23,0.19 C0.39,0.08 0.61,0.11 0.72,0.26 C0.8,0.37 0.78,0.47 0.81,0.56 Z"
-              className="animate-blob-path-component" // Apply animation to the path data
+            <motion.path
+              animate={{
+                d: blobPaths,
+              }}
+              transition={{
+                d: {
+                  duration: 15,
+                  ease: "easeInOut",
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  times: [0, 0.25, 0.5, 0.75, 1],
+                },
+              }}
             />
           </clipPath>
         </defs>
