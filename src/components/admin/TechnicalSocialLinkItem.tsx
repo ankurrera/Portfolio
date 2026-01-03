@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Github, Linkedin, X } from 'lucide-react';
+import { Github, Linkedin } from 'lucide-react';
+import XIcon from '@/components/icons/XIcon';
 
 interface TechnicalSocialLinkItemProps {
   link: SocialLink;
@@ -18,7 +19,7 @@ const TechnicalSocialLinkItem = ({ link, onUpdate }: TechnicalSocialLinkItemProp
       case 'linkedin':
         return <Linkedin className="w-5 h-5" />;
       case 'twitter':
-        return <X className="w-5 h-5" />;
+        return <XIcon className="w-5 h-5" />;
       default:
         return null;
     }
