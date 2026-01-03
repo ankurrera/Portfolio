@@ -26,6 +26,9 @@ interface AnimatedBlobImageProps extends React.ImgHTMLAttributes<HTMLImageElemen
  * A component that displays an image within a subtly animating blob shape.
  * Uses Framer Motion for path animation to ensure cross-browser compatibility,
  * including mobile browsers that don't support CSS `d` property animation.
+ * 
+ * Note: The initial `d` attribute on the path element is required for WebKit/Safari
+ * tablet browsers to properly render the clip-path before animation begins.
  */
 const AnimatedBlobImage = React.forwardRef<
   HTMLImageElement,
@@ -49,15 +52,25 @@ const AnimatedBlobImage = React.forwardRef<
         className="absolute inset-0 w-full h-full object-cover" // Ensure image covers the container
         style={{
           // The clip-path creates the blob shape.
+          // WebkitClipPath provides fallback for older WebKit browsers (tablets)
+          WebkitClipPath: `url(#${clipPathId})`,
           clipPath: `url(#${clipPathId})`,
         }}
         {...props}
       />
       {/* Define the SVG clip-path with Framer Motion animated path */}
-      <svg className="absolute w-0 h-0" aria-hidden="true">
+      {/* Using visibility:hidden instead of w-0 h-0 for better WebKit compatibility */}
+      <svg 
+        className="absolute" 
+        style={{ width: 0, height: 0, visibility: 'hidden' }}
+        aria-hidden="true"
+      >
         <defs>
           <clipPath id={clipPathId} clipPathUnits="objectBoundingBox">
             <motion.path
+              // Initial d attribute is required for WebKit/Safari tablet browsers
+              // Without it, the clip-path may not render until animation starts
+              d={blobPaths[0]}
               animate={{
                 d: blobPaths,
               }}
