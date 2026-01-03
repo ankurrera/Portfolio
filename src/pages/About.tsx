@@ -162,6 +162,14 @@ const About = () => {
 
   useEffect(() => {
     const loadPortrait = async () => {
+      // Placeholder fallback portrait
+      const placeholderPortrait: Portrait = {
+        src: '/placeholder.svg',
+        alt: 'Portrait',
+        width: DEFAULT_PHOTO_WIDTH,
+        height: DEFAULT_PHOTO_HEIGHT,
+      };
+
       try {
         // First, try to use the profile image from about_page
         if (aboutData?.profile_image_url) {
@@ -193,9 +201,14 @@ const About = () => {
             width: photo.width || DEFAULT_PHOTO_WIDTH,
             height: photo.height || DEFAULT_PHOTO_HEIGHT,
           });
+        } else {
+          // Use placeholder as final fallback
+          setPortrait(placeholderPortrait);
         }
       } catch (err) {
         console.error('Error fetching portrait:', err);
+        // Use placeholder on error
+        setPortrait(placeholderPortrait);
       } finally {
         setLoading(false);
       }
