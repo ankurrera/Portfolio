@@ -161,49 +161,20 @@ const About = () => {
   }, []);
 
   useEffect(() => {
-    const loadPortrait = async () => {
-      try {
-        // First, try to use the profile image from about_page
-        if (aboutData?.profile_image_url) {
-          setPortrait({
-            src: aboutData.profile_image_url,
-            alt: 'Portrait',
-            width: DEFAULT_PHOTO_WIDTH,
-            height: DEFAULT_PHOTO_HEIGHT,
-          });
-          setLoading(false);
-          return;
-        }
-
-        // Fallback: Fetch a portrait from Supabase uploads
-        const { data, error: fetchError } = await supabase
-          .from('photos')
-          .select('*')
-          .eq('is_draft', false)
-          .order('display_order', { ascending: true })
-          .limit(1);
-
-        if (fetchError) throw fetchError;
-
-        if (data && data.length > 0) {
-          const photo = data[0];
-          setPortrait({
-            src: photo.image_url,
-            alt: photo.title || 'Portrait',
-            width: photo.width || DEFAULT_PHOTO_WIDTH,
-            height: photo.height || DEFAULT_PHOTO_HEIGHT,
-          });
-        }
-      } catch (err) {
-        console.error('Error fetching portrait:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Only load portrait when aboutData is ready
+    // Strictly use profile_image_url from about_page table only
     if (!aboutLoading) {
-      loadPortrait();
+      if (aboutData?.profile_image_url) {
+        setPortrait({
+          src: aboutData.profile_image_url,
+          alt: 'Portrait',
+          width: DEFAULT_PHOTO_WIDTH,
+          height: DEFAULT_PHOTO_HEIGHT,
+        });
+      } else {
+        // No profile image set in about_page table - don't show any portrait
+        setPortrait(null);
+      }
+      setLoading(false);
     }
   }, [aboutData, aboutLoading]);
 

@@ -68,9 +68,9 @@ const AnimatedBlobImage = React.forwardRef<
         <defs>
           <clipPath id={clipPathId} clipPathUnits="objectBoundingBox">
             <motion.path
-              // Initial d attribute is required for WebKit/Safari tablet browsers
-              // Without it, the clip-path may not render until animation starts
-              d={blobPaths[0]}
+              // Using initial prop ensures the d attribute is properly set before animation starts
+              // This prevents "undefined" d attribute errors in Chrome and other browsers
+              initial={{ d: blobPaths[0] }}
               animate={{
                 d: blobPaths,
               }}
