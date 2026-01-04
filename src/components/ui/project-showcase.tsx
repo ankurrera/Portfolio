@@ -54,7 +54,7 @@ export function ProjectShowcase({ projects }: ProjectShowcaseProps) {
   const current = projects[activeIndex]
 
   return (
-    <div className="flex items-center justify-center min-h-[600px] bg-background overflow-hidden py-12" style={{ contain: 'layout' }}>
+    <div className="flex items-center justify-center min-h-[600px] bg-background overflow-hidden py-12" style={{ contain: 'layout size', isolation: 'isolate' }}>
       <div ref={containerRef} className="relative w-full max-w-5xl px-4 md:px-8" onMouseMove={handleMouseMove}>
         {/* Oversized index number - positioned at top edge of content */}
         <motion.div

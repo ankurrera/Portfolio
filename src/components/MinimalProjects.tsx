@@ -95,16 +95,26 @@ const MinimalProjects = () => {
         {/* Animated Project Showcase */}
         <ProjectShowcase projects={projects} />
 
-        {/* CTA - Isolated in a fixed-height wrapper to prevent layout shift during animations */}
-        <div className="relative isolate mt-20" style={{ contain: 'layout' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+        {/* CTA - Completely isolated from animated layout flow 
+            - No motion.div wrapper (removes Framer Motion layout recalculation)
+            - Fixed min-height container prevents any height changes
+            - CSS containment ensures this section never reflows during project animations
+            - Position: relative with explicit positioning prevents inherited transforms
+        */}
+        <div 
+          className="relative isolate mt-20" 
+          style={{ 
+            contain: 'strict',
+            minHeight: '120px'
+          }}
+        >
+          <div 
             className="text-center"
-            style={{ willChange: 'opacity, transform' }}
-            layout={false}
+            style={{ 
+              position: 'relative',
+              transform: 'none',
+              willChange: 'auto'
+            }}
           >
             <p className="text-muted-foreground mb-6">
               Interested in working together?
@@ -121,7 +131,7 @@ const MinimalProjects = () => {
             >
               Start a Project
             </Button>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
