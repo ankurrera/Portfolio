@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, forwardRef } from "react"
 import { cn } from "@/lib/utils"
-import { X, ExternalLink } from "lucide-react"
+import { X, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface Project {
   id: string
@@ -175,17 +175,6 @@ export function AnimatedFolder({ title, projects, className }: AnimatedFolderPro
         >
           {projects.length} projects
         </p>
-
-        {/* Hover hint */}
-        <div
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-xs text-muted-foreground transition-all duration-300"
-          style={{
-            opacity: isHovered ? 0 : 0.6,
-            transform: isHovered ? "translateY(10px)" : "translateY(0)",
-          }}
-        >
-          <span>Hover to explore</span>
-        </div>
       </div>
 
       <ImageLightbox
@@ -193,6 +182,7 @@ export function AnimatedFolder({ title, projects, className }: AnimatedFolderPro
         currentIndex={selectedIndex ?? 0}
         isOpen={selectedIndex !== null}
         onClose={handleCloseLightbox}
+        onIndexChange={setSelectedIndex}
         sourceRect={sourceRect}
         onCloseComplete={handleCloseComplete}
       />
@@ -205,6 +195,7 @@ interface ImageLightboxProps {
   currentIndex: number
   isOpen: boolean
   onClose: () => void
+  onIndexChange: (index: number) => void
   sourceRect: DOMRect | null
   onCloseComplete?: () => void
 }
@@ -214,6 +205,7 @@ export function ImageLightbox({
   currentIndex,
   isOpen,
   onClose,
+  onIndexChange,
   sourceRect,
   onCloseComplete,
 }: ImageLightboxProps) {
@@ -221,8 +213,27 @@ export function ImageLightbox({
   const [isClosing, setIsClosing] = useState(false)
   const [shouldRender, setShouldRender] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  
+  // Touch/swipe state
+  const touchStartX = useRef<number>(0)
+  const touchEndX = useRef<number>(0)
+  const isSwiping = useRef<boolean>(false)
 
   const currentProject = projects[currentIndex]
+  const canGoPrev = currentIndex > 0
+  const canGoNext = currentIndex < projects.length - 1
+
+  const handlePrev = useCallback(() => {
+    if (canGoPrev) {
+      onIndexChange(currentIndex - 1)
+    }
+  }, [canGoPrev, currentIndex, onIndexChange])
+
+  const handleNext = useCallback(() => {
+    if (canGoNext) {
+      onIndexChange(currentIndex + 1)
+    }
+  }, [canGoNext, currentIndex, onIndexChange])
 
   const handleClose = useCallback(() => {
     setIsClosing(true)
@@ -239,6 +250,14 @@ export function ImageLightbox({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return
       if (e.key === "Escape") handleClose()
+      if (e.key === "ArrowLeft") {
+        e.preventDefault()
+        handlePrev()
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault()
+        handleNext()
+      }
     }
 
     window.addEventListener("keydown", handleKeyDown)
@@ -250,7 +269,7 @@ export function ImageLightbox({
       window.removeEventListener("keydown", handleKeyDown)
       document.body.style.overflow = ""
     }
-  }, [isOpen, handleClose])
+  }, [isOpen, handleClose, handlePrev, handleNext])
 
   useLayoutEffect(() => {
     if (isOpen && sourceRect) {
@@ -304,10 +323,48 @@ export function ImageLightbox({
 
   const currentStyles = animationPhase === "initial" && !isClosing ? getInitialStyles() : getFinalStyles()
 
+  // Touch/swipe handlers for mobile navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+    touchEndX.current = e.touches[0].clientX
+    isSwiping.current = false
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX
+    const diffX = Math.abs(touchEndX.current - touchStartX.current)
+    // Only consider it a swipe if horizontal movement is significant
+    if (diffX > 10) {
+      isSwiping.current = true
+    }
+  }
+
+  const handleTouchEnd = () => {
+    if (!isSwiping.current) return
+    
+    const diffX = touchStartX.current - touchEndX.current
+    const minSwipeDistance = 50 // Minimum swipe distance in pixels
+    
+    if (Math.abs(diffX) > minSwipeDistance) {
+      if (diffX > 0) {
+        // Swiped left -> next
+        handleNext()
+      } else {
+        // Swiped right -> prev
+        handlePrev()
+      }
+    }
+    
+    isSwiping.current = false
+  }
+
   return (
     <div
       className={cn("fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8")}
       onClick={handleClose}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       style={{
         opacity: isClosing ? 0 : 1,
         transition: "opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)",
@@ -343,6 +400,62 @@ export function ImageLightbox({
       >
         <X className="w-4 h-4" strokeWidth={2.5} />
       </button>
+
+      {/* Left arrow navigation button */}
+      {projects.length > 1 && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            handlePrev()
+          }}
+          disabled={!canGoPrev}
+          className={cn(
+            "absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-50",
+            "w-10 h-10 md:w-12 md:h-12 flex items-center justify-center",
+            "rounded-full bg-muted/50 backdrop-blur-md",
+            "border border-border",
+            "text-muted-foreground hover:text-foreground hover:bg-muted",
+            "transition-all duration-300 ease-out hover:scale-105 active:scale-95",
+            "disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100",
+          )}
+          style={{
+            opacity: animationPhase === "complete" && !isClosing ? 1 : 0,
+            transform: animationPhase === "complete" && !isClosing ? "translateY(-50%)" : "translateY(-50%) translateX(-10px)",
+            transition: "opacity 300ms ease-out, transform 300ms ease-out",
+          }}
+          aria-label="Previous certificate"
+        >
+          <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" strokeWidth={2} />
+        </button>
+      )}
+
+      {/* Right arrow navigation button */}
+      {projects.length > 1 && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            handleNext()
+          }}
+          disabled={!canGoNext}
+          className={cn(
+            "absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50",
+            "w-10 h-10 md:w-12 md:h-12 flex items-center justify-center",
+            "rounded-full bg-muted/50 backdrop-blur-md",
+            "border border-border",
+            "text-muted-foreground hover:text-foreground hover:bg-muted",
+            "transition-all duration-300 ease-out hover:scale-105 active:scale-95",
+            "disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100",
+          )}
+          style={{
+            opacity: animationPhase === "complete" && !isClosing ? 1 : 0,
+            transform: animationPhase === "complete" && !isClosing ? "translateY(-50%)" : "translateY(-50%) translateX(10px)",
+            transition: "opacity 300ms ease-out, transform 300ms ease-out",
+          }}
+          aria-label="Next certificate"
+        >
+          <ChevronRight className="w-5 h-5 md:w-6 md:h-6" strokeWidth={2} />
+        </button>
+      )}
 
       <div
         ref={containerRef}
