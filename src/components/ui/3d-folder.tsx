@@ -2,6 +2,10 @@ import { useState, useRef, useEffect, useLayoutEffect, useCallback, forwardRef }
 import { cn } from "@/lib/utils"
 import { X, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react"
 
+// Swipe gesture constants
+const SWIPE_MOVEMENT_THRESHOLD = 10 // Minimum pixels to consider it a swipe
+const SWIPE_MIN_DISTANCE = 50 // Minimum swipe distance to trigger navigation
+
 interface Project {
   id: string
   image: string
@@ -325,16 +329,18 @@ export function ImageLightbox({
 
   // Touch/swipe handlers for mobile navigation
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (!e.touches[0]) return
     touchStartX.current = e.touches[0].clientX
     touchEndX.current = e.touches[0].clientX
     isSwiping.current = false
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (!e.touches[0]) return
     touchEndX.current = e.touches[0].clientX
     const diffX = Math.abs(touchEndX.current - touchStartX.current)
     // Only consider it a swipe if horizontal movement is significant
-    if (diffX > 10) {
+    if (diffX > SWIPE_MOVEMENT_THRESHOLD) {
       isSwiping.current = true
     }
   }
@@ -343,9 +349,8 @@ export function ImageLightbox({
     if (!isSwiping.current) return
     
     const diffX = touchStartX.current - touchEndX.current
-    const minSwipeDistance = 50 // Minimum swipe distance in pixels
     
-    if (Math.abs(diffX) > minSwipeDistance) {
+    if (Math.abs(diffX) > SWIPE_MIN_DISTANCE) {
       if (diffX > 0) {
         // Swiped left -> next
         handleNext()
@@ -362,9 +367,6 @@ export function ImageLightbox({
     <div
       className={cn("fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8")}
       onClick={handleClose}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
       style={{
         opacity: isClosing ? 0 : 1,
         transition: "opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)",
@@ -461,6 +463,9 @@ export function ImageLightbox({
         ref={containerRef}
         className="relative z-10 w-full max-w-3xl"
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         style={{
           ...currentStyles,
           transform: isClosing ? "translate(0, 0) scale(0.95)" : currentStyles.transform,
