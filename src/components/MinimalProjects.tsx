@@ -94,35 +94,6 @@ const MinimalProjects = () => {
 
         {/* Animated Project Showcase */}
         <ProjectShowcase projects={projects} />
-
-        {/* CTA - Isolated in a fixed-height wrapper to prevent layout shift during animations */}
-        <div className="relative isolate mt-20" style={{ contain: 'layout' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-center"
-            style={{ willChange: 'opacity, transform' }}
-            layout={false}
-          >
-            <p className="text-muted-foreground mb-6">
-              Interested in working together?
-            </p>
-            <Button 
-              variant="default" 
-              size="lg"
-              onClick={() => {
-                const element = document.querySelector('#contact');
-                if (element) {
-                  element.scrollIntoView({ behavior: 'smooth' });
-                }
-              }}
-            >
-              Start a Project
-            </Button>
-          </motion.div>
-        </div>
       </div>
     </section>
   );
