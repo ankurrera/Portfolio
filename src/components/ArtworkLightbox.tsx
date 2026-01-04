@@ -144,9 +144,9 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
         </svg>
       </button>
 
-      {/* Page Indicator Near Cursor - Hidden on mobile */}
+      {/* Page Indicator Near Cursor */}
       <div 
-        className="fixed z-[102] text-foreground/60 text-sm font-inter tracking-wide pointer-events-none hidden md:block"
+        className="fixed z-[102] text-foreground/60 text-sm font-inter tracking-wide pointer-events-none"
         style={{ 
           left: `${cursorPos.x + 20}px`, 
           top: `${cursorPos.y + 20}px` 
@@ -155,44 +155,10 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
         {currentIndex + 1} of {artworks.length}
       </div>
 
-      {/* Mobile: Metadata above image - centered */}
-      <div className="md:hidden fixed top-20 left-0 right-0 z-[101] text-foreground/60 text-sm font-inter leading-relaxed pointer-events-none px-4 text-center space-y-2">
-        {/* Artwork Title */}
-        {currentArtwork.title && (
-          <div className="text-foreground text-lg font-normal leading-tight">
-            {currentArtwork.title}
-          </div>
-        )}
-        
-        {/* Description / Concept */}
-        {currentArtwork.description && (
-          <div className="text-foreground/60 text-sm font-inter font-normal leading-relaxed">
-            {currentArtwork.description}
-          </div>
-        )}
-        
-        {/* Time Taken to Complete */}
-        {currentArtwork.time_taken && (
-          <div className="text-foreground/60 text-xs font-inter">
-            Time taken: {currentArtwork.time_taken}
-          </div>
-        )}
-        
-        {/* Artist Credit */}
-        <div className="text-sm">{ARTIST_NAME}</div>
-        
-        {/* Date */}
-        {currentArtwork.creation_date && (
-          <div className="text-xs">
-            {formatDate(currentArtwork.creation_date)}
-          </div>
-        )}
-      </div>
-
-      {/* Desktop: Right Side Metadata Block - Aligned with top of image */}
+      {/* Right Side Metadata Block - Aligned with top of image */}
       {imageRef.current && (
         <div 
-          className="hidden md:block fixed right-8 z-[101] text-right pointer-events-none px-4 md:px-0 max-w-xs space-y-4"
+          className="fixed right-8 z-[101] text-right pointer-events-none px-4 md:px-0 max-w-xs space-y-4"
           style={{
             top: `${imageRef.current.getBoundingClientRect().top}px`
           }}
@@ -220,8 +186,8 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
         </div>
       )}
 
-      {/* BOTTOM RIGHT CORNER - Materials Only - Desktop only */}
-      <div className="hidden md:block fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0 space-y-0.5">
+      {/* BOTTOM RIGHT CORNER - Materials Only */}
+      <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0 space-y-0.5">
         {/* Paper Types (from paper_type field) */}
         {getPaperTypes() && (
           <div>Paper Types: {getPaperTypes()}</div>
@@ -238,13 +204,13 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
         )}
       </div>
 
-      {/* BOTTOM LEFT CORNER - Artist Credit - Desktop only */}
-      <div className="hidden md:block fixed bottom-8 left-8 z-[101] text-foreground/60 text-sm font-inter pointer-events-none px-4 md:px-0">
+      {/* BOTTOM LEFT CORNER - Artist Credit */}
+      <div className="fixed bottom-8 left-8 z-[101] text-foreground/60 text-sm font-inter pointer-events-none px-4 md:px-0">
         {ARTIST_NAME}
       </div>
 
-      {/* BOTTOM CENTER - Copyright and Date - Desktop only */}
-      <div className="hidden md:block fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[101] text-foreground/60 text-xs font-inter pointer-events-none px-4 md:px-0 text-center space-y-0.5">
+      {/* BOTTOM CENTER - Copyright and Date */}
+      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[101] text-foreground/60 text-xs font-inter pointer-events-none px-4 md:px-0 text-center space-y-0.5">
         <div>{COPYRIGHT_TEXT}</div>
         {currentArtwork.creation_date && (
           <div>Date: {formatDate(currentArtwork.creation_date)}</div>

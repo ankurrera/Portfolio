@@ -20,7 +20,7 @@ const DynamicHero = ({
 
   if (loading) {
     return (
-      <section className="max-w-[1600px] mx-auto px-3 md:px-5 pb-12 md:pb-16" style={{ paddingTop: 'max(5rem, calc(5rem + env(safe-area-inset-top, 0px)))' }}>
+      <section className="max-w-[1600px] mx-auto px-3 md:px-5 pt-16 pb-12 md:pt-20 md:pb-16">
         <div className="space-y-4 text-center flex items-center justify-center min-h-[200px]">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -55,20 +55,14 @@ const DynamicHero = ({
     )
   );
 
-  // Combine dynamic background with safe-area padding
-  const sectionStyle = {
-    paddingTop: 'max(5rem, calc(5rem + env(safe-area-inset-top, 0px)))',
-    ...(heroText?.background_media_url ? {
-      backgroundImage: `url(${heroText.background_media_url})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    } : {})
-  };
-
   return (
     <section 
-      className="max-w-[1600px] mx-auto px-3 md:px-5 pb-12 md:pb-16"
-      style={sectionStyle}
+      className="max-w-[1600px] mx-auto px-3 md:px-5 pt-16 pb-12 md:pt-20 md:pb-16"
+      style={heroText?.background_media_url ? {
+        backgroundImage: `url(${heroText.background_media_url})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      } : undefined}
     >
       <div className="space-y-4 text-center">
         <h1 className="font-playfair text-4xl md:text-5xl text-foreground">

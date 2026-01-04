@@ -125,9 +125,9 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
         </svg>
       </button>
 
-      {/* Page Indicator Near Cursor - Hidden on mobile */}
+      {/* Page Indicator Near Cursor */}
       <div 
-        className="fixed z-[102] text-foreground/60 text-sm font-inter tracking-wide pointer-events-none hidden md:block"
+        className="fixed z-[102] text-foreground/60 text-sm font-inter tracking-wide pointer-events-none"
         style={{ 
           left: `${cursorPos.x + 20}px`, 
           top: `${cursorPos.y + 20}px` 
@@ -136,46 +136,10 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
         {currentIndex + 1} of {images.length}
       </div>
 
-      {/* Mobile: Metadata above image - centered */}
-      <div className="md:hidden fixed top-20 left-0 right-0 z-[101] text-foreground/60 text-sm font-inter leading-relaxed pointer-events-none px-4 text-center space-y-2">
-        {/* Caption / Description */}
-        {currentImage.caption && (
-          <div className="text-base">
-            {currentImage.caption}
-          </div>
-        )}
-        
-        {/* Credits / Collaborators - no decorative border */}
-        {currentImage.credits && (
-          <div className="text-xs whitespace-pre-line">
-            <div className="font-semibold mb-1">Credits</div>
-            {currentImage.credits}
-          </div>
-        )}
-        
-        {/* Photographer Name */}
-        {currentImage.photographer_name && (
-          <div className="text-sm">
-            {currentImage.photographer_name}
-          </div>
-        )}
-        
-        {/* Date */}
-        {currentImage.date_taken && (
-          <div className="text-xs">
-            {new Date(currentImage.date_taken).toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Desktop: Right Side Metadata Block - Aligned with top of image */}
+      {/* Right Side Metadata Block - Aligned with top of image */}
       {imageRef.current && (
         <div 
-          className="hidden md:block fixed right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed pointer-events-none px-4 md:px-0 max-w-xs space-y-4"
+          className="fixed right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed pointer-events-none px-4 md:px-0 max-w-xs space-y-4"
           style={{
             top: `${imageRef.current.getBoundingClientRect().top}px`
           }}
@@ -187,9 +151,9 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
             </div>
           )}
           
-          {/* Credits / Collaborators - no decorative border */}
+          {/* Credits / Collaborators */}
           {currentImage.credits && (
-            <div className="text-xs whitespace-pre-line">
+            <div className="text-xs whitespace-pre-line border-l-2 border-foreground/20 pl-3">
               <div className="font-semibold mb-1">Credits</div>
               {currentImage.credits}
             </div>
@@ -200,16 +164,16 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
         </div>
       )}
 
-      {/* Photographer Name - Bottom Left (name only, no prefix) - Desktop only */}
+      {/* Photographer Name - Bottom Left (name only, no prefix) */}
       {currentImage.photographer_name && (
-        <div className="hidden md:block fixed bottom-8 left-8 z-[101] text-foreground/60 text-sm font-inter pointer-events-none px-4 md:px-0">
+        <div className="fixed bottom-8 left-8 z-[101] text-foreground/60 text-sm font-inter pointer-events-none px-4 md:px-0">
           {currentImage.photographer_name}
         </div>
       )}
 
-      {/* Date, Device, and Lens - Bottom Right (stacked vertically) - Desktop only */}
+      {/* Date, Device, and Lens - Bottom Right (stacked vertically) */}
       {(currentImage.device_used || currentImage.camera_lens || currentImage.date_taken) && (
-        <div className="hidden md:block fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0 space-y-0.5">
+        <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0 space-y-0.5">
           {currentImage.device_used && (
             <div>Device used: {currentImage.device_used}</div>
           )}
@@ -228,19 +192,19 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
         </div>
       )}
 
-      {/* Legacy fields for backwards compatibility - Desktop only */}
+      {/* Legacy fields for backwards compatibility */}
       {!currentImage.photographer_name && currentImage.photographer && (
-        <div className="hidden md:block fixed bottom-8 left-8 z-[101] text-foreground/60 text-sm font-inter pointer-events-none px-4 md:px-0">
+        <div className="fixed bottom-8 left-8 z-[101] text-foreground/60 text-sm font-inter pointer-events-none px-4 md:px-0">
           {currentImage.photographer}
         </div>
       )}
       {!currentImage.caption && currentImage.client && (
-        <div className="hidden md:block fixed top-8 right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed max-w-md md:max-w-lg text-right pointer-events-none px-4 md:px-0">
+        <div className="fixed top-8 right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed max-w-md md:max-w-lg text-right pointer-events-none px-4 md:px-0">
           For {currentImage.client}
         </div>
       )}
       {!currentImage.date_taken && !currentImage.device_used && !currentImage.camera_lens && currentImage.location && currentImage.details && (
-        <div className="hidden md:block fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0">
+        <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0">
           Shot in {currentImage.location}. {currentImage.details}.
         </div>
       )}

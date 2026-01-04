@@ -92,38 +92,33 @@ const MinimalProjects = () => {
           </div>
         </motion.div>
 
-        {/* Animated Project Showcase - isolated to prevent layout reflow */}
-        <div className="relative" style={{ contain: 'layout' }}>
-          <ProjectShowcase projects={projects} />
-        </div>
+        {/* Animated Project Showcase */}
+        <ProjectShowcase projects={projects} />
 
-        {/* CTA - position-locked container to prevent movement during animations */}
-        <div className="relative" style={{ contain: 'layout' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            layout="position"
-            className="text-center mt-20"
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="text-center mt-20"
+        >
+          <p className="text-muted-foreground mb-6">
+            Interested in working together?
+          </p>
+          <Button 
+            variant="default" 
+            size="lg"
+            onClick={() => {
+              const element = document.querySelector('#contact');
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
           >
-            <p className="text-muted-foreground mb-6">
-              Interested in working together?
-            </p>
-            <Button 
-              variant="default" 
-              size="lg"
-              onClick={() => {
-                const element = document.querySelector('#contact');
-                if (element) {
-                  element.scrollIntoView({ behavior: 'smooth' });
-                }
-              }}
-            >
-              Start a Project
-            </Button>
-          </motion.div>
-        </div>
+            Start a Project
+          </Button>
+        </motion.div>
       </div>
     </section>
   );
