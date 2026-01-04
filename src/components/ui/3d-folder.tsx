@@ -2,6 +2,10 @@ import { useState, useRef, useEffect, useLayoutEffect, useCallback, forwardRef }
 import { cn } from "@/lib/utils"
 import { X, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react"
 
+// Swipe gesture constants
+const SWIPE_MOVEMENT_THRESHOLD = 10 // Minimum pixels to consider it a swipe
+const SWIPE_MIN_DISTANCE = 50 // Minimum swipe distance to trigger navigation
+
 interface Project {
   id: string
   image: string
@@ -38,11 +42,6 @@ export function AnimatedFolder({ title, projects, className }: AnimatedFolderPro
 
   const handleCloseComplete = () => {
     setHiddenCardId(null)
-  }
-
-  const handleNavigate = (newIndex: number) => {
-    setSelectedIndex(newIndex)
-    setHiddenCardId(projects[newIndex]?.id || null)
   }
 
   return (
@@ -180,17 +179,6 @@ export function AnimatedFolder({ title, projects, className }: AnimatedFolderPro
         >
           {projects.length} projects
         </p>
-
-        {/* Hover hint */}
-        <div
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-xs text-muted-foreground transition-all duration-300"
-          style={{
-            opacity: isHovered ? 0 : 0.6,
-            transform: isHovered ? "translateY(10px)" : "translateY(0)",
-          }}
-        >
-          <span>Hover to explore</span>
-        </div>
       </div>
 
       <ImageLightbox
@@ -198,9 +186,9 @@ export function AnimatedFolder({ title, projects, className }: AnimatedFolderPro
         currentIndex={selectedIndex ?? 0}
         isOpen={selectedIndex !== null}
         onClose={handleCloseLightbox}
+        onIndexChange={setSelectedIndex}
         sourceRect={sourceRect}
         onCloseComplete={handleCloseComplete}
-        onNavigate={handleNavigate}
       />
     </>
   )
@@ -211,9 +199,9 @@ interface ImageLightboxProps {
   currentIndex: number
   isOpen: boolean
   onClose: () => void
+  onIndexChange: (index: number) => void
   sourceRect: DOMRect | null
   onCloseComplete?: () => void
-  onNavigate: (index: number) => void
 }
 
 export function ImageLightbox({
@@ -221,59 +209,35 @@ export function ImageLightbox({
   currentIndex,
   isOpen,
   onClose,
+  onIndexChange,
   sourceRect,
   onCloseComplete,
-  onNavigate,
 }: ImageLightboxProps) {
   const [animationPhase, setAnimationPhase] = useState<"initial" | "animating" | "complete">("initial")
   const [isClosing, setIsClosing] = useState(false)
   const [shouldRender, setShouldRender] = useState(false)
-  const [internalIndex, setInternalIndex] = useState(currentIndex)
-  const [prevIndex, setPrevIndex] = useState(currentIndex)
-  const [isSliding, setIsSliding] = useState(false)
-  const [slideDirection, setSlideDirection] = useState<"left" | "right">("right")
   const containerRef = useRef<HTMLDivElement>(null)
+  
+  // Touch/swipe state
+  const touchStartX = useRef<number>(0)
+  const touchEndX = useRef<number>(0)
+  const isSwiping = useRef<boolean>(false)
 
-  const totalProjects = projects.length
-  const hasNext = internalIndex < totalProjects - 1
-  const hasPrev = internalIndex > 0
+  const currentProject = projects[currentIndex]
+  const canGoPrev = currentIndex > 0
+  const canGoNext = currentIndex < projects.length - 1
 
-  const currentProject = projects[internalIndex]
-  const previousProject = projects[prevIndex]
-
-  useEffect(() => {
-    if (isOpen && currentIndex !== internalIndex && !isSliding) {
-      const direction = currentIndex > internalIndex ? "left" : "right"
-      setSlideDirection(direction)
-      setPrevIndex(internalIndex)
-      setIsSliding(true)
-
-      const timer = setTimeout(() => {
-        setInternalIndex(currentIndex)
-        setIsSliding(false)
-      }, 400)
-
-      return () => clearTimeout(timer)
+  const handlePrev = useCallback(() => {
+    if (canGoPrev) {
+      onIndexChange(currentIndex - 1)
     }
-  }, [currentIndex, isOpen, internalIndex, isSliding])
+  }, [canGoPrev, currentIndex, onIndexChange])
 
-  useEffect(() => {
-    if (isOpen) {
-      setInternalIndex(currentIndex)
-      setPrevIndex(currentIndex)
-      setIsSliding(false)
+  const handleNext = useCallback(() => {
+    if (canGoNext) {
+      onIndexChange(currentIndex + 1)
     }
-  }, [isOpen, currentIndex])
-
-  const navigateNext = useCallback(() => {
-    if (internalIndex >= totalProjects - 1 || isSliding) return
-    onNavigate(internalIndex + 1)
-  }, [internalIndex, totalProjects, isSliding, onNavigate])
-
-  const navigatePrev = useCallback(() => {
-    if (internalIndex <= 0 || isSliding) return
-    onNavigate(internalIndex - 1)
-  }, [internalIndex, isSliding, onNavigate])
+  }, [canGoNext, currentIndex, onIndexChange])
 
   const handleClose = useCallback(() => {
     setIsClosing(true)
@@ -290,8 +254,14 @@ export function ImageLightbox({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return
       if (e.key === "Escape") handleClose()
-      if (e.key === "ArrowRight") navigateNext()
-      if (e.key === "ArrowLeft") navigatePrev()
+      if (e.key === "ArrowLeft") {
+        e.preventDefault()
+        handlePrev()
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault()
+        handleNext()
+      }
     }
 
     window.addEventListener("keydown", handleKeyDown)
@@ -303,7 +273,7 @@ export function ImageLightbox({
       window.removeEventListener("keydown", handleKeyDown)
       document.body.style.overflow = ""
     }
-  }, [isOpen, handleClose, navigateNext, navigatePrev])
+  }, [isOpen, handleClose, handlePrev, handleNext])
 
   useLayoutEffect(() => {
     if (isOpen && sourceRect) {
@@ -321,11 +291,6 @@ export function ImageLightbox({
       return () => clearTimeout(timer)
     }
   }, [isOpen, sourceRect])
-
-  const handleDotClick = (idx: number) => {
-    if (isSliding || idx === internalIndex) return
-    onNavigate(idx)
-  }
 
   if (!shouldRender || !currentProject) return null
 
@@ -361,6 +326,42 @@ export function ImageLightbox({
   }
 
   const currentStyles = animationPhase === "initial" && !isClosing ? getInitialStyles() : getFinalStyles()
+
+  // Touch/swipe handlers for mobile navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!e.touches[0]) return
+    touchStartX.current = e.touches[0].clientX
+    touchEndX.current = e.touches[0].clientX
+    isSwiping.current = false
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!e.touches[0]) return
+    touchEndX.current = e.touches[0].clientX
+    const diffX = Math.abs(touchEndX.current - touchStartX.current)
+    // Only consider it a swipe if horizontal movement is significant
+    if (diffX > SWIPE_MOVEMENT_THRESHOLD) {
+      isSwiping.current = true
+    }
+  }
+
+  const handleTouchEnd = () => {
+    if (!isSwiping.current) return
+    
+    const diffX = touchStartX.current - touchEndX.current
+    
+    if (Math.abs(diffX) > SWIPE_MIN_DISTANCE) {
+      if (diffX > 0) {
+        // Swiped left -> next
+        handleNext()
+      } else {
+        // Swiped right -> prev
+        handlePrev()
+      }
+    }
+    
+    isSwiping.current = false
+  }
 
   return (
     <div
@@ -402,58 +403,69 @@ export function ImageLightbox({
         <X className="w-4 h-4" strokeWidth={2.5} />
       </button>
 
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          navigatePrev()
-        }}
-        disabled={!hasPrev || isSliding}
-        className={cn(
-          "absolute left-4 md:left-8 z-50",
-          "w-12 h-12 flex items-center justify-center",
-          "rounded-full bg-muted/50 backdrop-blur-md",
-          "border border-border",
-          "text-muted-foreground hover:text-foreground hover:bg-muted",
-          "transition-all duration-300 ease-out hover:scale-110 active:scale-95",
-          "disabled:opacity-0 disabled:pointer-events-none",
-        )}
-        style={{
-          opacity: animationPhase === "complete" && !isClosing && hasPrev ? 1 : 0,
-          transform: animationPhase === "complete" && !isClosing ? "translateX(0)" : "translateX(-20px)",
-          transition: "opacity 300ms ease-out 150ms, transform 300ms ease-out 150ms",
-        }}
-      >
-        <ChevronLeft className="w-5 h-5" strokeWidth={2.5} />
-      </button>
+      {/* Left arrow navigation button */}
+      {projects.length > 1 && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            handlePrev()
+          }}
+          disabled={!canGoPrev}
+          className={cn(
+            "absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-50",
+            "w-10 h-10 md:w-12 md:h-12 flex items-center justify-center",
+            "rounded-full bg-muted/50 backdrop-blur-md",
+            "border border-border",
+            "text-muted-foreground hover:text-foreground hover:bg-muted",
+            "transition-all duration-300 ease-out hover:scale-105 active:scale-95",
+            "disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100",
+          )}
+          style={{
+            opacity: animationPhase === "complete" && !isClosing ? 1 : 0,
+            transform: animationPhase === "complete" && !isClosing ? "translateY(-50%)" : "translateY(-50%) translateX(-10px)",
+            transition: "opacity 300ms ease-out, transform 300ms ease-out",
+          }}
+          aria-label="Previous certificate"
+        >
+          <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" strokeWidth={2} />
+        </button>
+      )}
 
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          navigateNext()
-        }}
-        disabled={!hasNext || isSliding}
-        className={cn(
-          "absolute right-4 md:right-8 z-50",
-          "w-12 h-12 flex items-center justify-center",
-          "rounded-full bg-muted/50 backdrop-blur-md",
-          "border border-border",
-          "text-muted-foreground hover:text-foreground hover:bg-muted",
-          "transition-all duration-300 ease-out hover:scale-110 active:scale-95",
-          "disabled:opacity-0 disabled:pointer-events-none",
-        )}
-        style={{
-          opacity: animationPhase === "complete" && !isClosing && hasNext ? 1 : 0,
-          transform: animationPhase === "complete" && !isClosing ? "translateX(0)" : "translateX(20px)",
-          transition: "opacity 300ms ease-out 150ms, transform 300ms ease-out 150ms",
-        }}
-      >
-        <ChevronRight className="w-5 h-5" strokeWidth={2.5} />
-      </button>
+      {/* Right arrow navigation button */}
+      {projects.length > 1 && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            handleNext()
+          }}
+          disabled={!canGoNext}
+          className={cn(
+            "absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50",
+            "w-10 h-10 md:w-12 md:h-12 flex items-center justify-center",
+            "rounded-full bg-muted/50 backdrop-blur-md",
+            "border border-border",
+            "text-muted-foreground hover:text-foreground hover:bg-muted",
+            "transition-all duration-300 ease-out hover:scale-105 active:scale-95",
+            "disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100",
+          )}
+          style={{
+            opacity: animationPhase === "complete" && !isClosing ? 1 : 0,
+            transform: animationPhase === "complete" && !isClosing ? "translateY(-50%)" : "translateY(-50%) translateX(10px)",
+            transition: "opacity 300ms ease-out, transform 300ms ease-out",
+          }}
+          aria-label="Next certificate"
+        >
+          <ChevronRight className="w-5 h-5 md:w-6 md:h-6" strokeWidth={2} />
+        </button>
+      )}
 
       <div
         ref={containerRef}
         className="relative z-10 w-full max-w-3xl"
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         style={{
           ...currentStyles,
           transform: isClosing ? "translate(0, 0) scale(0.95)" : currentStyles.transform,
@@ -472,26 +484,14 @@ export function ImageLightbox({
           }}
         >
           <div className="relative overflow-hidden">
-            <div
-              className="flex transition-transform duration-400 ease-out"
-              style={{
-                transform: `translateX(-${internalIndex * 100}%)`,
-                transition: isSliding ? "transform 400ms cubic-bezier(0.32, 0.72, 0, 1)" : "none",
+            <img
+              src={currentProject.image}
+              alt={currentProject.title}
+              className="w-full h-auto max-h-[70vh] object-contain bg-background"
+              onError={(e) => {
+                e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='600' viewBox='0 0 400 600'%3E%3Crect width='400' height='600' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='18' fill='%23999'%3EImage not found%3C/text%3E%3C/svg%3E";
               }}
-            >
-              {projects.map((project, idx) => (
-                <img
-                  key={project.id}
-                  src={project.image}
-                  alt={project.title}
-                  className="w-full h-auto max-h-[70vh] object-contain bg-background flex-shrink-0"
-                  style={{ minWidth: "100%" }}
-                  onError={(e) => {
-                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='600' viewBox='0 0 400 600'%3E%3Crect width='400' height='600' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='18' fill='%23999'%3EImage not found%3C/text%3E%3C/svg%3E";
-                  }}
-                />
-              ))}
-            </div>
+            />
 
             {/* Subtle vignette effect */}
             <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-card/20 via-transparent to-card/10" />
@@ -510,38 +510,11 @@ export function ImageLightbox({
                 <h3 className="text-lg font-medium text-foreground tracking-tight truncate h-7">
                   {currentProject?.title}
                 </h3>
-                <div className="flex items-center justify-between gap-3 mt-1">
-                  <div className="flex items-center gap-3">
-                    <p className="text-sm text-muted-foreground">
-                      <kbd className="px-1.5 py-0.5 mx-0.5 text-xs font-medium bg-muted text-muted-foreground rounded border border-border">
-                        ←
-                      </kbd>
-                      <kbd className="px-1.5 py-0.5 mx-0.5 text-xs font-medium bg-muted text-muted-foreground rounded border border-border">
-                        →
-                      </kbd>{" "}
-                      to navigate
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                      {projects.map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleDotClick(idx)}
-                          className={cn(
-                            "w-2 h-2 rounded-full transition-all duration-300",
-                            idx === internalIndex
-                              ? "bg-foreground scale-110"
-                              : "bg-muted-foreground/40 hover:bg-muted-foreground/60",
-                          )}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  {currentProject?.year && (
-                    <p className="text-sm font-medium text-muted-foreground">
-                      {currentProject.year}
-                    </p>
-                  )}
-                </div>
+                {currentProject?.year && (
+                  <p className="text-sm font-medium text-muted-foreground mt-1">
+                    {currentProject.year}
+                  </p>
+                )}
               </div>
 
               <button
