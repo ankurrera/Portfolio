@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 interface LightboxProps {
   images: { 
@@ -22,9 +22,34 @@ interface LightboxProps {
 
 const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Detect mobile viewport with debouncing
+  const checkMobile = useCallback(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
+
+  useEffect(() => {
+    checkMobile();
+    
+    const handleResize = () => {
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      resizeTimeoutRef.current = setTimeout(checkMobile, 150);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+    };
+  }, [checkMobile]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -84,8 +109,6 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
     const imageRect = imageRef.current.getBoundingClientRect();
     const mouseX = e.clientX;
     
-    setCursorPos({ x: e.clientX, y: e.clientY });
-    
     // Update cursor style based on position
     const imageCenterX = imageRect.left + imageRect.width / 2;
     const container = containerRef.current;
@@ -102,6 +125,121 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
 
   const currentImage = images[currentIndex];
 
+  // Mobile layout: vertical stack with text above and below image
+  if (isMobile) {
+    return (
+      <div
+        className="fixed inset-0 bg-background z-[100] flex flex-col animate-fade-in overflow-y-auto"
+      >
+        {/* Back Button - Top Left */}
+        <button
+          onClick={onClose}
+          className="fixed top-0 left-0 w-16 h-16 z-[200] flex items-center justify-center opacity-30 hover:opacity-100 transition-opacity"
+          aria-label="Close lightbox"
+        >
+          <svg viewBox="0 0 60.08 60.08" className="absolute left-6 top-6 w-6 h-6">
+            <path 
+              d="M25.64,58.83L2.56,30.04,25.64,1.25" 
+              fill="none"
+              fillRule="evenodd"
+              stroke="#000"
+              strokeWidth="3.5"
+              strokeMiterlimit="10"
+            />
+          </svg>
+        </button>
+
+        {/* Mobile Content Container */}
+        <div className="flex-1 flex flex-col justify-center px-4 py-16">
+          {/* Top Metadata: Title/Caption, Credits - Above Image */}
+          <div className="text-center mb-6 space-y-3">
+            {/* Caption / Description */}
+            {currentImage.caption && (
+              <div className="text-foreground/80 text-base font-inter">
+                {currentImage.caption}
+              </div>
+            )}
+            
+            {/* Credits / Collaborators - No decorative bar */}
+            {currentImage.credits && (
+              <div className="text-foreground/60 text-xs font-inter whitespace-pre-line">
+                <div className="font-semibold mb-1">Credits</div>
+                {currentImage.credits}
+              </div>
+            )}
+
+            {/* Legacy client field */}
+            {!currentImage.caption && currentImage.client && (
+              <div className="text-foreground/60 text-sm font-inter">
+                For {currentImage.client}
+              </div>
+            )}
+          </div>
+
+          {/* Image Container */}
+          <div
+            ref={containerRef}
+            className="relative flex items-center justify-center"
+            onClick={handleClick}
+          >
+            <img
+              ref={imageRef}
+              src={currentImage.src}
+              alt={currentImage.alt}
+              className="max-w-full max-h-[60vh] object-contain transition-opacity duration-300 pointer-events-none"
+            />
+          </div>
+
+          {/* Bottom Metadata: Photographer, Device, Date - Below Image */}
+          <div className="text-center mt-6 space-y-2">
+            {/* Photographer Name */}
+            {currentImage.photographer_name && (
+              <div className="text-foreground/60 text-sm font-inter">
+                {currentImage.photographer_name}
+              </div>
+            )}
+            
+            {/* Legacy photographer field */}
+            {!currentImage.photographer_name && currentImage.photographer && (
+              <div className="text-foreground/60 text-sm font-inter">
+                {currentImage.photographer}
+              </div>
+            )}
+
+            {/* Device, Lens, Date */}
+            {(currentImage.device_used || currentImage.camera_lens || currentImage.date_taken) && (
+              <div className="text-foreground/60 text-xs font-inter space-y-0.5">
+                {currentImage.device_used && (
+                  <div>Device used: {currentImage.device_used}</div>
+                )}
+                {currentImage.camera_lens && (
+                  <div>Lens used: {currentImage.camera_lens}</div>
+                )}
+                {currentImage.date_taken && (
+                  <div>
+                    Date: {new Date(currentImage.date_taken).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Legacy location/details fields */}
+            {!currentImage.date_taken && !currentImage.device_used && !currentImage.camera_lens && currentImage.location && currentImage.details && (
+              <div className="text-foreground/60 text-xs font-inter">
+                Shot in {currentImage.location}. {currentImage.details}.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop layout: original side-positioned metadata
   return (
     <div
       className="fixed inset-0 bg-background z-[100] flex items-center justify-center animate-fade-in"
@@ -110,10 +248,10 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
       {/* Back Button - Top Left */}
       <button
         onClick={onClose}
-        className="fixed top-0 left-0 w-16 h-16 md:w-[6em] md:h-[6em] z-[200] flex items-center justify-center opacity-30 hover:opacity-100 transition-opacity"
+        className="fixed top-0 left-0 w-[6em] h-[6em] z-[200] flex items-center justify-center opacity-30 hover:opacity-100 transition-opacity"
         aria-label="Close lightbox"
       >
-        <svg viewBox="0 0 60.08 60.08" className="absolute left-6 top-6 md:left-[2.4em] md:top-[2.4em] w-6 h-6 md:w-[1.8em] md:h-[1.8em]">
+        <svg viewBox="0 0 60.08 60.08" className="absolute left-[2.4em] top-[2.4em] w-[1.8em] h-[1.8em]">
           <path 
             d="M25.64,58.83L2.56,30.04,25.64,1.25" 
             fill="none"
@@ -125,21 +263,10 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
         </svg>
       </button>
 
-      {/* Page Indicator Near Cursor */}
-      <div 
-        className="fixed z-[102] text-foreground/60 text-sm font-inter tracking-wide pointer-events-none"
-        style={{ 
-          left: `${cursorPos.x + 20}px`, 
-          top: `${cursorPos.y + 20}px` 
-        }}
-      >
-        {currentIndex + 1} of {images.length}
-      </div>
-
       {/* Right Side Metadata Block - Aligned with top of image */}
       {imageRef.current && (
         <div 
-          className="fixed right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed pointer-events-none px-4 md:px-0 max-w-xs space-y-4"
+          className="fixed right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed pointer-events-none max-w-xs space-y-4"
           style={{
             top: `${imageRef.current.getBoundingClientRect().top}px`
           }}
@@ -151,29 +278,26 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
             </div>
           )}
           
-          {/* Credits / Collaborators */}
+          {/* Credits / Collaborators - No decorative bar */}
           {currentImage.credits && (
-            <div className="text-xs whitespace-pre-line border-l-2 border-foreground/20 pl-3">
+            <div className="text-xs whitespace-pre-line">
               <div className="font-semibold mb-1">Credits</div>
               {currentImage.credits}
             </div>
           )}
-          
-          {/* Tags (if available) */}
-          {/* Tags would come from a tags field if it existed */}
         </div>
       )}
 
       {/* Photographer Name - Bottom Left (name only, no prefix) */}
       {currentImage.photographer_name && (
-        <div className="fixed bottom-8 left-8 z-[101] text-foreground/60 text-sm font-inter pointer-events-none px-4 md:px-0">
+        <div className="fixed bottom-8 left-8 z-[101] text-foreground/60 text-sm font-inter pointer-events-none">
           {currentImage.photographer_name}
         </div>
       )}
 
       {/* Date, Device, and Lens - Bottom Right (stacked vertically) */}
       {(currentImage.device_used || currentImage.camera_lens || currentImage.date_taken) && (
-        <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0 space-y-0.5">
+        <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none space-y-0.5">
           {currentImage.device_used && (
             <div>Device used: {currentImage.device_used}</div>
           )}
@@ -194,17 +318,17 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
 
       {/* Legacy fields for backwards compatibility */}
       {!currentImage.photographer_name && currentImage.photographer && (
-        <div className="fixed bottom-8 left-8 z-[101] text-foreground/60 text-sm font-inter pointer-events-none px-4 md:px-0">
+        <div className="fixed bottom-8 left-8 z-[101] text-foreground/60 text-sm font-inter pointer-events-none">
           {currentImage.photographer}
         </div>
       )}
       {!currentImage.caption && currentImage.client && (
-        <div className="fixed top-8 right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed max-w-md md:max-w-lg text-right pointer-events-none px-4 md:px-0">
+        <div className="fixed top-8 right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed max-w-lg text-right pointer-events-none">
           For {currentImage.client}
         </div>
       )}
       {!currentImage.date_taken && !currentImage.device_used && !currentImage.camera_lens && currentImage.location && currentImage.details && (
-        <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0">
+        <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none">
           Shot in {currentImage.location}. {currentImage.details}.
         </div>
       )}
