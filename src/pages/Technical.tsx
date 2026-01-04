@@ -5,6 +5,7 @@ import PageLayout from '@/components/PageLayout';
 import MinimalProjects from '@/components/MinimalProjects';
 import MinimalAbout from '@/components/MinimalAbout';
 import MinimalContact from '@/components/MinimalContact';
+import WorkCTA from '@/components/WorkCTA';
 
 const Technical = () => {
   return (
@@ -19,6 +20,7 @@ const Technical = () => {
           fallbackDescription="Production photographer specializing in fashion, editorial, and commercial work. Creating compelling imagery for global brands and publications."
         />
         <MinimalProjects />
+        <WorkCTA />
         <MinimalAbout />
         <MinimalContact />
       </main>
