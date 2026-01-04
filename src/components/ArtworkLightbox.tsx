@@ -13,9 +13,20 @@ interface ArtworkLightboxProps {
 
 const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -75,8 +86,6 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
     const imageRect = imageRef.current.getBoundingClientRect();
     const mouseX = e.clientX;
     
-    setCursorPos({ x: e.clientX, y: e.clientY });
-    
     // Update cursor style based on position
     const imageCenterX = imageRect.left + imageRect.width / 2;
     const container = containerRef.current;
@@ -121,6 +130,105 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
     });
   };
 
+  // Mobile layout: vertical stack with text above and below image
+  if (isMobile) {
+    return (
+      <div
+        className="fixed inset-0 bg-background z-[100] flex flex-col animate-fade-in overflow-y-auto"
+      >
+        {/* Back Button - Top Left */}
+        <button
+          onClick={onClose}
+          className="fixed top-0 left-0 w-16 h-16 z-[200] flex items-center justify-center opacity-30 hover:opacity-100 transition-opacity"
+          aria-label="Close lightbox"
+        >
+          <svg viewBox="0 0 60.08 60.08" className="absolute left-6 top-6 w-6 h-6">
+            <path 
+              d="M25.64,58.83L2.56,30.04,25.64,1.25" 
+              fill="none"
+              fillRule="evenodd"
+              stroke="#000"
+              strokeWidth="3.5"
+              strokeMiterlimit="10"
+            />
+          </svg>
+        </button>
+
+        {/* Mobile Content Container */}
+        <div className="flex-1 flex flex-col justify-center px-4 py-16">
+          {/* Top Metadata: Title/Caption, Time Taken - Above Image */}
+          <div className="text-center mb-6 space-y-3">
+            {/* Artwork Title */}
+            {currentArtwork.title && (
+              <div className="text-foreground text-lg font-normal leading-tight">
+                {currentArtwork.title}
+              </div>
+            )}
+            
+            {/* Description / Concept */}
+            {currentArtwork.description && (
+              <div className="text-foreground/60 text-sm font-inter font-normal leading-relaxed">
+                {currentArtwork.description}
+              </div>
+            )}
+            
+            {/* Time Taken to Complete */}
+            {currentArtwork.time_taken && (
+              <div className="text-foreground/60 text-xs font-inter">
+                Time taken: {currentArtwork.time_taken}
+              </div>
+            )}
+          </div>
+
+          {/* Image Container */}
+          <div
+            ref={containerRef}
+            className="relative flex items-center justify-center"
+            onClick={handleClick}
+          >
+            <img
+              ref={imageRef}
+              src={currentArtwork.primary_image_url}
+              alt={currentArtwork.title || 'Artwork'}
+              className="max-w-full max-h-[55vh] object-contain transition-opacity duration-300 pointer-events-none"
+            />
+          </div>
+
+          {/* Bottom Metadata: Copyright Credit, Date - Below Image */}
+          <div className="text-center mt-6 space-y-2">
+            {/* Copyright */}
+            <div className="text-foreground/60 text-xs font-inter">
+              {COPYRIGHT_TEXT}
+            </div>
+            
+            {/* Date */}
+            {currentArtwork.creation_date && (
+              <div className="text-foreground/60 text-xs font-inter">
+                Date: {formatDate(currentArtwork.creation_date)}
+              </div>
+            )}
+
+            {/* Materials (optional) */}
+            {(getPaperTypes() || getPencilGrades() || getCharcoalTypes()) && (
+              <div className="text-foreground/60 text-xs font-inter space-y-0.5 pt-2">
+                {getPaperTypes() && (
+                  <div>Paper Types: {getPaperTypes()}</div>
+                )}
+                {getPencilGrades() && (
+                  <div>Pencil Grades: {getPencilGrades()}</div>
+                )}
+                {getCharcoalTypes() && (
+                  <div>Charcoal Types: {getCharcoalTypes()}</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop layout: original side-positioned metadata
   return (
     <div
       className="fixed inset-0 bg-background z-[100] flex items-center justify-center animate-fade-in"
@@ -129,10 +237,10 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
       {/* Back Button - Top Left */}
       <button
         onClick={onClose}
-        className="fixed top-0 left-0 w-16 h-16 md:w-[6em] md:h-[6em] z-[200] flex items-center justify-center opacity-30 hover:opacity-100 transition-opacity"
+        className="fixed top-0 left-0 w-[6em] h-[6em] z-[200] flex items-center justify-center opacity-30 hover:opacity-100 transition-opacity"
         aria-label="Close lightbox"
       >
-        <svg viewBox="0 0 60.08 60.08" className="absolute left-6 top-6 md:left-[2.4em] md:top-[2.4em] w-6 h-6 md:w-[1.8em] md:h-[1.8em]">
+        <svg viewBox="0 0 60.08 60.08" className="absolute left-[2.4em] top-[2.4em] w-[1.8em] h-[1.8em]">
           <path 
             d="M25.64,58.83L2.56,30.04,25.64,1.25" 
             fill="none"
@@ -144,21 +252,10 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
         </svg>
       </button>
 
-      {/* Page Indicator Near Cursor */}
-      <div 
-        className="fixed z-[102] text-foreground/60 text-sm font-inter tracking-wide pointer-events-none"
-        style={{ 
-          left: `${cursorPos.x + 20}px`, 
-          top: `${cursorPos.y + 20}px` 
-        }}
-      >
-        {currentIndex + 1} of {artworks.length}
-      </div>
-
       {/* Right Side Metadata Block - Aligned with top of image */}
       {imageRef.current && (
         <div 
-          className="fixed right-8 z-[101] text-right pointer-events-none px-4 md:px-0 max-w-xs space-y-4"
+          className="fixed right-8 z-[101] text-right pointer-events-none max-w-xs space-y-4"
           style={{
             top: `${imageRef.current.getBoundingClientRect().top}px`
           }}
@@ -187,7 +284,7 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
       )}
 
       {/* BOTTOM RIGHT CORNER - Materials Only */}
-      <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none px-4 md:px-0 space-y-0.5">
+      <div className="fixed bottom-8 right-8 z-[101] text-foreground/60 text-xs font-inter leading-relaxed text-right pointer-events-none space-y-0.5">
         {/* Paper Types (from paper_type field) */}
         {getPaperTypes() && (
           <div>Paper Types: {getPaperTypes()}</div>
@@ -205,12 +302,12 @@ const ArtworkLightbox = ({ artworks, initialIndex, onClose }: ArtworkLightboxPro
       </div>
 
       {/* BOTTOM LEFT CORNER - Artist Credit */}
-      <div className="fixed bottom-8 left-8 z-[101] text-foreground/60 text-sm font-inter pointer-events-none px-4 md:px-0">
+      <div className="fixed bottom-8 left-8 z-[101] text-foreground/60 text-sm font-inter pointer-events-none">
         {ARTIST_NAME}
       </div>
 
       {/* BOTTOM CENTER - Copyright and Date */}
-      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[101] text-foreground/60 text-xs font-inter pointer-events-none px-4 md:px-0 text-center space-y-0.5">
+      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[101] text-foreground/60 text-xs font-inter pointer-events-none text-center space-y-0.5">
         <div>{COPYRIGHT_TEXT}</div>
         {currentArtwork.creation_date && (
           <div>Date: {formatDate(currentArtwork.creation_date)}</div>

@@ -86,7 +86,9 @@ const Achievement = () => {
         canonicalUrl="/achievement"
       />
       <PortfolioHeader activeCategory="ACHIEVEMENT" />
-      <main id="main-content" className="flex-1">
+      <main id="main-content" className="flex-1 pt-[env(safe-area-inset-top)] md:pt-0">
+        {/* Spacer for fixed header with safe-area handling for mobile */}
+        <div className="h-14 md:h-12" style={{ paddingTop: 'env(safe-area-inset-top)' }} />
         <DynamicHero 
           pageSlug="achievement"
           fallbackTitle="Achievements"
