@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "motion/react";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 import { GalleryImage } from "@/types/gallery";
+import VideoCard from "@/components/VideoCard";
 
 interface LayoutGalleryProps {
   images: GalleryImage[];
@@ -16,6 +17,11 @@ interface LayoutGalleryProps {
  * 
  * No auto-resizing, no forced aspect ratios, no equalization of card dimensions.
  * Layout respects admin's original positioning, spacing, and card sizes.
+ * 
+ * Video features:
+ * - Videos autoplay muted when in viewport
+ * - Click/tap to unmute with sound indicator
+ * - Mutual exclusion for audio (only one video unmuted at a time)
  */
 
 // Layout configuration constants
@@ -32,6 +38,13 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
   const [isDesktop, setIsDesktop] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Global mute signal - incremented when a video unmutes to trigger muting all others
+  const [globalMuteSignal, setGlobalMuteSignal] = useState(0);
+
+  // Handler for when a video is unmuted - mute all other videos
+  const handleVideoUnmute = useCallback(() => {
+    setGlobalMuteSignal(prev => prev + 1);
+  }, []);
 
   const handleImageLoad = (index: number) => {
     setLoadedImages((prev) => new Set(prev).add(index));
@@ -126,14 +139,15 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
             const scale = image.scale || 1;
             const rotation = image.rotation || 0;
             const zIndex = image.z_index || 0;
+            const isVideo = image.type === "video";
 
             return (
               <button
                 key={index}
-                onClick={() => onImageClick(index)}
+                onClick={() => !isVideo && onImageClick(index)}
                 onMouseEnter={() => handleImageHover(index)}
                 onMouseLeave={handleImageLeave}
-                className="absolute cursor-zoom-in select-none group"
+                className={`absolute select-none group ${isVideo ? 'cursor-pointer' : 'cursor-zoom-in'}`}
                 style={{
                   left: `${posX}px`,
                   top: `${posY}px`,
@@ -145,26 +159,21 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                 }}
               >
                 <div className="relative w-full h-full overflow-hidden rounded-sm shadow-lg">
-                  {image.type === "video" ? (
-                    <video
-                      poster={image.src}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      onLoadedData={() => handleImageLoad(index)}
-                      className={`w-full h-full object-contain transition-all duration-400 ${
+                  {isVideo ? (
+                    <VideoCard
+                      src={image.videoSrc || image.src}
+                      poster={image.video_thumbnail_url || image.src}
+                      alt={image.alt}
+                      className={`w-full h-full transition-all duration-400 ${
                         hoveredIndex !== null && hoveredIndex !== index
                           ? "grayscale"
                           : ""
                       }`}
-                      style={{
-                        opacity: loadedImages.has(index) ? 1 : 0,
-                        transition: "opacity 0.5s ease-out",
-                      }}
-                    >
-                      <source src={image.videoSrc} type="video/mp4" />
-                    </video>
+                      onLoadedData={() => handleImageLoad(index)}
+                      isHovered={hoveredIndex === index}
+                      globalMuteSignal={globalMuteSignal}
+                      onUnmute={handleVideoUnmute}
+                    />
                   ) : (
                     <img
                       src={image.src}
@@ -239,14 +248,15 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
             const height = image.height || 400;
             // Guard against division by zero
             const aspectRatio = width > 0 ? height / width : 400 / 300;
+            const isVideo = image.type === "video";
 
             return (
               <button
                 key={index}
-                onClick={() => onImageClick(index)}
+                onClick={() => !isVideo && onImageClick(index)}
                 onMouseEnter={() => handleImageHover(index)}
                 onMouseLeave={handleImageLeave}
-                className="w-full cursor-zoom-in select-none group"
+                className={`w-full select-none group ${isVideo ? 'cursor-pointer' : 'cursor-zoom-in'}`}
               >
                 <div 
                   className="relative w-full overflow-hidden rounded-sm shadow-lg"
@@ -255,26 +265,21 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                   }}
                 >
                   <div className="absolute inset-0">
-                    {image.type === "video" ? (
-                      <video
-                        poster={image.src}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        onLoadedData={() => handleImageLoad(index)}
-                        className={`w-full h-full object-contain transition-all duration-400 ${
+                    {isVideo ? (
+                      <VideoCard
+                        src={image.videoSrc || image.src}
+                        poster={image.video_thumbnail_url || image.src}
+                        alt={image.alt}
+                        className={`w-full h-full transition-all duration-400 ${
                           hoveredIndex !== null && hoveredIndex !== index
                             ? "grayscale"
                             : ""
                         }`}
-                        style={{
-                          opacity: loadedImages.has(index) ? 1 : 0,
-                          transition: "opacity 0.5s ease-out",
-                        }}
-                      >
-                        <source src={image.videoSrc} type="video/mp4" />
-                      </video>
+                        onLoadedData={() => handleImageLoad(index)}
+                        isHovered={hoveredIndex === index}
+                        globalMuteSignal={globalMuteSignal}
+                        onUnmute={handleVideoUnmute}
+                      />
                     ) : (
                       <img
                         src={image.src}
@@ -346,14 +351,15 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
             const height = image.height || 400;
             // Guard against division by zero
             const aspectRatioPercent = width > 0 ? (height / width) * 100 : (400 / 300) * 100;
+            const isVideo = image.type === "video";
 
             return (
               <button
                 key={index}
-                onClick={() => onImageClick(index)}
+                onClick={() => !isVideo && onImageClick(index)}
                 onMouseEnter={() => handleImageHover(index)}
                 onMouseLeave={handleImageLeave}
-                className="w-full cursor-zoom-in select-none group"
+                className={`w-full select-none group ${isVideo ? 'cursor-pointer' : 'cursor-zoom-in'}`}
                 style={{
                   maxWidth: `${width}px`,
                 }}
@@ -365,26 +371,21 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
                   }}
                 >
                   <div className="absolute inset-0">
-                    {image.type === "video" ? (
-                      <video
-                        poster={image.src}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        onLoadedData={() => handleImageLoad(index)}
-                        className={`w-full h-full object-contain transition-all duration-400 ${
+                    {isVideo ? (
+                      <VideoCard
+                        src={image.videoSrc || image.src}
+                        poster={image.video_thumbnail_url || image.src}
+                        alt={image.alt}
+                        className={`w-full h-full transition-all duration-400 ${
                           hoveredIndex !== null && hoveredIndex !== index
                             ? "grayscale"
                             : ""
                         }`}
-                        style={{
-                          opacity: loadedImages.has(index) ? 1 : 0,
-                          transition: "opacity 0.5s ease-out",
-                        }}
-                      >
-                        <source src={image.videoSrc} type="video/mp4" />
-                      </video>
+                        onLoadedData={() => handleImageLoad(index)}
+                        isHovered={hoveredIndex === index}
+                        globalMuteSignal={globalMuteSignal}
+                        onUnmute={handleVideoUnmute}
+                      />
                     ) : (
                       <img
                         src={image.src}

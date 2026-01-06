@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
-import { Upload, X, Loader2, Video, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Loader2, Video, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { formatSupabaseError } from '@/lib/utils';
 import { toast } from 'sonner';
 import PhotoMetadataForm, { PhotoMetadata } from './PhotoMetadataForm';
+import { MAX_VIDEO_SIZE_MB, MAX_VIDEO_SIZE_BYTES, MIN_VIDEO_DURATION_SECONDS, MAX_VIDEO_DURATION_SECONDS } from '@/types/gallery';
 
 interface PhotoUploaderProps {
   onUploadComplete: () => void;
@@ -14,6 +15,13 @@ interface PhotoUploaderProps {
 interface PendingFile {
   file: File;
   previewUrl: string;
+  thumbnailUrl?: string;
+  videoMetadata?: {
+    duration: number;
+    width: number;
+    height: number;
+  };
+  validationError?: string;
 }
 
 // Interface for photo insert data to ensure type safety
@@ -46,6 +54,12 @@ interface PhotoInsertData {
   camera_lens: string | null;
   project_visibility: string;
   external_links: Record<string, unknown>[] | null;
+  // Video-specific fields
+  media_type: 'image' | 'video';
+  video_url: string | null;
+  video_duration_seconds: number | null;
+  video_width: number | null;
+  video_height: number | null;
   // Category is optional to support both:
   // 1. Old schema where category column exists with photo_category enum ('selected' | 'commissioned' | 'editorial' | 'personal' | 'artistic')
   // 2. New schema where category column has been dropped
@@ -81,9 +95,15 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
 
   // Generate web-optimized derivative with aspect ratio preservation
   const generateDerivative = useCallback(async (file: File, originalWidth: number, originalHeight: number): Promise<Blob> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        reject(new Error('Failed to get canvas 2D context'));
+        return;
+      }
+      
       const img = new Image();
       
       img.onload = () => {
@@ -103,10 +123,20 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
         
         // Use high-quality WebP encoding (0.95 quality)
         canvas.toBlob(
-          (blob) => resolve(blob!),
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Failed to generate image blob'));
+            }
+          },
           'image/webp',
           0.95
         );
+      };
+      
+      img.onerror = () => {
+        reject(new Error('Failed to load image for derivative generation'));
       };
       
       img.src = URL.createObjectURL(file);
@@ -124,7 +154,130 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
     });
   }, []);
 
-  const uploadFile = useCallback(async (file: File) => {
+  // Get video metadata (duration, dimensions)
+  const getVideoMetadata = useCallback(async (file: File): Promise<{ duration: number; width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      
+      video.onloadedmetadata = () => {
+        resolve({
+          duration: video.duration,
+          width: video.videoWidth,
+          height: video.videoHeight,
+        });
+        URL.revokeObjectURL(video.src);
+      };
+      
+      video.onerror = () => {
+        URL.revokeObjectURL(video.src);
+        reject(new Error('Failed to load video metadata'));
+      };
+      
+      video.src = URL.createObjectURL(file);
+    });
+  }, []);
+
+  // Generate video thumbnail from first frame
+  const generateVideoThumbnail = useCallback(async (file: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.muted = true;
+      video.playsInline = true;
+      
+      video.onloadeddata = () => {
+        // Seek to 1 second or 10% of duration (whichever is smaller) for a better frame
+        const seekTime = Math.min(1, video.duration * 0.1);
+        video.currentTime = seekTime;
+      };
+      
+      video.onseeked = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          URL.revokeObjectURL(video.src);
+          reject(new Error('Failed to get canvas 2D context for thumbnail'));
+          return;
+        }
+        
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(video.src);
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Failed to generate thumbnail'));
+            }
+          },
+          'image/webp',
+          0.9
+        );
+      };
+      
+      video.onerror = () => {
+        URL.revokeObjectURL(video.src);
+        reject(new Error('Failed to load video for thumbnail generation'));
+      };
+      
+      video.src = URL.createObjectURL(file);
+    });
+  }, []);
+
+  // Validate video file
+  const validateVideoFile = useCallback(async (file: File): Promise<{ valid: boolean; error?: string; metadata?: { duration: number; width: number; height: number } }> => {
+    // Check file size
+    if (file.size > MAX_VIDEO_SIZE_BYTES) {
+      return {
+        valid: false,
+        error: `Video exceeds maximum size of ${MAX_VIDEO_SIZE_MB}MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+      };
+    }
+
+    // Check file type
+    const supportedTypes = ['video/mp4', 'video/webm'];
+    if (!supportedTypes.includes(file.type)) {
+      return {
+        valid: false,
+        error: `Unsupported video format. Please use MP4 or WebM.`,
+      };
+    }
+
+    try {
+      const metadata = await getVideoMetadata(file);
+      
+      // Check duration (warn but don't block)
+      if (metadata.duration < MIN_VIDEO_DURATION_SECONDS) {
+        return {
+          valid: true,
+          error: `Video is shorter than recommended (${MIN_VIDEO_DURATION_SECONDS}s minimum)`,
+          metadata,
+        };
+      }
+      
+      if (metadata.duration > MAX_VIDEO_DURATION_SECONDS) {
+        return {
+          valid: true,
+          error: `Video is longer than recommended (${MAX_VIDEO_DURATION_SECONDS}s maximum)`,
+          metadata,
+        };
+      }
+
+      return { valid: true, metadata };
+    } catch {
+      return {
+        valid: false,
+        error: 'Failed to read video metadata. The file may be corrupted.',
+      };
+    }
+  }, [getVideoMetadata]);
+
+  const uploadFile = useCallback(async (file: File, pendingFileData?: PendingFile) => {
     try {
       const isVideo = file.type.startsWith('video/');
       let derivativeUrl: string;
@@ -132,31 +285,71 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
       let thumbnailUrl: string | null = null;
       let originalWidth: number | null = null;
       let originalHeight: number | null = null;
+      let videoUrl: string | null = null;
+      let videoDuration: number | null = null;
+      let videoWidth: number | null = null;
+      let videoHeight: number | null = null;
 
       if (isVideo) {
+        // Get video metadata from pending file data or extract it
+        const videoMetadata = pendingFileData?.videoMetadata || await getVideoMetadata(file);
+        videoDuration = videoMetadata.duration;
+        videoWidth = videoMetadata.width;
+        videoHeight = videoMetadata.height;
+        originalWidth = videoWidth;
+        originalHeight = videoHeight;
+
         // Upload video file directly without compression
         const sanitizedName = file.name
           .replace(/\.[^/.]+$/, '')
           .replace(/[^a-zA-Z0-9]/g, '-')
           .replace(/-+/g, '-')
           .replace(/^-|-$/g, '');
-        const fileName = `photoshoots/${Date.now()}-${sanitizedName || 'video'}.mp4`;
+        const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4';
+        const videoFileName = `photoshoots/videos/${Date.now()}-${sanitizedName || 'video'}.${ext}`;
         
         const { error: uploadError } = await supabase.storage
           .from('photos')
-          .upload(fileName, file, {
+          .upload(videoFileName, file, {
             contentType: file.type,
             cacheControl: '31536000'
           });
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl: videoUrl } } = supabase.storage
+        const { data: { publicUrl: uploadedVideoUrl } } = supabase.storage
           .from('photos')
-          .getPublicUrl(fileName);
+          .getPublicUrl(videoFileName);
         
-        derivativeUrl = videoUrl;
-        originalUrl = videoUrl; // For videos, original and derivative are the same
+        videoUrl = uploadedVideoUrl;
+        originalUrl = uploadedVideoUrl;
+
+        // Generate and upload thumbnail
+        try {
+          const thumbnailBlob = await generateVideoThumbnail(file);
+          const thumbnailFileName = `photoshoots/thumbnails/${Date.now()}-${sanitizedName || 'video'}-thumb.webp`;
+          
+          const { error: thumbUploadError } = await supabase.storage
+            .from('photos')
+            .upload(thumbnailFileName, thumbnailBlob, {
+              contentType: 'image/webp',
+              cacheControl: '31536000'
+            });
+
+          if (thumbUploadError) {
+            console.warn('Failed to upload video thumbnail:', thumbUploadError);
+          } else {
+            const { data: { publicUrl: thumbUrl } } = supabase.storage
+              .from('photos')
+              .getPublicUrl(thumbnailFileName);
+            thumbnailUrl = thumbUrl;
+          }
+        } catch (thumbError) {
+          console.warn('Failed to generate video thumbnail:', thumbError);
+        }
+
+        // For videos, use thumbnail as the image_url (for display in grid)
+        derivativeUrl = thumbnailUrl || uploadedVideoUrl;
       } else {
         // Get original dimensions
         const dimensions = await getImageDimensions(file);
@@ -272,6 +465,12 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
         camera_lens: metadata.camera_lens || null,
         project_visibility: metadata.project_visibility || 'public',
         external_links: externalLinksJson,
+        // Video-specific fields
+        media_type: isVideo ? 'video' : 'image',
+        video_url: videoUrl,
+        video_duration_seconds: videoDuration,
+        video_width: videoWidth,
+        video_height: videoHeight,
       };
 
       // Add category field for backward compatibility if the column still exists in DB
@@ -294,8 +493,15 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
           
           if (isVideo) {
             // Extract video file path from URL
-            const videoPath = extractStoragePath(originalUrl);
-            if (videoPath) filesToDelete.push(videoPath);
+            if (videoUrl) {
+              const videoPath = extractStoragePath(videoUrl);
+              if (videoPath) filesToDelete.push(videoPath);
+            }
+            // Also clean up thumbnail if generated
+            if (thumbnailUrl) {
+              const thumbPath = extractStoragePath(thumbnailUrl);
+              if (thumbPath) filesToDelete.push(thumbPath);
+            }
           } else {
             // Extract original and derivative paths
             const origPath = extractStoragePath(originalUrl);
@@ -338,10 +544,10 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
       
       throw new Error(errorMessage);
     }
-  }, [generateDerivative, getImageDimensions, metadata]);
+  }, [generateDerivative, getImageDimensions, getVideoMetadata, generateVideoThumbnail, metadata]);
 
   // Handle file selection (preview only, no upload yet)
-  const handleFiles = useCallback((files: FileList) => {
+  const handleFiles = useCallback(async (files: FileList) => {
     const mediaFiles = Array.from(files).filter(f => 
       f.type.startsWith('image/') || f.type.startsWith('video/')
     );
@@ -351,15 +557,56 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
       return;
     }
 
-    // Create preview URLs for selected files
-    const newPendingFiles: PendingFile[] = mediaFiles.map(file => ({
-      file,
-      previewUrl: URL.createObjectURL(file)
-    }));
+    // Process files and validate videos
+    const newPendingFiles: PendingFile[] = [];
+    
+    for (const file of mediaFiles) {
+      const isVideo = file.type.startsWith('video/');
+      
+      if (isVideo) {
+        // Validate video
+        const validation = await validateVideoFile(file);
+        
+        if (!validation.valid) {
+          toast.error(`${file.name}: ${validation.error}`);
+          continue;
+        }
 
-    setPendingFiles(prev => [...prev, ...newPendingFiles]);
-    toast.success(`${mediaFiles.length} file(s) selected. Fill metadata and click "Upload & Publish" to confirm.`);
-  }, []);
+        // Create pending file with video metadata
+        const pendingFile: PendingFile = {
+          file,
+          previewUrl: URL.createObjectURL(file),
+          videoMetadata: validation.metadata,
+          validationError: validation.error, // Warning messages (duration recommendations)
+        };
+
+        // Try to generate thumbnail preview
+        try {
+          const thumbnailBlob = await generateVideoThumbnail(file);
+          pendingFile.thumbnailUrl = URL.createObjectURL(thumbnailBlob);
+        } catch {
+          // Use video URL as fallback
+        }
+
+        newPendingFiles.push(pendingFile);
+        
+        if (validation.error) {
+          toast.warning(`${file.name}: ${validation.error}`);
+        }
+      } else {
+        // Image file - no special validation
+        newPendingFiles.push({
+          file,
+          previewUrl: URL.createObjectURL(file),
+        });
+      }
+    }
+
+    if (newPendingFiles.length > 0) {
+      setPendingFiles(prev => [...prev, ...newPendingFiles]);
+      toast.success(`${newPendingFiles.length} file(s) selected. Fill metadata and click "Upload & Publish" to confirm.`);
+    }
+  }, [validateVideoFile, generateVideoThumbnail]);
 
   // Handle actual upload when user clicks the button
   const handleUploadAndPublish = useCallback(async () => {
@@ -374,10 +621,11 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
     let successCount = 0;
     let failCount = 0;
 
-    for (const { file } of pendingFiles) {
+    for (const pendingFile of pendingFiles) {
+      const { file } = pendingFile;
       try {
         setUploadProgress(prev => [...prev, `Uploading ${file.name}...`]);
-        await uploadFile(file);
+        await uploadFile(file, pendingFile);
         setUploadProgress(prev => 
           prev.map(p => p === `Uploading ${file.name}...` ? `✓ ${file.name}` : p)
         );
@@ -404,7 +652,10 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
     }
     
     // Clean up preview URLs
-    pendingFiles.forEach(({ previewUrl }) => URL.revokeObjectURL(previewUrl));
+    pendingFiles.forEach(({ previewUrl, thumbnailUrl }) => {
+      URL.revokeObjectURL(previewUrl);
+      if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
+    });
     
     // Reset form after successful upload
     if (successCount > 0) {
@@ -419,8 +670,11 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
   const handleRemovePendingFile = useCallback((index: number) => {
     setPendingFiles(prev => {
       const newFiles = [...prev];
-      // Clean up preview URL
+      // Clean up preview and thumbnail URLs
       URL.revokeObjectURL(newFiles[index].previewUrl);
+      if (newFiles[index].thumbnailUrl) {
+        URL.revokeObjectURL(newFiles[index].thumbnailUrl);
+      }
       newFiles.splice(index, 1);
       return newFiles;
     });
@@ -503,7 +757,10 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
               variant="outline"
               size="sm"
               onClick={() => {
-                pendingFiles.forEach(({ previewUrl }) => URL.revokeObjectURL(previewUrl));
+                pendingFiles.forEach(({ previewUrl, thumbnailUrl }) => {
+                  URL.revokeObjectURL(previewUrl);
+                  if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
+                });
                 setPendingFiles([]);
                 toast.info('All files removed');
               }}
@@ -513,40 +770,73 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
             </Button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {pendingFiles.map(({ file, previewUrl }, index) => (
-              <div key={index} className="relative group border rounded-lg overflow-hidden">
-                {file.type.startsWith('image/') ? (
-                  <img 
-                    src={previewUrl} 
-                    alt={file.name} 
-                    className="w-full h-32 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-32 bg-secondary flex items-center justify-center">
-                    <Video className="h-8 w-8 text-muted-foreground" />
+            {pendingFiles.map((pendingFile, index) => {
+              const { file, previewUrl, thumbnailUrl, videoMetadata, validationError } = pendingFile;
+              const isVideo = file.type.startsWith('video/');
+              
+              return (
+                <div key={index} className="relative group border rounded-lg overflow-hidden">
+                  {isVideo ? (
+                    <div className="relative w-full h-32 bg-secondary">
+                      {thumbnailUrl ? (
+                        <img 
+                          src={thumbnailUrl} 
+                          alt={file.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Video className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      )}
+                      {/* Video indicator badge */}
+                      <div className="absolute top-2 right-2 bg-black/70 text-white px-1.5 py-0.5 rounded text-[10px] font-medium flex items-center gap-1">
+                        <Video className="h-3 w-3" />
+                        {videoMetadata && (
+                          <span>{Math.round(videoMetadata.duration)}s</span>
+                        )}
+                      </div>
+                      {/* Warning indicator */}
+                      {validationError && (
+                        <div className="absolute top-2 left-2" title={validationError}>
+                          <AlertCircle className="h-4 w-4 text-amber-500" />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <img 
+                      src={previewUrl} 
+                      alt={file.name} 
+                      className="w-full h-32 object-cover"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemovePendingFile(index);
+                      }}
+                      disabled={uploading}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Remove
+                    </Button>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemovePendingFile(index);
-                    }}
-                    disabled={uploading}
-                  >
-                    <X className="h-4 w-4 mr-1" />
-                    Remove
-                  </Button>
+                  <div className="p-2 bg-secondary/50">
+                    <p className="text-xs truncate" title={file.name}>
+                      {file.name}
+                    </p>
+                    {isVideo && videoMetadata && (
+                      <p className="text-[10px] text-muted-foreground">
+                        {videoMetadata.width}×{videoMetadata.height} • {(file.size / (1024 * 1024)).toFixed(1)}MB
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="p-2 bg-secondary/50">
-                  <p className="text-xs truncate" title={file.name}>
-                    {file.name}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

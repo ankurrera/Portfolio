@@ -2,6 +2,12 @@
 export const DEFAULT_PHOTO_WIDTH = 800;
 export const DEFAULT_PHOTO_HEIGHT = 1000;
 
+// Video upload constraints
+export const MAX_VIDEO_SIZE_MB = 500;
+export const MAX_VIDEO_SIZE_BYTES = MAX_VIDEO_SIZE_MB * 1024 * 1024;
+export const MIN_VIDEO_DURATION_SECONDS = 10;
+export const MAX_VIDEO_DURATION_SECONDS = 120;
+
 export interface GalleryImage {
   type?: 'image' | 'video';
   src: string;
@@ -28,6 +34,10 @@ export interface GalleryImage {
   camera_lens?: string;
   credits?: string;
   video_thumbnail_url?: string;
+  // Video-specific fields
+  video_duration_seconds?: number;
+  video_width?: number;
+  video_height?: number;
 }
 
 export interface Portrait {

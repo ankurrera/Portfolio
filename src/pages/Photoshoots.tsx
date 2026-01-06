@@ -55,8 +55,9 @@ const Photoshoots = () => {
 
         // Transform Supabase photos to gallery format
         const transformedImages = (data || []).map((photo) => ({
-          type: 'image' as const,
+          type: (photo.media_type === 'video' ? 'video' : 'image') as 'image' | 'video',
           src: photo.image_url,
+          videoSrc: photo.video_url || undefined,
           highResSrc: photo.original_file_url || photo.image_url,
           alt: photo.title || 'Portfolio image',
           photographer: 'Ankur Bag',
@@ -76,6 +77,10 @@ const Photoshoots = () => {
           device_used: photo.device_used,
           camera_lens: photo.camera_lens,
           credits: photo.credits,
+          video_thumbnail_url: photo.video_thumbnail_url || undefined,
+          video_duration_seconds: photo.video_duration_seconds || undefined,
+          video_width: photo.video_width || undefined,
+          video_height: photo.video_height || undefined,
         }));
 
         setImages(transformedImages);

@@ -500,13 +500,13 @@ export default function WYSIWYGEditor({ onSignOut }: WYSIWYGEditorProps) {
         </div>
       </div>
 
-      {/* Photo Uploader Dialog */}
+      {/* Media Uploader Dialog */}
       <Dialog open={showUploader} onOpenChange={setShowUploader}>
         <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Add Photos</DialogTitle>
+            <DialogTitle>Add Media</DialogTitle>
             <DialogDescription>
-              Upload photos to your photoshoot gallery
+              Upload photos and videos to your photoshoot gallery. Videos support autoplay with muted audio.
             </DialogDescription>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 pr-2">
