@@ -204,8 +204,12 @@ export default function VideoCard({
             isLoaded ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <source src={src} type="video/mp4" />
-          <source src={src.replace('.mp4', '.webm')} type="video/webm" />
+          {/* Primary source - use the provided video URL */}
+          <source src={src} type={src.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
+          {/* Fallback WebM source only if primary is MP4 */}
+          {src.endsWith('.mp4') && (
+            <source src={src.replace('.mp4', '.webm')} type="video/webm" />
+          )}
           Your browser does not support the video tag.
         </video>
       )}

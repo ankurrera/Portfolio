@@ -95,9 +95,15 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
 
   // Generate web-optimized derivative with aspect ratio preservation
   const generateDerivative = useCallback(async (file: File, originalWidth: number, originalHeight: number): Promise<Blob> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        reject(new Error('Failed to get canvas 2D context'));
+        return;
+      }
+      
       const img = new Image();
       
       img.onload = () => {
@@ -117,10 +123,20 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
         
         // Use high-quality WebP encoding (0.95 quality)
         canvas.toBlob(
-          (blob) => resolve(blob!),
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Failed to generate image blob'));
+            }
+          },
           'image/webp',
           0.95
         );
+      };
+      
+      img.onerror = () => {
+        reject(new Error('Failed to load image for derivative generation'));
       };
       
       img.src = URL.createObjectURL(file);
@@ -180,7 +196,14 @@ export default function PhotoUploader({ onUploadComplete, onCancel }: PhotoUploa
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d')!;
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          URL.revokeObjectURL(video.src);
+          reject(new Error('Failed to get canvas 2D context for thumbnail'));
+          return;
+        }
+        
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
         canvas.toBlob(

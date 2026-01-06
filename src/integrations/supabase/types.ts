@@ -34,6 +34,7 @@ export type Database = {
           updated_at: string
           video_duration_seconds: number | null
           video_height: number | null
+          video_thumbnail_url: string | null
           video_url: string | null
           video_width: number | null
           width: number
@@ -58,6 +59,7 @@ export type Database = {
           updated_at?: string
           video_duration_seconds?: number | null
           video_height?: number | null
+          video_thumbnail_url?: string | null
           video_url?: string | null
           video_width?: number | null
           width?: number
@@ -82,6 +84,7 @@ export type Database = {
           updated_at?: string
           video_duration_seconds?: number | null
           video_height?: number | null
+          video_thumbnail_url?: string | null
           video_url?: string | null
           video_width?: number | null
           width?: number
