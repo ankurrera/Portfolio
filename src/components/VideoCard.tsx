@@ -11,20 +11,24 @@ interface VideoCardProps {
   // Global mute controller - when another video unmutes, this one should mute
   globalMuteSignal?: number;
   onUnmute?: () => void;
+  // Whether this is a thumbnail in the gallery (vs full-screen in lightbox)
+  // When true, disables click-to-mute and allows click events to propagate to parent
+  isThumbnail?: boolean;
 }
 
 /**
- * VideoCard component for displaying videos in the gallery grid
+ * VideoCard component for displaying videos in the gallery grid or lightbox
  * 
  * Features:
  * - Autoplay with muted audio (required for mobile autoplay)
- * - Click/tap to toggle mute/unmute
+ * - Click/tap to toggle mute/unmute (only in lightbox mode, not as thumbnail)
  * - Loop playback
  * - Lazy loading with Intersection Observer
  * - Fallback play button for autoplay failures
  * - Video indicator badge
  * - Sound indicator when unmuted
  * - ARIA labels and keyboard accessibility
+ * - Thumbnail mode: Disables click handling to allow parent click handlers (e.g., opening lightbox)
  */
 export default function VideoCard({
   src,
@@ -35,6 +39,7 @@ export default function VideoCard({
   isHovered = false,
   globalMuteSignal,
   onUnmute,
+  isThumbnail = true,
 }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -125,6 +130,11 @@ export default function VideoCard({
   }, []);
 
   const handleToggleMute = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
+    // In thumbnail mode, don't handle click events - let them propagate to parent
+    if (isThumbnail) {
+      return;
+    }
+    
     e.stopPropagation();
     
     const video = videoRef.current;
@@ -144,9 +154,14 @@ export default function VideoCard({
       video.muted = true;
       setIsMuted(true);
     }
-  }, [isMuted, onUnmute]);
+  }, [isMuted, onUnmute, isThumbnail]);
 
   const handlePlayButtonClick = useCallback(async (e: React.MouseEvent) => {
+    // In thumbnail mode, don't handle play button clicks - let them propagate
+    if (isThumbnail) {
+      return;
+    }
+    
     e.stopPropagation();
     
     const video = videoRef.current;
@@ -160,9 +175,14 @@ export default function VideoCard({
     } catch (error) {
       console.error('Play failed:', error);
     }
-  }, []);
+  }, [isThumbnail]);
 
   const handleRetry = useCallback(async (e: React.MouseEvent) => {
+    // In thumbnail mode, don't handle retry clicks - let them propagate
+    if (isThumbnail) {
+      return;
+    }
+    
     e.stopPropagation();
     
     const video = videoRef.current;
@@ -170,24 +190,29 @@ export default function VideoCard({
 
     setHasError(false);
     video.load();
-  }, []);
+  }, [isThumbnail]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // In thumbnail mode, don't handle keyboard events - let them propagate
+    if (isThumbnail) {
+      return;
+    }
+    
     if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
       handleToggleMute(e);
     }
-  }, [handleToggleMute]);
+  }, [handleToggleMute, isThumbnail]);
 
   return (
     <div
       ref={containerRef}
       className={`relative overflow-hidden ${className}`}
-      role="button"
-      tabIndex={0}
-      aria-label={`Video: ${alt}. ${isMuted ? 'Click to unmute' : 'Click to mute'}`}
-      onClick={handleToggleMute}
-      onKeyDown={handleKeyDown}
+      role={isThumbnail ? undefined : "button"}
+      tabIndex={isThumbnail ? undefined : 0}
+      aria-label={isThumbnail ? undefined : `Video: ${alt}. ${isMuted ? 'Click to unmute' : 'Click to mute'}`}
+      onClick={isThumbnail ? undefined : handleToggleMute}
+      onKeyDown={isThumbnail ? undefined : handleKeyDown}
     >
       {/* Video element */}
       {isInViewport && (
@@ -203,6 +228,7 @@ export default function VideoCard({
           className={`w-full h-full object-contain transition-opacity duration-500 ${
             isLoaded ? 'opacity-100' : 'opacity-0'
           }`}
+          style={isThumbnail ? { pointerEvents: 'none' } : undefined}
         >
           {/* Primary source - use the provided video URL */}
           <source src={src} type={src.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
