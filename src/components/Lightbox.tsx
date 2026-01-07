@@ -28,9 +28,18 @@ interface LightboxProps {
 
 // Helper function to determine video MIME type from URL
 const getVideoMimeType = (url: string): string => {
-  if (url.endsWith('.webm')) return 'video/webm';
-  if (url.endsWith('.ogg')) return 'video/ogg';
+  // Extract pathname from URL and handle query params/fragments
+  const pathname = url.split('?')[0].split('#')[0].toLowerCase();
+  
+  if (pathname.endsWith('.webm')) return 'video/webm';
+  if (pathname.endsWith('.ogg') || pathname.endsWith('.ogv')) return 'video/ogg';
   return 'video/mp4';
+};
+
+// Styles to prevent video download via long-press on mobile
+const videoNoDownloadStyles = {
+  WebkitTouchCallout: 'none' as const,
+  userSelect: 'none' as const,
 };
 
 const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
@@ -154,6 +163,7 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
   };
 
   const currentImage = images[currentIndex];
+  const videoUrl = currentImage.videoSrc || currentImage.src;
 
   // Mobile layout: vertical stack with text above and below image
   if (isMobile) {
@@ -215,7 +225,7 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
             {currentImage.type === 'video' ? (
               <video
                 ref={videoRef}
-                src={currentImage.videoSrc || currentImage.src}
+                src={videoUrl}
                 poster={currentImage.video_thumbnail_url || currentImage.src}
                 controls
                 controlsList="nodownload"
@@ -223,14 +233,11 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
                 disableRemotePlayback
                 onContextMenu={(e) => e.preventDefault()}
                 className="max-w-full max-h-[60vh] object-contain transition-opacity duration-300"
-                style={{
-                  WebkitTouchCallout: 'none',
-                  userSelect: 'none',
-                }}
+                style={videoNoDownloadStyles}
               >
                 <source 
-                  src={currentImage.videoSrc || currentImage.src} 
-                  type={getVideoMimeType(currentImage.videoSrc || currentImage.src)} 
+                  src={videoUrl} 
+                  type={getVideoMimeType(videoUrl)} 
                 />
                 Your browser does not support the video tag.
               </video>
@@ -396,7 +403,7 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
         {currentImage.type === 'video' ? (
           <video
             ref={videoRef}
-            src={currentImage.videoSrc || currentImage.src}
+            src={videoUrl}
             poster={currentImage.video_thumbnail_url || currentImage.src}
             controls
             controlsList="nodownload"
@@ -404,14 +411,11 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
             disableRemotePlayback
             onContextMenu={(e) => e.preventDefault()}
             className="max-w-full max-h-[85vh] object-contain transition-opacity duration-300"
-            style={{
-              WebkitTouchCallout: 'none',
-              userSelect: 'none',
-            }}
+            style={videoNoDownloadStyles}
           >
             <source 
-              src={currentImage.videoSrc || currentImage.src} 
-              type={getVideoMimeType(currentImage.videoSrc || currentImage.src)} 
+              src={videoUrl} 
+              type={getVideoMimeType(videoUrl)} 
             />
             Your browser does not support the video tag.
           </video>
