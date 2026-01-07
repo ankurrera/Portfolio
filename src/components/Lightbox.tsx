@@ -26,16 +26,6 @@ interface LightboxProps {
   onClose: () => void;
 }
 
-// Helper function to determine video MIME type from URL
-const getVideoMimeType = (url: string): string => {
-  // Extract pathname from URL and handle query params/fragments
-  const pathname = url.split('?')[0].split('#')[0].toLowerCase();
-  
-  if (pathname.endsWith('.webm')) return 'video/webm';
-  if (pathname.endsWith('.ogg') || pathname.endsWith('.ogv')) return 'video/ogg';
-  return 'video/mp4';
-};
-
 // Styles to prevent video download via long-press on mobile
 const videoNoDownloadStyles = {
   WebkitTouchCallout: 'none' as const,
@@ -88,8 +78,13 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
   useEffect(() => {
     // Pause video when switching to a different item
     if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
+      try {
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+      } catch (error) {
+        // Ignore errors if video is not loaded or in an invalid state
+        console.debug('Failed to pause video:', error);
+      }
     }
   }, [currentIndex]);
 
@@ -235,10 +230,6 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
                 className="max-w-full max-h-[60vh] object-contain transition-opacity duration-300"
                 style={videoNoDownloadStyles}
               >
-                <source 
-                  src={videoUrl} 
-                  type={getVideoMimeType(videoUrl)} 
-                />
                 Your browser does not support the video tag.
               </video>
             ) : (
@@ -325,13 +316,17 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
       </button>
 
       {/* Right Side Metadata Block - Aligned with top of image/video */}
-      {(imageRef.current || videoRef.current) && (
-        <div 
-          className="fixed right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed pointer-events-none max-w-xs space-y-4"
-          style={{
-            top: `${(imageRef.current || videoRef.current)?.getBoundingClientRect().top}px`
-          }}
-        >
+      {(imageRef.current || videoRef.current) && (() => {
+        const activeRef = (currentImage.type === 'video' ? videoRef.current : imageRef.current);
+        if (!activeRef) return null;
+        
+        return (
+          <div 
+            className="fixed right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed pointer-events-none max-w-xs space-y-4"
+            style={{
+              top: `${activeRef.getBoundingClientRect().top}px`
+            }}
+          >
           {/* Caption / Description */}
           {currentImage.caption && (
             <div className="text-base">
@@ -347,7 +342,8 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
 
       {/* Photographer Name - Bottom Left (name only, no prefix) */}
       {currentImage.photographer_name && (
@@ -413,10 +409,6 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
             className="max-w-full max-h-[85vh] object-contain transition-opacity duration-300"
             style={videoNoDownloadStyles}
           >
-            <source 
-              src={videoUrl} 
-              type={getVideoMimeType(videoUrl)} 
-            />
             Your browser does not support the video tag.
           </video>
         ) : (
