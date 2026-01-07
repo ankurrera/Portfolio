@@ -76,17 +76,21 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
   }, [currentIndex]);
 
   useEffect(() => {
-    // Pause video when switching to a different item
-    if (videoRef.current) {
+    // Pause and reset video when navigating away from it
+    const previousItem = images[currentIndex - 1];
+    const currentItem = images[currentIndex];
+    
+    // Only reset if we're navigating away from a video
+    if (previousItem?.type === 'video' && currentItem?.type !== 'video' && videoRef.current) {
       try {
         videoRef.current.pause();
         videoRef.current.currentTime = 0;
       } catch (error) {
         // Ignore errors if video is not loaded or in an invalid state
-        console.debug('Failed to pause video:', error);
+        console.debug('Failed to pause/reset video:', error);
       }
     }
-  }, [currentIndex]);
+  }, [currentIndex, images]);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
