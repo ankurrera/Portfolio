@@ -144,10 +144,10 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
             return (
               <button
                 key={index}
-                onClick={() => !isVideo && onImageClick(index)}
+                onClick={() => onImageClick(index)}
                 onMouseEnter={() => handleImageHover(index)}
                 onMouseLeave={handleImageLeave}
-                className={`absolute select-none group ${isVideo ? 'cursor-pointer' : 'cursor-zoom-in'}`}
+                className="absolute select-none group cursor-zoom-in"
                 style={{
                   left: `${posX}px`,
                   top: `${posY}px`,
@@ -253,10 +253,10 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
             return (
               <button
                 key={index}
-                onClick={() => !isVideo && onImageClick(index)}
+                onClick={() => onImageClick(index)}
                 onMouseEnter={() => handleImageHover(index)}
                 onMouseLeave={handleImageLeave}
-                className={`w-full select-none group ${isVideo ? 'cursor-pointer' : 'cursor-zoom-in'}`}
+                className="w-full select-none group cursor-zoom-in"
               >
                 <div 
                   className="relative w-full overflow-hidden rounded-sm shadow-lg"
@@ -356,10 +356,10 @@ const LayoutGallery = ({ images, onImageClick }: LayoutGalleryProps) => {
             return (
               <button
                 key={index}
-                onClick={() => !isVideo && onImageClick(index)}
+                onClick={() => onImageClick(index)}
                 onMouseEnter={() => handleImageHover(index)}
                 onMouseLeave={handleImageLeave}
-                className={`w-full select-none group ${isVideo ? 'cursor-pointer' : 'cursor-zoom-in'}`}
+                className="w-full select-none group cursor-zoom-in"
                 style={{
                   maxWidth: `${width}px`,
                 }}
