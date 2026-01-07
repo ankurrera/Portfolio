@@ -221,7 +221,16 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
                   userSelect: 'none',
                 }}
               >
-                <source src={currentImage.videoSrc || currentImage.src} type="video/mp4" />
+                <source 
+                  src={currentImage.videoSrc || currentImage.src} 
+                  type={
+                    (currentImage.videoSrc || currentImage.src).endsWith('.webm') 
+                      ? 'video/webm' 
+                      : (currentImage.videoSrc || currentImage.src).endsWith('.ogg')
+                      ? 'video/ogg'
+                      : 'video/mp4'
+                  } 
+                />
                 Your browser does not support the video tag.
               </video>
             ) : (
@@ -399,7 +408,16 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
               userSelect: 'none',
             }}
           >
-            <source src={currentImage.videoSrc || currentImage.src} type="video/mp4" />
+            <source 
+              src={currentImage.videoSrc || currentImage.src} 
+              type={
+                (currentImage.videoSrc || currentImage.src).endsWith('.webm') 
+                  ? 'video/webm' 
+                  : (currentImage.videoSrc || currentImage.src).endsWith('.ogg')
+                  ? 'video/ogg'
+                  : 'video/mp4'
+              } 
+            />
             Your browser does not support the video tag.
           </video>
         ) : (
