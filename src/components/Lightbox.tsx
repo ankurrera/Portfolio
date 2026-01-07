@@ -26,6 +26,13 @@ interface LightboxProps {
   onClose: () => void;
 }
 
+// Helper function to determine video MIME type from URL
+const getVideoMimeType = (url: string): string => {
+  if (url.endsWith('.webm')) return 'video/webm';
+  if (url.endsWith('.ogg')) return 'video/ogg';
+  return 'video/mp4';
+};
+
 const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isMobile, setIsMobile] = useState(false);
@@ -223,13 +230,7 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
               >
                 <source 
                   src={currentImage.videoSrc || currentImage.src} 
-                  type={
-                    (currentImage.videoSrc || currentImage.src).endsWith('.webm') 
-                      ? 'video/webm' 
-                      : (currentImage.videoSrc || currentImage.src).endsWith('.ogg')
-                      ? 'video/ogg'
-                      : 'video/mp4'
-                  } 
+                  type={getVideoMimeType(currentImage.videoSrc || currentImage.src)} 
                 />
                 Your browser does not support the video tag.
               </video>
@@ -410,13 +411,7 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
           >
             <source 
               src={currentImage.videoSrc || currentImage.src} 
-              type={
-                (currentImage.videoSrc || currentImage.src).endsWith('.webm') 
-                  ? 'video/webm' 
-                  : (currentImage.videoSrc || currentImage.src).endsWith('.ogg')
-                  ? 'video/ogg'
-                  : 'video/mp4'
-              } 
+              type={getVideoMimeType(currentImage.videoSrc || currentImage.src)} 
             />
             Your browser does not support the video tag.
           </video>
