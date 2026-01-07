@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { GripVertical, Maximize2, ZoomIn, Trash2, Pencil } from 'lucide-react';
+import { GripVertical, Maximize2, ZoomIn, Trash2, Pencil, Video } from 'lucide-react';
 import { PhotoLayoutData } from '@/types/wysiwyg';
 import { Button } from '@/components/ui/button';
 
@@ -252,14 +252,32 @@ export default function DraggablePhoto({
       }}
       transition={{ duration: 0.1 }}
     >
-      {/* Photo Image */}
-      <img
-        src={photo.image_url}
-        alt={photo.title || 'Photo'}
-        className="w-full h-full object-contain rounded-sm shadow-lg"
-        draggable={false}
-        onMouseDown={handleMouseDown}
-      />
+      {/* Photo/Video Content */}
+      {photo.media_type === 'video' ? (
+        <div className="relative w-full h-full">
+          {/* Video thumbnail */}
+          <img
+            src={photo.video_thumbnail_url || photo.image_url}
+            alt={photo.title || 'Video'}
+            className="w-full h-full object-contain rounded-sm shadow-lg"
+            draggable={false}
+            onMouseDown={handleMouseDown}
+          />
+          {/* Video indicator badge */}
+          <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1 pointer-events-none">
+            <Video className="h-3 w-3" />
+            <span>Video</span>
+          </div>
+        </div>
+      ) : (
+        <img
+          src={photo.image_url}
+          alt={photo.title || 'Photo'}
+          className="w-full h-full object-contain rounded-sm shadow-lg"
+          draggable={false}
+          onMouseDown={handleMouseDown}
+        />
+      )}
 
       {/* Edit Mode Overlay */}
       {isEditMode && (isHovered || isSelected) && (

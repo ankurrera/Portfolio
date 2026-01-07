@@ -2,7 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 interface LightboxProps {
   images: { 
+    type?: 'image' | 'video';
     src: string; 
+    videoSrc?: string;
     alt: string;
     photographer?: string;
     client?: string;
@@ -15,16 +17,27 @@ interface LightboxProps {
     device_used?: string;
     camera_lens?: string;
     credits?: string;
+    video_thumbnail_url?: string;
+    video_duration_seconds?: number;
+    video_width?: number;
+    video_height?: number;
   }[];
   initialIndex: number;
   onClose: () => void;
 }
+
+// Styles to prevent video download via long-press on mobile
+const videoNoDownloadStyles = {
+  WebkitTouchCallout: 'none' as const,
+  userSelect: 'none' as const,
+};
 
 const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Detect mobile viewport with debouncing
@@ -63,6 +76,23 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
   }, [currentIndex]);
 
   useEffect(() => {
+    // Pause and reset video when navigating away from it
+    const previousItem = images[currentIndex - 1];
+    const currentItem = images[currentIndex];
+    
+    // Only reset if we're navigating away from a video
+    if (previousItem?.type === 'video' && currentItem?.type !== 'video' && videoRef.current) {
+      try {
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+      } catch (error) {
+        // Ignore errors if video is not loaded or in an invalid state
+        console.debug('Failed to pause/reset video:', error);
+      }
+    }
+  }, [currentIndex, images]);
+
+  useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "";
@@ -82,21 +112,25 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
   };
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!imageRef.current) return;
+    const currentImage = images[currentIndex];
+    const isVideo = currentImage.type === 'video';
+    const elementRef = isVideo ? videoRef : imageRef;
     
-    const imageRect = imageRef.current.getBoundingClientRect();
+    if (!elementRef.current) return;
+    
+    const elementRect = elementRef.current.getBoundingClientRect();
     const clickX = e.clientX;
     const clickY = e.clientY;
     
-    // Check if click is outside image (top or bottom)
-    if (clickY < imageRect.top || clickY > imageRect.bottom) {
+    // Check if click is outside element (top or bottom)
+    if (clickY < elementRect.top || clickY > elementRect.bottom) {
       onClose();
       return;
     }
     
-    // Check if click is on left or right side of image
-    const imageCenterX = imageRect.left + imageRect.width / 2;
-    if (clickX < imageCenterX) {
+    // Check if click is on left or right side of element
+    const elementCenterX = elementRect.left + elementRect.width / 2;
+    if (clickX < elementCenterX) {
       handlePrevious();
     } else {
       handleNext();
@@ -104,18 +138,22 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!imageRef.current) return;
+    const currentImage = images[currentIndex];
+    const isVideo = currentImage.type === 'video';
+    const elementRef = isVideo ? videoRef : imageRef;
     
-    const imageRect = imageRef.current.getBoundingClientRect();
+    if (!elementRef.current) return;
+    
+    const elementRect = elementRef.current.getBoundingClientRect();
     const mouseX = e.clientX;
     
     // Update cursor style based on position
-    const imageCenterX = imageRect.left + imageRect.width / 2;
+    const elementCenterX = elementRect.left + elementRect.width / 2;
     const container = containerRef.current;
     if (container) {
-      if (mouseX < imageCenterX && currentIndex > 0) {
+      if (mouseX < elementCenterX && currentIndex > 0) {
         container.style.cursor = 'w-resize';
-      } else if (mouseX >= imageCenterX && currentIndex < images.length - 1) {
+      } else if (mouseX >= elementCenterX && currentIndex < images.length - 1) {
         container.style.cursor = 'e-resize';
       } else {
         container.style.cursor = 'default';
@@ -124,6 +162,7 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
   };
 
   const currentImage = images[currentIndex];
+  const videoUrl = currentImage.videoSrc || currentImage.src;
 
   // Mobile layout: vertical stack with text above and below image
   if (isMobile) {
@@ -176,18 +215,35 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
             )}
           </div>
 
-          {/* Image Container */}
+          {/* Image/Video Container */}
           <div
             ref={containerRef}
             className="relative flex items-center justify-center"
             onClick={handleClick}
           >
-            <img
-              ref={imageRef}
-              src={currentImage.src}
-              alt={currentImage.alt}
-              className="max-w-full max-h-[60vh] object-contain transition-opacity duration-300 pointer-events-none"
-            />
+            {currentImage.type === 'video' ? (
+              <video
+                ref={videoRef}
+                src={videoUrl}
+                poster={currentImage.video_thumbnail_url || currentImage.src}
+                controls
+                controlsList="nodownload"
+                disablePictureInPicture
+                disableRemotePlayback
+                onContextMenu={(e) => e.preventDefault()}
+                className="max-w-full max-h-[60vh] object-contain transition-opacity duration-300"
+                style={videoNoDownloadStyles}
+              >
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <img
+                ref={imageRef}
+                src={currentImage.src}
+                alt={currentImage.alt}
+                className="max-w-full max-h-[60vh] object-contain transition-opacity duration-300 pointer-events-none"
+              />
+            )}
           </div>
 
           {/* Bottom Metadata: Photographer, Device, Date - Below Image */}
@@ -263,14 +319,18 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
         </svg>
       </button>
 
-      {/* Right Side Metadata Block - Aligned with top of image */}
-      {imageRef.current && (
-        <div 
-          className="fixed right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed pointer-events-none max-w-xs space-y-4"
-          style={{
-            top: `${imageRef.current.getBoundingClientRect().top}px`
-          }}
-        >
+      {/* Right Side Metadata Block - Aligned with top of image/video */}
+      {(imageRef.current || videoRef.current) && (() => {
+        const activeRef = (currentImage.type === 'video' ? videoRef.current : imageRef.current);
+        if (!activeRef) return null;
+        
+        return (
+          <div 
+            className="fixed right-8 z-[101] text-foreground/60 text-sm font-inter leading-relaxed pointer-events-none max-w-xs space-y-4"
+            style={{
+              top: `${activeRef.getBoundingClientRect().top}px`
+            }}
+          >
           {/* Caption / Description */}
           {currentImage.caption && (
             <div className="text-base">
@@ -286,7 +346,8 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
 
       {/* Photographer Name - Bottom Left (name only, no prefix) */}
       {currentImage.photographer_name && (
@@ -333,18 +394,35 @@ const Lightbox = ({ images, initialIndex, onClose }: LightboxProps) => {
         </div>
       )}
 
-      {/* Image Container */}
+      {/* Image/Video Container */}
       <div
         ref={containerRef}
         className="relative w-full h-full flex items-center justify-center px-[10%]"
         onClick={handleClick}
       >
-        <img
-          ref={imageRef}
-          src={currentImage.src}
-          alt={currentImage.alt}
-          className="max-w-full max-h-[85vh] object-contain transition-opacity duration-300 pointer-events-none"
-        />
+        {currentImage.type === 'video' ? (
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            poster={currentImage.video_thumbnail_url || currentImage.src}
+            controls
+            controlsList="nodownload"
+            disablePictureInPicture
+            disableRemotePlayback
+            onContextMenu={(e) => e.preventDefault()}
+            className="max-w-full max-h-[85vh] object-contain transition-opacity duration-300"
+            style={videoNoDownloadStyles}
+          >
+            Your browser does not support the video tag.
+          </video>
+        ) : (
+          <img
+            ref={imageRef}
+            src={currentImage.src}
+            alt={currentImage.alt}
+            className="max-w-full max-h-[85vh] object-contain transition-opacity duration-300 pointer-events-none"
+          />
+        )}
       </div>
     </div>
   );

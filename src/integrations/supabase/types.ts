@@ -25,12 +25,18 @@ export type Database = {
           image_url: string
           is_draft: boolean
           layout_config: Json
+          media_type: string
           position_x: number
           position_y: number
           rotation: number
           scale: number
           title: string | null
           updated_at: string
+          video_duration_seconds: number | null
+          video_height: number | null
+          video_thumbnail_url: string | null
+          video_url: string | null
+          video_width: number | null
           width: number
           z_index: number
         }
@@ -44,12 +50,18 @@ export type Database = {
           image_url: string
           is_draft?: boolean
           layout_config?: Json
+          media_type?: string
           position_x?: number
           position_y?: number
           rotation?: number
           scale?: number
           title?: string | null
           updated_at?: string
+          video_duration_seconds?: number | null
+          video_height?: number | null
+          video_thumbnail_url?: string | null
+          video_url?: string | null
+          video_width?: number | null
           width?: number
           z_index?: number
         }
@@ -63,12 +75,18 @@ export type Database = {
           image_url?: string
           is_draft?: boolean
           layout_config?: Json
+          media_type?: string
           position_x?: number
           position_y?: number
           rotation?: number
           scale?: number
           title?: string | null
           updated_at?: string
+          video_duration_seconds?: number | null
+          video_height?: number | null
+          video_thumbnail_url?: string | null
+          video_url?: string | null
+          video_width?: number | null
           width?: number
           z_index?: number
         }

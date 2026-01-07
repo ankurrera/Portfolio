@@ -40,6 +40,10 @@ export interface PhotoPosition {
  * - camera_lens: Camera and lens info
  * - project_visibility: public, private, or unlisted
  * - external_links: Array of external links
+ * - media_type: 'image' or 'video'
+ * - video_url: URL to video file (for video media)
+ * - video_duration_seconds: Duration of video
+ * - video_width, video_height: Video dimensions
  * - created_at, updated_at: Timestamps
  */
 export interface PhotoLayoutData {
@@ -73,6 +77,11 @@ export interface PhotoLayoutData {
   camera_lens: string | null;
   project_visibility: string | null;
   external_links: Json;
+  media_type: string;
+  video_url: string | null;
+  video_duration_seconds: number | null;
+  video_width: number | null;
+  video_height: number | null;
   created_at: string;
   updated_at: string;
 }
