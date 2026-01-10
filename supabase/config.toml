@@ -1,4 +1,38 @@
-# A string used to distinguish different Supabase projects on the same host. Defaults to the
-# working directory name when running `supabase init`.
+# ============================================================================
+# SUPABASE PROJECT CONFIGURATION
+# ============================================================================
+# This file configures the Supabase CLI for local development and deployment.
+#
+# SETUP INSTRUCTIONS:
+# 1. Create a new Supabase project at https://app.supabase.com
+# 2. Get your project reference ID from Project Settings > General
+# 3. Replace "your-project-reference-id-here" below with your project ID
+# 4. Run: supabase link --project-ref YOUR_PROJECT_ID
+# 5. Run: supabase db push
+#
+# For more information, see: SUPABASE_RESTORE_GUIDE.md
+# ============================================================================
+
+# A string used to distinguish different Supabase projects on the same host.
 # Replace this with your actual Supabase project reference ID (e.g., "abcdefghijklmnop")
 project_id = "your-project-reference-id-here"
+
+# API configuration
+[api]
+# Port to use for the local API server
+port = 54321
+
+# Studio configuration  
+[studio]
+# Port to use for Supabase Studio
+port = 54323
+
+# Database configuration
+[db]
+# Port to use for the local database
+port = 54322
+
+# Seed file to run after migrations
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]

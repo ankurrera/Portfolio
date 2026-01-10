@@ -57,7 +57,9 @@ npm install
 
 ### 4. Run database migrations
 
-The SQL migration files are located in `supabase/migrations/`. You can apply them using the Supabase CLI or by running them directly in the SQL Editor in your Supabase dashboard:
+The SQL migration files are located in `supabase/migrations/`. You can apply them using the Supabase CLI or by running them directly in the SQL Editor in your Supabase dashboard.
+
+> 📚 **For detailed database setup and restoration instructions, see [SUPABASE_RESTORE_GUIDE.md](./supabase/SUPABASE_RESTORE_GUIDE.md)**
 
 **Option A: Using Supabase CLI** (Recommended)
 ```sh
@@ -71,13 +73,16 @@ supabase link --project-ref your-project-id
 supabase db push
 ```
 
-**Option B: Manual SQL Execution**
+**Option B: Using Consolidated init.sql**
 1. Go to your Supabase project dashboard
 2. Navigate to SQL Editor
-3. Copy and paste the contents of each migration file in order:
-   - `supabase/migrations/20251208080332_remix_migration_from_pg_dump.sql`
-   - `supabase/migrations/20251208081442_25abee87-b56a-40c8-9af4-e7c2d206f677.sql`
-   - `supabase/migrations/20251208093500_add_auto_user_role_trigger.sql`
+3. Copy and paste the contents of `supabase/init.sql`
+4. Execute the query
+
+**Option C: Manual SQL Execution (35 migration files)**
+1. Go to your Supabase project dashboard
+2. Navigate to SQL Editor
+3. Run each migration file in order (see [SUPABASE_RESTORE_GUIDE.md](./supabase/SUPABASE_RESTORE_GUIDE.md) for the full list)
 4. Execute each query
 
 ### 5. Configure Authentication (Important!)
@@ -134,8 +139,11 @@ The application will be available at `http://localhost:8080`
 │   ├── lib/             # Utility functions
 │   └── services/        # API services
 ├── supabase/
-│   ├── config.toml      # Supabase configuration
-│   └── migrations/      # Database migration files
+│   ├── config.toml      # Supabase CLI configuration
+│   ├── migrations/      # Database migration files (35 files)
+│   ├── init.sql         # Consolidated initialization script
+│   ├── seed.sql         # Seed data for initial setup
+│   └── SUPABASE_RESTORE_GUIDE.md  # Complete restoration guide
 └── public/              # Static assets
 ```
 
