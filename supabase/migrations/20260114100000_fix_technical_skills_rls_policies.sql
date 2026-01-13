@@ -48,9 +48,12 @@ $$;
 -- But we need to ensure the user_roles table exists and has data.
 
 -- Backfill any missing user roles for existing auth.users
+-- Using LEFT JOIN for better performance with many users
 INSERT INTO public.user_roles (user_id, role)
-SELECT id, 'user'::app_role FROM auth.users
-WHERE id NOT IN (SELECT user_id FROM public.user_roles)
+SELECT au.id, 'user'::app_role 
+FROM auth.users au
+LEFT JOIN public.user_roles ur ON au.id = ur.user_id
+WHERE ur.user_id IS NULL
 ON CONFLICT (user_id, role) DO NOTHING;
 
 -- =============================================================================
@@ -102,6 +105,10 @@ WITH CHECK (
 -- Policy: Admins can update skills (BOTH USING and WITH CHECK are required)
 -- USING: which rows can be selected for update
 -- WITH CHECK: what the new row values must satisfy after update
+-- Note: Both clauses use identical admin checks because:
+-- 1. We want admins to be able to select any row for updating (USING)
+-- 2. We want the updated row to still require admin permissions (WITH CHECK)
+-- 3. This prevents potential privilege escalation if WITH CHECK was different
 CREATE POLICY "Admins can update technical skills"
 ON public.technical_skills
 FOR UPDATE
