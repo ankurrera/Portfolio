@@ -142,8 +142,18 @@ END$$;
 -- Drop existing trigger if it exists (to ensure clean state)
 DROP TRIGGER IF EXISTS update_technical_about_updated_at ON public.technical_about;
 
--- Create the trigger (requires update_updated_at_column function to exist)
--- This function is created in 20260113190000_ensure_core_database_objects.sql
+-- Create the update_updated_at_column function if it doesn't exist
+-- Using CREATE OR REPLACE makes this idempotent - reuses existing function or creates new
+-- This ensures the migration works standalone without dependency on other migrations
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SET search_path = public;
+
+-- Create the trigger
 CREATE TRIGGER update_technical_about_updated_at
   BEFORE UPDATE ON public.technical_about
   FOR EACH ROW
@@ -170,7 +180,7 @@ SELECT
   'About',
   'Who Am I?',
   '[
-    "I''m a passionate full-stack Web developer with over 1 year of experience creating digital solutions that matter.",
+    "I''m a passionate full-stack web developer with over 1 year of experience creating digital solutions that matter.",
     "My journey began with a curiosity about how things work. Today, I specialize in building scalable web applications, integrating AI capabilities, and crafting user experiences that feel natural and intuitive.",
     "When I''m not coding, you''ll find me exploring new technologies, contributing to open source projects, or sharing knowledge with the developer community."
   ]'::jsonb,
