@@ -575,13 +575,27 @@ const AdminAboutEdit = () => {
   const loadSocialLinks = async () => {
     try {
       setSocialLinksLoading(true);
+      // First try with page_context filter (for databases with the migration applied)
       const { data, error } = await supabase
         .from('social_links')
         .select('*')
         .eq('page_context', 'about')
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        // If page_context column doesn't exist, fall back to querying without it
+        if (error.code === '42703') {
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('social_links')
+            .select('*')
+            .order('display_order', { ascending: true });
+
+          if (fallbackError) throw fallbackError;
+          setSocialLinks(fallbackData || []);
+          return;
+        }
+        throw error;
+      }
       setSocialLinks(data || []);
     } catch (error) {
       console.error('Error loading social links:', error);
