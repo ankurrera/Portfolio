@@ -40,13 +40,33 @@ const AdminTechnicalSocialLinksEdit = () => {
 
   const loadSocialLinks = async () => {
     try {
+      // First try with page_context filter (for databases with the migration applied)
       const { data, error } = await supabase
         .from('social_links')
         .select('*')
         .eq('page_context', 'technical')
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        // If page_context column doesn't exist, fall back to querying without it
+        // Filter to only show technical link types
+        if (error.code === '42703') {
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('social_links')
+            .select('*')
+            .order('display_order', { ascending: true });
+
+          if (fallbackError) throw fallbackError;
+          // Filter to only technical link types
+          const technicalTypes = ['github', 'linkedin', 'twitter'];
+          const filteredData = (fallbackData || []).filter(
+            link => technicalTypes.includes(link.link_type)
+          );
+          setSocialLinks(filteredData as SocialLink[]);
+          return;
+        }
+        throw error;
+      }
 
       setSocialLinks(data as SocialLink[]);
     } catch (error) {

@@ -14,6 +14,7 @@ const TechnicalSocialLinks = () => {
 
   const loadSocialLinks = async () => {
     try {
+      // First try with page_context filter (for databases with the migration applied)
       const { data, error } = await supabase
         .from('social_links')
         .select('*')
@@ -21,7 +22,27 @@ const TechnicalSocialLinks = () => {
         .eq('is_visible', true)
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        // If page_context column doesn't exist, fall back to querying without it
+        // Only show github, linkedin, twitter for technical page
+        if (error.code === '42703') {
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('social_links')
+            .select('*')
+            .eq('is_visible', true)
+            .order('display_order', { ascending: true });
+
+          if (fallbackError) throw fallbackError;
+          // Filter to only technical link types and non-empty URLs
+          const technicalTypes = ['github', 'linkedin', 'twitter'];
+          const validLinks = (fallbackData || []).filter(
+            link => link.url && link.url.trim() !== '' && technicalTypes.includes(link.link_type)
+          );
+          setLinks(validLinks);
+          return;
+        }
+        throw error;
+      }
       // Filter out links with empty URLs
       const validLinks = (data || []).filter(link => link.url && link.url.trim() !== '');
       setLinks(validLinks);
