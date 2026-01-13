@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AboutPage } from '@/types/about';
+import { formatSupabaseError } from '@/lib/utils';
 
 export const useAboutPage = () => {
   const [aboutData, setAboutData] = useState<AboutPage | null>(null);
@@ -20,16 +21,28 @@ export const useAboutPage = () => {
           .limit(1)
           .single();
 
-        if (fetchError && fetchError.code !== 'PGRST116') {
-          // PGRST116 is "no rows returned" error
-          throw fetchError;
+        if (fetchError) {
+          // PGRST116 is "no rows returned" error - this is expected when table is empty
+          if (fetchError.code === 'PGRST116') {
+            console.log('[useAboutPage] No about data found in database');
+            setAboutData(null);
+            return;
+          }
+          // Log detailed error for debugging
+          const errorMessage = formatSupabaseError(fetchError);
+          console.error('[useAboutPage] Error fetching about data:', errorMessage);
+          throw new Error(errorMessage);
         }
 
-        if (data) {
-          setAboutData(data);
+        // Defensive check: validate data structure before setting state
+        if (data && typeof data === 'object' && 'id' in data) {
+          setAboutData(data as AboutPage);
+        } else {
+          console.warn('[useAboutPage] Received unexpected data format:', typeof data);
+          setAboutData(null);
         }
       } catch (err) {
-        console.error('Error fetching about data:', err);
+        console.error('[useAboutPage] Error loading about data:', err);
         setError(err instanceof Error ? err : new Error('Failed to fetch about data'));
       } finally {
         setLoading(false);

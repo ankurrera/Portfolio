@@ -21,23 +21,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const checkAdminRole = async (userId: string) => {
-    console.log('[useAuth] Checking admin role for user:', userId);
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .eq('role', 'admin')
-      .maybeSingle();
-    
-    if (error) {
-      const errorMessage = formatSupabaseError(error);
-      console.error('[useAuth] Error checking admin role:', errorMessage);
+  const checkAdminRole = async (userId: string): Promise<boolean> => {
+    // Validate userId before making the query
+    if (!userId || typeof userId !== 'string') {
+      console.warn('[useAuth] Invalid userId provided for admin role check');
       return false;
     }
-    const isAdmin = !!data;
-    console.log('[useAuth] Admin role check result:', { hasData: !!data, isAdmin });
-    return isAdmin;
+
+    console.log('[useAuth] Checking admin role for user:', userId);
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle();
+      
+      if (error) {
+        const errorMessage = formatSupabaseError(error);
+        console.error('[useAuth] Error checking admin role:', errorMessage);
+        return false;
+      }
+      
+      // Defensive check: ensure data is valid and has the expected structure
+      // data should be { role: 'admin' } or null
+      const isAdminUser = data !== null && 
+                          typeof data === 'object' && 
+                          'role' in data && 
+                          data.role === 'admin';
+      
+      console.log('[useAuth] Admin role check result:', { 
+        hasData: data !== null, 
+        dataType: typeof data,
+        isAdmin: isAdminUser 
+      });
+      
+      return isAdminUser;
+    } catch (err) {
+      // Catch any unexpected errors (network issues, etc.)
+      console.error('[useAuth] Unexpected error in admin role check:', err);
+      return false;
+    }
   };
 
   useEffect(() => {
