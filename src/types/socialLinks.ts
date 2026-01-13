@@ -1,6 +1,9 @@
 export type SocialLinkType = 'resume' | 'github' | 'linkedin' | 'twitter' | 'telegram';
 export type PageContext = 'about' | 'technical';
 
+// Link types available on the technical page
+export const TECHNICAL_LINK_TYPES: SocialLinkType[] = ['github', 'linkedin', 'twitter'];
+
 export interface SocialLink {
   id: string;
   page_context: PageContext;

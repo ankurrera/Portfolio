@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { SocialLink } from '@/types/socialLinks';
+import { SocialLink, TECHNICAL_LINK_TYPES } from '@/types/socialLinks';
 import { Github, Linkedin } from 'lucide-react';
 import XIcon from '@/components/icons/XIcon';
 
@@ -34,9 +34,8 @@ const TechnicalSocialLinks = () => {
 
           if (fallbackError) throw fallbackError;
           // Filter to only technical link types and non-empty URLs
-          const technicalTypes = ['github', 'linkedin', 'twitter'];
           const validLinks = (fallbackData || []).filter(
-            link => link.url && link.url.trim() !== '' && technicalTypes.includes(link.link_type)
+            link => link.url && link.url.trim() !== '' && TECHNICAL_LINK_TYPES.includes(link.link_type)
           );
           setLinks(validLinks);
           return;

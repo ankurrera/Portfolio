@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Loader2, ChevronLeft, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { SocialLink } from '@/types/socialLinks';
+import { SocialLink, TECHNICAL_LINK_TYPES } from '@/types/socialLinks';
 import { Button } from '@/components/ui/button';
 import TechnicalSocialLinkItem from '@/components/admin/TechnicalSocialLinkItem';
 
@@ -58,9 +58,8 @@ const AdminTechnicalSocialLinksEdit = () => {
 
           if (fallbackError) throw fallbackError;
           // Filter to only technical link types
-          const technicalTypes = ['github', 'linkedin', 'twitter'];
           const filteredData = (fallbackData || []).filter(
-            link => technicalTypes.includes(link.link_type)
+            link => TECHNICAL_LINK_TYPES.includes(link.link_type)
           );
           setSocialLinks(filteredData as SocialLink[]);
           return;
