@@ -3,6 +3,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { AboutPage } from '@/types/about';
 import { formatSupabaseError } from '@/lib/utils';
 
+/**
+ * Type guard to validate that data conforms to AboutPage interface
+ */
+function isAboutPage(data: unknown): data is AboutPage {
+  if (!data || typeof data !== 'object') return false;
+  const obj = data as Record<string, unknown>;
+  return (
+    typeof obj.id === 'string' &&
+    typeof obj.created_at === 'string' &&
+    typeof obj.updated_at === 'string'
+  );
+}
+
 export const useAboutPage = () => {
   const [aboutData, setAboutData] = useState<AboutPage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,9 +47,9 @@ export const useAboutPage = () => {
           throw new Error(errorMessage);
         }
 
-        // Defensive check: validate data structure before setting state
-        if (data && typeof data === 'object' && 'id' in data) {
-          setAboutData(data as AboutPage);
+        // Validate data structure using type guard before setting state
+        if (isAboutPage(data)) {
+          setAboutData(data);
         } else {
           console.warn('[useAboutPage] Received unexpected data format:', typeof data);
           setAboutData(null);

@@ -44,16 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false;
       }
       
-      // Defensive check: ensure data is valid and has the expected structure
+      // Defensive check: ensure data has the expected role value
       // data should be { role: 'admin' } or null
-      const isAdminUser = data !== null && 
-                          typeof data === 'object' && 
-                          'role' in data && 
-                          data.role === 'admin';
+      const isAdminUser = data?.role === 'admin';
       
       console.log('[useAuth] Admin role check result:', { 
         hasData: data !== null, 
-        dataType: typeof data,
         isAdmin: isAdminUser 
       });
       
