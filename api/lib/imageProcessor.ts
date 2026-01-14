@@ -2,7 +2,7 @@
  * Image Processing Utility
  * Handles image optimization using sharp library
  */
-import * as sharp from 'sharp';
+import sharp from 'sharp';
 import { IMAGE_OPTIMIZATION } from './imageUploadConfig.js';
 
 export interface ProcessedImage {

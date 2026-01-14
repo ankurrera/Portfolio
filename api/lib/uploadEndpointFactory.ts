@@ -13,6 +13,33 @@ const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
 const MAX_UPLOADS_PER_WINDOW = 20;
 
 /**
+ * Get a more reliable client identifier for rate limiting
+ * Uses multiple headers and falls back to socket address
+ * Note: For production at scale, consider using Redis/Vercel KV for distributed rate limiting
+ */
+function getClientIdentifier(req: VercelRequest): string {
+  // In Vercel, x-forwarded-for is set by the load balancer and includes the real client IP
+  // Use the first IP in the chain (the original client)
+  const forwardedFor = req.headers['x-forwarded-for'];
+  if (forwardedFor) {
+    const ips = (Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor).split(',');
+    const clientIp = ips[0]?.trim();
+    if (clientIp) {
+      return clientIp;
+    }
+  }
+  
+  // Vercel also provides x-real-ip
+  const realIp = req.headers['x-real-ip'];
+  if (realIp) {
+    return Array.isArray(realIp) ? realIp[0] : realIp;
+  }
+  
+  // Fall back to socket address
+  return req.socket?.remoteAddress || 'unknown';
+}
+
+/**
  * Check rate limit for uploads
  */
 function checkUploadRateLimit(identifier: string): boolean {
@@ -80,10 +107,8 @@ export function createUploadHandler(options: CreateUploadHandlerOptions) {
     }
     
     try {
-      // Rate limiting check
-      const identifier = req.headers['x-forwarded-for'] as string || 
-                        req.socket?.remoteAddress || 
-                        'unknown';
+      // Rate limiting check using improved client identification
+      const identifier = getClientIdentifier(req);
       
       if (!checkUploadRateLimit(identifier)) {
         return res.status(429).json({
@@ -197,10 +222,8 @@ export function createBatchUploadHandler(options: CreateUploadHandlerOptions) {
     }
     
     try {
-      // Rate limiting check
-      const identifier = req.headers['x-forwarded-for'] as string || 
-                        req.socket?.remoteAddress || 
-                        'unknown';
+      // Rate limiting check using improved client identification
+      const identifier = getClientIdentifier(req);
       
       if (!checkUploadRateLimit(identifier)) {
         return res.status(429).json({

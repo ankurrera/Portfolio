@@ -71,7 +71,7 @@ export function validateFile(
   if (!isValidMimeType(mimeType)) {
     return {
       valid: false,
-      error: `Invalid file type. Allowed types: ${ALLOWED_EXTENSIONS.join(', ')}`,
+      error: `Invalid file type. Allowed types: JPEG, PNG`,
     };
   }
   

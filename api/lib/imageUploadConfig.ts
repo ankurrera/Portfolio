@@ -6,7 +6,6 @@
 // Allowed MIME types for upload
 export const ALLOWED_MIME_TYPES = [
   'image/jpeg',
-  'image/jpg', 
   'image/png',
 ] as const;
 
