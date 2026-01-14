@@ -28,7 +28,7 @@ type Page = typeof VALID_PAGES[number];
 type Section = typeof VALID_SECTIONS[number];
 
 // Allowed file types
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png'];
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
 
 // Max file size: 20MB
