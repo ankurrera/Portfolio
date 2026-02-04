@@ -42,7 +42,7 @@ A centralized, structured system for showcasing professional recognition.
     * Proof of work attached to each record
 * Filterable & Scalable Data Model
 
-### 4️�� 🔐 The Command Center — Admin Dashboard (/admin)
+### 🔐 The Command Center — Admin Dashboard (/admin)
 A secure, role-based headless CMS that powers the entire platform.
 * Full Content Management
     * Create, edit, and delete:
