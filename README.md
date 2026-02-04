@@ -1,7 +1,8 @@
-##🚀 Personal Portfolio & Content Management System
+**🚀 Personal Portfolio & Content Management System**
+
 A modern, high-performance personal portfolio platform designed to bridge the gap between Technical Engineering and Creative Arts. This is not a static showcase — it is a fully dynamic, CMS-driven web application powered by a custom Admin Dashboard, enabling real-time content management for technical projects, photography, artworks, and professional achievements.
 
-##🌟 Core Features
+###🌟 Core Features
 1️⃣ #Technical Portfolio (/technical)
 A dedicated engineering-focused section designed with modern developer aesthetics.
 * Split-Screen Hero Section with smooth Light / Dark mode animations
