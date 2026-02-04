@@ -1,10 +1,8 @@
-
-
-🚀 Personal Portfolio & Content Management System
+##🚀 Personal Portfolio & Content Management System
 A modern, high-performance personal portfolio platform designed to bridge the gap between Technical Engineering and Creative Arts. This is not a static showcase — it is a fully dynamic, CMS-driven web application powered by a custom Admin Dashboard, enabling real-time content management for technical projects, photography, artworks, and professional achievements.
 
-🌟 Core Features
-1️⃣ Technical Portfolio (/technical)
+##🌟 Core Features
+1️⃣ #Technical Portfolio (/technical)
 A dedicated engineering-focused section designed with modern developer aesthetics.
 * Split-Screen Hero Section with smooth Light / Dark mode animations
 * Dynamic Project Showcase
@@ -19,7 +17,7 @@ A dedicated engineering-focused section designed with modern developer aesthetic
     * Smooth scrolling navigation
     * Inspired by modern developer portfolios
 
-2️⃣ Creative Studio (/photoshoots & /artistic)
+2️⃣ #Creative Studio (/photoshoots & /artistic)
 A visually immersive space for photography and artistic expression.
 * Responsive Masonry Galleries
     * Categories: Selected, Commissioned, Editorial
@@ -29,7 +27,7 @@ A visually immersive space for photography and artistic expression.
     * High-resolution image viewing
     * Seamless transitions for immersive browsing
 
-3️⃣ Achievements Hub (/achievement)
+3️⃣ #Achievements Hub (/achievement)
 A centralized, structured system for showcasing professional recognition.
 * Categorized Achievements
     * College
@@ -42,7 +40,7 @@ A centralized, structured system for showcasing professional recognition.
     * Proof of work attached to each record
 * Filterable & Scalable Data Model
 
-4️⃣ 🔐 The Command Center — Admin Dashboard (/admin)
+4️⃣ #🔐 The Command Center — Admin Dashboard (/admin)
 A secure, role-based headless CMS that powers the entire platform.
 * Full Content Management
     * Create, edit, and delete:
@@ -62,7 +60,7 @@ A secure, role-based headless CMS that powers the entire platform.
     * Row Level Security (RLS)
 ⚡ No code changes required to update portfolio content.
 
-🛠️ Tech Stack
+🛠️ #Tech Stack
 Frontend
 * React 18
 * TypeScript
@@ -82,7 +80,7 @@ Forms & Validation
 * React Hook Form
 * Zod Validation
 
-🎯 Project Philosophy
+🎯 #Project Philosophy
 This project is built to:
 * Combine engineering precision with creative storytelling
 * Be scalable, secure, and maintainable
