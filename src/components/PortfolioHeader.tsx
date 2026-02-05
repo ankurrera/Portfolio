@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import FocusTrap from "focus-trap-react";
-import { TextRoll } from "@/components/ui/text-roll";
+import { TextScramble } from "@/components/ui/text-scramble";
 
 interface PortfolioHeaderProps {
   activeCategory: string;
@@ -38,138 +38,183 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
   }, [mobileMenuOpen]);
 
   return (
-    <header 
-      className={`fixed left-0 right-0 ${isAdminContext ? 'z-40' : 'z-50'} bg-background`}
-      style={{ top: topOffset }}
-    >
-      <div className="max-w-[1600px] mx-auto flex items-center justify-between md:justify-center px-3 md:px-5 py-3 gap-3">
+    <>
+      {/* Left Vertical Sidebar for Desktop */}
+      <aside 
+        className={`hidden md:flex fixed left-0 top-0 bottom-0 ${isAdminContext ? 'z-40' : 'z-50'} bg-background border-r border-border w-48 flex-col py-8 px-6`}
+        style={{ top: topOffset }}
+      >
+        {/* Logo/Name at top */}
         <Link
           to="/technical"
-          className="text-[10px] md:text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors font-inter whitespace-nowrap"
+          className="text-sm uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors font-inter mb-12"
           onMouseEnter={() => setHoveredItem('name')}
           onMouseLeave={() => setHoveredItem(null)}
         >
           {hoveredItem === 'name' ? (
-            <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+            <TextScramble
+              as="span"
+              duration={0.6}
+              speed={0.03}
+              trigger={hoveredItem === 'name'}
+              onScrambleComplete={() => {}}
+            >
               ANKUR
-            </TextRoll>
+            </TextScramble>
           ) : (
             "ANKUR"
           )}
         </Link>
 
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setMobileMenuOpen(true)}
-          className="md:hidden p-2 text-foreground/70 hover:text-foreground transition-colors"
-          aria-label="Open navigation menu"
-          aria-expanded={mobileMenuOpen}
-        >
-          <Menu size={20} />
-        </button>
-
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-3">
-          {/* Technical link */}
+        {/* Navigation Links */}
+        <nav className="flex flex-col gap-6">
           <Link
             to="/technical"
             onMouseEnter={() => setHoveredItem('technical')}
             onMouseLeave={() => setHoveredItem(null)}
-            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+            className={`text-xs uppercase tracking-widest font-inter transition-colors ${
               activeCategory === "TECHNICAL"
                 ? "text-foreground font-medium"
-                : "text-muted-foreground hover:text-foreground/80"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {hoveredItem === 'technical' ? (
-              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+              <TextScramble
+                as="span"
+                duration={0.6}
+                speed={0.03}
+                trigger={hoveredItem === 'technical'}
+                onScrambleComplete={() => {}}
+              >
                 TECHNICAL
-              </TextRoll>
+              </TextScramble>
             ) : (
               "TECHNICAL"
             )}
           </Link>
 
-          {/* Artistic link */}
           <Link
             to="/artistic"
             onMouseEnter={() => setHoveredItem('artistic')}
             onMouseLeave={() => setHoveredItem(null)}
-            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+            className={`text-xs uppercase tracking-widest font-inter transition-colors ${
               activeCategory === "ARTISTIC"
                 ? "text-foreground font-medium"
-                : "text-muted-foreground hover:text-foreground/80"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {hoveredItem === 'artistic' ? (
-              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+              <TextScramble
+                as="span"
+                duration={0.6}
+                speed={0.03}
+                trigger={hoveredItem === 'artistic'}
+                onScrambleComplete={() => {}}
+              >
                 ARTISTIC
-              </TextRoll>
+              </TextScramble>
             ) : (
               "ARTISTIC"
             )}
           </Link>
 
-          {/* Photoshoots link */}
           <Link
             to="/photoshoots"
             onMouseEnter={() => setHoveredItem('photoshoots')}
             onMouseLeave={() => setHoveredItem(null)}
-            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+            className={`text-xs uppercase tracking-widest font-inter transition-colors ${
               activeCategory === "PHOTOSHOOTS"
                 ? "text-foreground font-medium"
-                : "text-muted-foreground hover:text-foreground/80"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {hoveredItem === 'photoshoots' ? (
-              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+              <TextScramble
+                as="span"
+                duration={0.6}
+                speed={0.03}
+                trigger={hoveredItem === 'photoshoots'}
+                onScrambleComplete={() => {}}
+              >
                 PHOTOSHOOTS
-              </TextRoll>
+              </TextScramble>
             ) : (
               "PHOTOSHOOTS"
             )}
           </Link>
 
-          {/* Achievement link */}
           <Link
             to="/achievement"
             onMouseEnter={() => setHoveredItem('achievement')}
             onMouseLeave={() => setHoveredItem(null)}
-            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+            className={`text-xs uppercase tracking-widest font-inter transition-colors ${
               activeCategory === "ACHIEVEMENT"
                 ? "text-foreground font-medium"
-                : "text-muted-foreground hover:text-foreground/80"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {hoveredItem === 'achievement' ? (
-              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+              <TextScramble
+                as="span"
+                duration={0.6}
+                speed={0.03}
+                trigger={hoveredItem === 'achievement'}
+                onScrambleComplete={() => {}}
+              >
                 ACHIEVEMENT
-              </TextRoll>
+              </TextScramble>
             ) : (
               "ACHIEVEMENT"
             )}
           </Link>
-        
-          {/* About link */}
+
           <Link
             to="/about"
             onMouseEnter={() => setHoveredItem('about')}
             onMouseLeave={() => setHoveredItem(null)}
-            className={`text-[10px] md:text-[11px] uppercase tracking-widest font-inter transition-colors whitespace-nowrap ${
+            className={`text-xs uppercase tracking-widest font-inter transition-colors ${
               activeCategory === "ABOUT"
                 ? "text-foreground font-medium"
-                : "text-muted-foreground hover:text-foreground/80"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {hoveredItem === 'about' ? (
-              <TextRoll duration={0.3} getEnterDelay={(i) => i * 0.02} getExitDelay={(i) => i * 0.02}>
+              <TextScramble
+                as="span"
+                duration={0.6}
+                speed={0.03}
+                trigger={hoveredItem === 'about'}
+                onScrambleComplete={() => {}}
+              >
                 ABOUT
-              </TextRoll>
+              </TextScramble>
             ) : (
               "ABOUT"
             )}
           </Link>
-      </div>
+        </nav>
+      </aside>
+
+      {/* Mobile Header */}
+      <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
+        <div className="flex items-center justify-between px-4 py-4">
+          <Link
+            to="/technical"
+            className="text-sm uppercase tracking-widest text-foreground font-inter"
+          >
+            ANKUR
+          </Link>
+          
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="p-2 text-foreground/70 hover:text-foreground transition-colors"
+            aria-label="Open navigation menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            <Menu size={20} />
+          </button>
+        </div>
+      </header>
 
         {/* Mobile Menu Overlay */}
         {mobileMenuOpen && (
@@ -193,7 +238,6 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
 
               {/* Mobile Navigation Links */}
               <nav className="flex flex-col items-center justify-center gap-6 px-8 pt-12">
-                {/* Technical link */}
                 <Link
                   to="/technical"
                   onClick={() => setMobileMenuOpen(false)}
@@ -206,7 +250,6 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
                   TECHNICAL
                 </Link>
 
-                {/* Artistic link */}
                 <Link
                   to="/artistic"
                   onClick={() => setMobileMenuOpen(false)}
@@ -219,7 +262,6 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
                   ARTISTIC
                 </Link>
 
-                {/* Photoshoots link */}
                 <Link
                   to="/photoshoots"
                   onClick={() => setMobileMenuOpen(false)}
@@ -232,7 +274,6 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
                   PHOTOSHOOTS
                 </Link>
 
-                {/* Achievement link */}
                 <Link
                   to="/achievement"
                   onClick={() => setMobileMenuOpen(false)}
@@ -245,10 +286,8 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
                   ACHIEVEMENT
                 </Link>
 
-                {/* Separator */}
                 <div className="w-16 h-px bg-border"></div>
 
-                {/* About Link */}
                 <Link
                   to="/about"
                   onClick={() => setMobileMenuOpen(false)}
@@ -264,8 +303,7 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
             </div>
           </FocusTrap>
         )}
-      </div>
-    </header>
+    </>
   );
 };
 
