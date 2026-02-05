@@ -57,7 +57,7 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
               duration={0.6}
               speed={0.03}
               trigger={hoveredItem === 'name'}
-              onScrambleComplete={() => {}}
+              
             >
               ANKUR
             </TextScramble>
@@ -84,7 +84,7 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
                 duration={0.6}
                 speed={0.03}
                 trigger={hoveredItem === 'technical'}
-                onScrambleComplete={() => {}}
+                
               >
                 TECHNICAL
               </TextScramble>
@@ -109,7 +109,7 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
                 duration={0.6}
                 speed={0.03}
                 trigger={hoveredItem === 'artistic'}
-                onScrambleComplete={() => {}}
+                
               >
                 ARTISTIC
               </TextScramble>
@@ -134,7 +134,7 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
                 duration={0.6}
                 speed={0.03}
                 trigger={hoveredItem === 'photoshoots'}
-                onScrambleComplete={() => {}}
+                
               >
                 PHOTOSHOOTS
               </TextScramble>
@@ -159,7 +159,7 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
                 duration={0.6}
                 speed={0.03}
                 trigger={hoveredItem === 'achievement'}
-                onScrambleComplete={() => {}}
+                
               >
                 ACHIEVEMENT
               </TextScramble>
@@ -184,7 +184,7 @@ const PortfolioHeader = ({ activeCategory, isAdminContext = false, topOffset = '
                 duration={0.6}
                 speed={0.03}
                 trigger={hoveredItem === 'about'}
-                onScrambleComplete={() => {}}
+                
               >
                 ABOUT
               </TextScramble>
