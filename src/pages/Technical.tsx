@@ -9,7 +9,7 @@ import WorkCTA from '@/components/WorkCTA';
 
 const Technical = () => {
   return (
-    <PageLayout>
+    <PageLayout hasSidebar>
       <PortfolioHeader activeCategory="TECHNICAL" />
       
       <main className="flex-1">

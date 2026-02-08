@@ -138,7 +138,7 @@ const Artistic = () => {
   };
 
   return (
-    <PageLayout>
+    <PageLayout hasSidebar>
       <SEO 
         title="Artistic - Ankur Bag"
         description="Artistic photography exploring creative expression and visual storytelling."

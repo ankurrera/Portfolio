@@ -79,7 +79,7 @@ const Achievement = () => {
   }, []);
 
   return (
-    <PageLayout>
+    <PageLayout hasSidebar>
       <SEO 
         title="Achievement | Raya"
         description="Awards, recognitions, and notable achievements across various categories including school, college, national competitions, online courses, and extra-curricular activities."

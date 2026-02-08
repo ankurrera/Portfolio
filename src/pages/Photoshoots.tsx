@@ -132,7 +132,7 @@ const Photoshoots = () => {
   };
 
   return (
-    <PageLayout>
+    <PageLayout hasSidebar>
       <SEO
         title="Photoshoots - Ankur Bag"
         description="Complete portfolio spanning fashion campaigns, editorial work, and personal projects with a distinctive minimalist aesthetic."

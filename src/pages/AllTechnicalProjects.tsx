@@ -59,7 +59,7 @@ const AllTechnicalProjects = () => {
 
   if (isLoading) {
     return (
-      <PageLayout>
+      <PageLayout hasSidebar>
         <PortfolioHeader activeCategory="TECHNICAL" />
         <main className="flex-1 min-h-screen flex items-center justify-center bg-background">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -70,7 +70,7 @@ const AllTechnicalProjects = () => {
   }
 
   return (
-    <PageLayout>
+    <PageLayout hasSidebar>
       <PortfolioHeader activeCategory="TECHNICAL" />
       
       <main className="flex-1 min-h-screen transition-colors duration-500 w-full bg-background">

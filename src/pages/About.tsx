@@ -178,7 +178,7 @@ const About = () => {
   }, [aboutData, aboutLoading]);
 
   return (
-    <PageLayout>
+    <PageLayout hasSidebar>
       <SEO
         title="About - Ankur Bag"
         description="Learn about Ankur Bag, a production photographer specializing in fashion, editorial, and commercial photography."
