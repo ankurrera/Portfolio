@@ -23,7 +23,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useHeroText } from "@/hooks/useHeroText";
 import { useAboutPage } from "@/hooks/useAboutPage";
-import { Loader2 } from "lucide-react";
+import { MHSkeleton } from "@/components/MHSkeleton";
 import SocialLinks from "@/components/SocialLinks";
 import { VALIDATION_RULES, VALIDATION_MESSAGES } from "@/lib/validation/contactFormValidation";
 import { parseApiResponse } from "@/lib/utils";
@@ -193,8 +193,9 @@ const About = () => {
         <section className="max-w-[1600px] mx-auto pt-20 pb-12 md:pt-24 md:pb-16">
           <div className="text-center space-y-8 mb-16 px-3 md:px-5 max-w-2xl mx-auto">
             {heroLoading ? (
-              <div className="flex items-center justify-center min-h-[200px]">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <div className="space-y-4 max-w-xs mx-auto py-6">
+                <MHSkeleton variant="text" className="h-10 w-3/4 mx-auto" />
+                <MHSkeleton variant="text" className="h-4 w-1/2 mx-auto" />
               </div>
             ) : (
               <div className="space-y-4">
@@ -225,8 +226,11 @@ const About = () => {
           {/* Bio Section */}
           <div className="max-w-2xl mx-auto px-3 md:px-5 space-y-8 text-center text-foreground/80 text-sm leading-relaxed mb-16">
             {aboutLoading ? (
-              <div className="flex items-center justify-center min-h-[200px]">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <div className="space-y-3 max-w-xl mx-auto py-4">
+                <MHSkeleton variant="text" className="w-full" />
+                <MHSkeleton variant="text" className="w-[92%]" />
+                <MHSkeleton variant="text" className="w-[95%]" />
+                <MHSkeleton variant="text" className="w-[85%]" />
               </div>
             ) : aboutData?.bio_text ? (
               // Display bio from database, preserving line breaks

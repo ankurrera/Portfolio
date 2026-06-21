@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
-import { Loader2, LogOut, Camera, FolderOpen, Code2, Trophy, Type, User } from 'lucide-react';
+import { LogOut, Camera, FolderOpen, Code2, Trophy, Type, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { MHSkeleton } from '@/components/MHSkeleton';
 
 const AdminDashboard = () => {
   const { user, isAdmin, isLoading, signOut } = useAuth();
@@ -36,8 +37,26 @@ const AdminDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen bg-background">
+        <div className="border-b border-border bg-muted/30">
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between max-w-[1400px]">
+            <div className="flex items-center gap-2">
+              <MHSkeleton variant="rect" className="h-5 w-32" />
+            </div>
+            <MHSkeleton variant="rect" className="h-8 w-24" />
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-6 max-w-[1400px] space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="border rounded-lg p-4 space-y-3">
+                <MHSkeleton variant="text" className="h-5 w-1/3" />
+                <MHSkeleton variant="text" className="h-4 w-2/3" />
+                <MHSkeleton variant="rect" className="h-8 w-16" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

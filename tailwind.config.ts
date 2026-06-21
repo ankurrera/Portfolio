@@ -159,6 +159,11 @@ export default {
             transform: "translateY(0)" 
           }
         },
+        "shimmer": {
+          "100%": {
+            transform: "translateX(100%)"
+          }
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -168,6 +173,7 @@ export default {
         "scale-in": "scale-in 0.2s ease-out",
         "fadeIn": "fadeIn 0.8s ease-out",
         "slideUp": "slideUp 0.6s ease-out",
+        "shimmer": "shimmer 2s infinite"
       },
     },
   },

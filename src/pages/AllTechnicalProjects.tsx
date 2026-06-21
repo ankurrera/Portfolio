@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft, Loader2, Github, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { TechnicalProject } from '@/types/technical';
 import { cn } from '@/lib/utils';
@@ -10,6 +8,9 @@ import { useNavigate } from 'react-router-dom';
 import PortfolioHeader from '@/components/PortfolioHeader';
 import PortfolioFooter from '@/components/PortfolioFooter';
 import PageLayout from '@/components/PageLayout';
+import { ArrowLeft, Github, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { MHSkeleton } from '@/components/MHSkeleton';
 
 const AllTechnicalProjects = () => {
   const [projects, setProjects] = useState<TechnicalProject[]>([]);
@@ -57,18 +58,6 @@ const AllTechnicalProjects = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageLayout>
-        <PortfolioHeader activeCategory="TECHNICAL" />
-        <main className="flex-1 min-h-screen flex items-center justify-center bg-background">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </main>
-        <PortfolioFooter />
-      </PageLayout>
-    );
-  }
-
   return (
     <PageLayout>
       <PortfolioHeader activeCategory="TECHNICAL" />
@@ -115,7 +104,25 @@ const AllTechnicalProjects = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="w-full max-w-4xl"
           >
-            {projects.length === 0 ? (
+            {isLoading ? (
+              <div className="flex flex-col gap-2 w-full">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="py-6 px-6 -mx-4 grid grid-cols-1 md:grid-cols-[auto_1fr_auto] gap-4 md:gap-6 items-center border-b border-border/10">
+                    <div className="hidden md:flex items-center gap-3">
+                      <MHSkeleton variant="text" className="h-4 w-6" />
+                    </div>
+                    <div className="flex-1 space-y-3">
+                      <MHSkeleton variant="text" className="h-5 w-1/3" />
+                      <MHSkeleton variant="text" className="h-4 w-full" />
+                      <MHSkeleton variant="text" className="h-4 w-2/3" />
+                    </div>
+                    <div className="flex gap-2">
+                      <MHSkeleton variant="rect" className="h-8 w-24 rounded-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : projects.length === 0 ? (
               <div className="text-center py-20 text-muted-foreground">
                 No projects available yet.
               </div>

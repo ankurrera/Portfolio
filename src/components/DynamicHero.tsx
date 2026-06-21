@@ -1,6 +1,6 @@
 import { useHeroText } from '@/hooks/useHeroText';
 import { Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { MHSkeleton } from '@/components/MHSkeleton';
 import { TextGenerateEffect } from '@/components/ui/text-generate-effect';
 
 interface DynamicHeroProps {
@@ -21,8 +21,13 @@ const DynamicHero = ({
   if (loading) {
     return (
       <section className="max-w-[1600px] mx-auto px-3 md:px-5 pt-16 pb-12 md:pt-20 md:pb-16">
-        <div className="space-y-4 text-center flex items-center justify-center min-h-[200px]">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="space-y-4 text-center max-w-2xl mx-auto py-6">
+          <MHSkeleton variant="text" className="h-10 w-2/3 mx-auto" />
+          <MHSkeleton variant="text" className="h-4 w-1/3 mx-auto animate-pulse" />
+          <div className="space-y-2 pt-2">
+            <MHSkeleton variant="text" className="h-4 w-full" />
+            <MHSkeleton variant="text" className="h-4 w-[90%]" />
+          </div>
         </div>
       </section>
     );

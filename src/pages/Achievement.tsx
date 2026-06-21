@@ -6,8 +6,8 @@ import PageLayout from "@/components/PageLayout";
 import SEO from "@/components/SEO";
 import { AnimatedFolder } from "@/components/ui/3d-folder";
 import { supabase } from "@/integrations/supabase/client";
+import { MHSkeleton } from "@/components/MHSkeleton";
 import { AchievementData, groupAchievementsByCategory } from "@/types/achievement";
-import { Loader2 } from "lucide-react";
 
 const Achievement = () => {
   const [achievementFolders, setAchievementFolders] = useState<ReturnType<typeof groupAchievementsByCategory>>([]);
@@ -98,8 +98,13 @@ const Achievement = () => {
         
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-16">
           {loading && (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 md:gap-10 lg:gap-12 items-start justify-items-center">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="w-full max-w-[300px] space-y-4">
+                  <MHSkeleton variant="rect" className="h-[220px] w-full rounded-lg" />
+                  <MHSkeleton variant="text" className="h-5 w-2/3 mx-auto" />
+                </div>
+              ))}
             </div>
           )}
 
